@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// See LICENSE file for full license text.
+
 import SwiftUI
 import Clerk
 
