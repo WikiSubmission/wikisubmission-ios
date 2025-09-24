@@ -34,7 +34,6 @@ struct QuranShareVerses: View {
         }
     }
     
-    // MARK: - Selection Section
     private var selectionSection: some View {
         Section {
             VStack(spacing: 4) {
@@ -75,7 +74,6 @@ struct QuranShareVerses: View {
             .lineLimit(4)
     }
     
-    // MARK: - Horizontal Action Buttons
     private var horizontalActionButtons: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
@@ -139,7 +137,6 @@ struct QuranShareVerses: View {
         .buttonStyle(SignatureButtonStyle())
     }
     
-    // MARK: - Verse List
     private var verseList: some View {
         ScrollView {
             VStack(spacing: 8) {
@@ -160,7 +157,6 @@ struct QuranShareVerses: View {
         }
     }
     
-    // MARK: - Footer Info
     private var footerInfo: some View {
         VStack {
             Divider()

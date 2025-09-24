@@ -26,7 +26,6 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - Sections
     private var languageSection: some View {
         Section(header: Text("Language"), footer: translatorsFooter) {
             PrimaryLanguagePicker()
@@ -106,7 +105,6 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - Helpers
     private var translatorsFooter: some View {
         Button("Translators") {
             SheetKit().presentWithEnvironment {

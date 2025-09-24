@@ -36,7 +36,6 @@ struct QuranVerseInfo: View {
         }
     }
     
-    // MARK: - Main content
     private var content: some View {
         ScrollView {
             LazyVStack(spacing: 16) {
@@ -64,7 +63,6 @@ struct QuranVerseInfo: View {
         }
     }
     
-    // MARK: - Verse card
     private var verseCard: some View {
         VStack {
             verseCardTop
@@ -77,7 +75,6 @@ struct QuranVerseInfo: View {
         }
     }
     
-    // MARK: - Share button
     private var buttonRow: some View {
         FlexStack {
             Button {
@@ -120,7 +117,6 @@ struct QuranVerseInfo: View {
         .padding(.top)
     }
     
-    // MARK: - Word by word section
     private var wordByWordSection: some View {
         Section(header: sectionHeader("WORD BY WORD")) {
             if wordByWordData.count > 0 {
@@ -134,7 +130,6 @@ struct QuranVerseInfo: View {
         }
     }
     
-    // MARK: - Single word row
     private func wordRow(_ i: Types.Quran.WordByWord) -> some View {
         VStack {
             HStack {
@@ -155,7 +150,6 @@ struct QuranVerseInfo: View {
         }
     }
     
-    // MARK: - Section header
     private func sectionHeader(_ title: String) -> some View {
         HStack {
             Text(title)
@@ -167,7 +161,6 @@ struct QuranVerseInfo: View {
         .padding(.bottom, 4)
     }
     
-    // MARK: - Root word sheet
     private func presentRootWordSheet(_ word: Types.Quran.WordByWord) {
         SheetKit().presentWithEnvironment {
             NavigationStack {
@@ -199,7 +192,6 @@ struct QuranVerseInfo: View {
         }
     }
     
-    // MARK: - Other meanings
     private func meaningsSection(_ word: Types.Quran.WordByWord) -> some View {
         Section(header: sectionHeader("MEANINGS")) {
             HStack {
@@ -210,7 +202,6 @@ struct QuranVerseInfo: View {
         }
     }
     
-    // MARK: - All occurrences
     @ViewBuilder
     private func allOccurrencesSection(_ word: Types.Quran.WordByWord) -> some View {
         AsyncOccurrencesView(rootWord: word.root_word)

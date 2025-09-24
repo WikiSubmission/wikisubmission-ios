@@ -43,6 +43,9 @@ struct HomeView: View {
                                 TinyCard(title: "Prayer Times", systemImage: "bolt.heart.fill") {
                                     PrayerTimesView()
                                 }
+                                TinyCard(title: "Qibla", systemImage: "safari.fill") {
+                                    QiblaView()
+                                }
                             }
                         }
                         .padding()

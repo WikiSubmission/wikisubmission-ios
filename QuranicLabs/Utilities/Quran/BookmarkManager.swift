@@ -100,7 +100,6 @@ extension Utilities.Quran {
             }
         }
         
-        // MARK: - Server Sync Logic
         private func syncWithServer() async {
             guard !isSyncing else { return }
             guard await canSyncWithServer() else { return }

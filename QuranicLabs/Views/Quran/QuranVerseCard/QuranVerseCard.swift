@@ -252,7 +252,6 @@ struct QuranVerseCard: View {
     }
 }
 
-// MARK: - Shimmering Placeholder Extension
 extension View {
     func shimmering() -> some View {
         self

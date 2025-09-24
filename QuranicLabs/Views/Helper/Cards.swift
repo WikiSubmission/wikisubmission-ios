@@ -178,7 +178,6 @@ struct LargeCard<Destination: View>: View {
         .buttonStyle(.plain)
     }
     
-    // MARK: - Image Logic
     private var cardImage: Image {
         if let local = image {
             return Image(local) // local asset
@@ -241,7 +240,6 @@ struct LargeCardWithoutDestination: View {
         .frame(height: 120)
     }
     
-    // MARK: - Image Logic
     private var cardImage: Image {
         if let local = image {
             return Image(local) // local asset

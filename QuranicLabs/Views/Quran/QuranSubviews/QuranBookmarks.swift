@@ -43,8 +43,6 @@ struct QuranBookmarks: View {
         }
     }
 
-    // MARK: - Components
-
     private var emptyState: some View {
         Text("You have no bookmarks yet. Click on any chapter or verse to add them here.")
             .padding()
