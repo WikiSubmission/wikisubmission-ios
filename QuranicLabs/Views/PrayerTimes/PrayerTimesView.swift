@@ -138,7 +138,7 @@ struct PrayerTimesCard: View {
                                 if key == prayerData.currentPrayer && environment.NetworkMonitor.hasInternet {
                                     Image(systemName: "clock")
                                     Text("\(prayerData.currentPrayerTimeElapsed) ago")
-                                        .foregroundStyle(prayerData.upcomingPrayerTimeLeft.contains("h") ? .gray : .red)
+                                        .foregroundStyle(prayerData.currentPrayerTimeElapsed.contains("h") ? .gray : .red)
                                         .fontWeight(.light)
                                 }
                                 if key == prayerData.upcomingPrayer && environment.NetworkMonitor.hasInternet {
