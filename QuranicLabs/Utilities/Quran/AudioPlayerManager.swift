@@ -1,3 +1,5 @@
+// To expand (very basic implementation)
+
 import Foundation
 import SwiftUI
 import AudioStreaming
@@ -27,39 +29,18 @@ extension Utilities.Quran {
             return player
         }()
         
-        func getAudioLink(for verseId: String) async -> URL? {
+        func getAudioLink(for verseId: String) -> URL {
             let reciter = UserDefaults.standard.string(forKey: "quran_reciter") ?? "mishary"
-            let urlString = "https://quran.wikisubmission.org/recitations/\(verseId)"
-
-            guard let url = URL(string: urlString) else { return nil }
-
-            do {
-                let (data, _) = try await URLSession.shared.data(from: url)
-                if let json = try JSONSerialization.jsonObject(with: data) as? [String: String],
-                   let audioUrlString = json[reciter],
-                   let audioUrl = URL(string: audioUrlString) {
-                    return audioUrl
-                } else {
-                    print("Error: No audio URL found for reciter \(reciter)")
-                    return nil
-                }
-            } catch {
-                print("Error fetching audio link:", error)
-                return nil
-            }
+            let urlString = "https://ws-quran-recitations.wikisubmission.org/arabic/\(reciter)/\(verseId.replacingOccurrences(of: ":", with: "-")).mp3"
+            
+            return URL(string: urlString)!
         }
 
         @MainActor
         func playVerse(_ verseId: String) {
-            Task {
-                if let audioUrl = await getAudioLink(for: verseId) {
-                    print("Playing \(audioUrl)")
-                    self.player.play(url: audioUrl)
-                    self.currentVerseId = verseId
-                } else {
-                    print("Failed to get audio URL for verse \(verseId)")
-                }
-            }
+            let audioUrl = getAudioLink(for: verseId)
+            self.player.play(url: audioUrl)
+            self.currentVerseId = verseId
         }
     }
 }
