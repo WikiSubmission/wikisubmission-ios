@@ -53,6 +53,7 @@ extension Utilities.Quran {
             }
         }
         
+        @MainActor
         private func updateSyncStatus() async {
             // Check internet
             let canProceed = await Utilities.System.ensureCanProceed([.ensureInternetConnection, .ensureLoggedIn])
@@ -74,6 +75,7 @@ extension Utilities.Quran {
             }
         }
 
+        @MainActor
         func refresh() async {
             await updateSyncStatus()
             
@@ -86,6 +88,8 @@ extension Utilities.Quran {
                 await syncWithServer()
             }
         }
+        
+        @MainActor
         private func canSyncWithServer() async -> Bool {
             let status = await Utilities.System.ensureCanProceed([.ensureInternetConnection, .ensureLoggedIn])
             isOnline = status.success
@@ -100,6 +104,7 @@ extension Utilities.Quran {
             }
         }
         
+        @MainActor
         private func syncWithServer() async {
             guard !isSyncing else { return }
             guard await canSyncWithServer() else { return }
