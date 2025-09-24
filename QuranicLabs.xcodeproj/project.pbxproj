@@ -15,11 +15,13 @@
 		923F0C002E847D8A0092BA1B /* Clerk in Frameworks */ = {isa = PBXBuildFile; productRef = 923F0BFF2E847D8A0092BA1B /* Clerk */; };
 		923F0C032E847D930092BA1B /* SheetKit in Frameworks */ = {isa = PBXBuildFile; productRef = 923F0C022E847D930092BA1B /* SheetKit */; };
 		923F0C062E847DAD0092BA1B /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 923F0C052E847DAD0092BA1B /* Supabase */; };
+		923F0C082E8480DF0092BA1B /* .gitignore in Sources */ = {isa = PBXBuildFile; fileRef = 923F0C072E8480DC0092BA1B /* .gitignore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		923F0B152E847C440092BA1B /* QuranicLabs.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QuranicLabs.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		923F0BEB2E847C8B0092BA1B /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		923F0C072E8480DC0092BA1B /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -67,6 +69,7 @@
 				923F0B172E847C440092BA1B /* QuranicLabs */,
 				923F0B162E847C440092BA1B /* Products */,
 				923F0BEB2E847C8B0092BA1B /* README.md */,
+				923F0C072E8480DC0092BA1B /* .gitignore */,
 			);
 			sourceTree = "<group>";
 		};
@@ -168,6 +171,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				923F0C082E8480DF0092BA1B /* .gitignore in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
