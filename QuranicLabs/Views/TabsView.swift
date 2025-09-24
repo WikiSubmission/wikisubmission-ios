@@ -16,6 +16,12 @@ struct TabsView: View {
                 Label(TabItem.prayer.rawValue, systemImage: TabItem.prayer.symbol)
             }
             .tag(TabItem.prayer)
+            
+            ResourcesView()
+            .tabItem {
+                Label(TabItem.resources.rawValue, systemImage: TabItem.resources.symbol)
+            }
+            .tag(TabItem.resources)
 
             SettingsView()
                 .tabItem {
@@ -29,12 +35,14 @@ struct TabsView: View {
 enum TabItem: String, CaseIterable, Equatable {
     case home = "Home"
     case prayer = "Prayer"
+    case resources = "Resources"
     case settings = "Settings"
     
     var symbol: String {
         switch self {
         case .home: return "house.fill"
         case .prayer: return "bolt.heart.fill"
+        case .resources: return "info.circle.text.page.fill"
         case .settings: return "gearshape.fill"
         }
     }
