@@ -49,7 +49,7 @@ extension Utilities.PrayerTimes {
             isLoading = true
             let encodedLocation = location.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? location
             let useMidpointMethodForAsr = UserDefaults.standard.bool(forKey: Defaults.Keys.use_midpoint_method_for_asr.name)
-            let urlString = "https://practices.wikisubmission.org/prayer-times/\(encodedLocation.lowercased())?client=ios&\(useMidpointMethodForAsr == true ? "asr_adjustment=true" : "")"
+            let urlString = "https://practices.wikisubmission.org/prayer-times/\(encodedLocation.lowercased())?client=ios\(useMidpointMethodForAsr == true ? "&asr_adjustment=true" : "")"
             guard let url = URL(string: urlString) else {
                 DispatchQueue.main.async {
                     self.isLoading = false
