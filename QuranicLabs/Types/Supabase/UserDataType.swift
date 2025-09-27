@@ -1,11 +1,12 @@
 import Foundation
 
 extension Types.Supabase {
-    struct UserData: Decodable {
+    struct UserData: Decodable, Encodable {
         let quran_preferences: QuranPreferences
+        let quran_bookmarks: Bookmarks
     }
     
-    struct QuranPreferences: Codable {
+    struct QuranPreferences: Decodable, Encodable {
         var arabic: Bool
         var subtitles: Bool
         var footnotes: Bool
@@ -16,7 +17,7 @@ extension Types.Supabase {
         var font_size: Int
     }
     
-    struct Bookmarks: Codable, Hashable {
+    struct Bookmarks: Decodable, Encodable, Hashable {
         var id = UUID()
         var created_at: TimeInterval
         var updated_at: TimeInterval?

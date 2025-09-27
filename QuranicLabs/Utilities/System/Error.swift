@@ -37,3 +37,7 @@ struct ErrorView: View {
     .presentationDetents([.medium])
   }
 }
+
+#Preview {
+    ErrorView(details: ErrorDetails.networkError.details)
+}

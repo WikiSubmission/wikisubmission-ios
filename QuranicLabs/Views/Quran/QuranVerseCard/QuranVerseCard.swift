@@ -136,7 +136,7 @@ struct QuranVerseCard: View {
                         .scaledToFit()
                         .frame(width: 16, height: 16)
                         .foregroundStyle(.secondary)
-                        .fontWeight(.light)
+                        .fontWeight(.ultraLight)
                 }
             }
         }
@@ -191,7 +191,7 @@ struct QuranVerseCard: View {
                     FlexStack(horizontalSpacing: 9) {
                         ForEach(arabicWordByWord, id: \.word_index) { i in
                             Text(i.arabic_text)
-                                .font(.system(size: CGFloat(primaryLanguage == .persian ? fontSize + 2 : fontSize)))
+                                .font(.system(size: CGFloat(primaryLanguage == .persian ? fontSize + 2 : fontSize + 3)))
                                 .fontDesign(.default)
                                 .background(
                                     RoundedRectangle(cornerRadius: 24)
@@ -208,7 +208,7 @@ struct QuranVerseCard: View {
                 HStack {
                     Spacer()
                     Text(data.verse_text_arabic)
-                        .font(.system(size: CGFloat(fontSize + 1)))
+                        .font(.system(size: CGFloat(fontSize + 3)))
                         .multilineTextAlignment(.trailing)
                 }
             }

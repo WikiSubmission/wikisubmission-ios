@@ -14,14 +14,16 @@ struct SettingsView: View {
             List {
                 SignIn(removeFormatting: true)
                     .padding(.vertical)
-                
                 languageSection
                 appearanceSection
                 previewVerseSection
-                readerSection
+                readerTogglesSection
+                prayerTimesTogglesSection
+                miscalleneousSection
                 appActionsSection
                 appInfoSection
             }
+            .scrollIndicators(.hidden)
             .navigationTitle("Settings")
         }
     }
@@ -45,13 +47,29 @@ struct SettingsView: View {
         }
     }
 
-    private var readerSection: some View {
+    private var readerTogglesSection: some View {
         Section(header: Text("Reader")) {
             ArabicToggle()
             SubtitlesToggle()
             FootnotesToggle()
             TransliterationToggle()
             ArabicPositionToggle()
+        }
+    }
+    
+    private var prayerTimesTogglesSection: some View {
+        Section(header: Text("Prayer Times")) {
+            AsrMethodToggle()
+        }
+    }
+    
+    private var miscalleneousSection: some View {
+        Section() {
+            NavigationLink {
+                NotificationsView()
+            } label: {
+                Label("Notifications", systemImage: "bell.fill")
+            }
         }
     }
 

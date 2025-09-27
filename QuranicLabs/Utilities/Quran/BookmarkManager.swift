@@ -3,6 +3,7 @@ import PostgREST
 import SwiftUI
 import AlertKit
 import Defaults
+import SheetKit
 
 extension Utilities.Quran {
     class BookmarkManager: ObservableObject {
@@ -28,10 +29,16 @@ extension Utilities.Quran {
             }
         }
         
-        private func saveLocalBookmarks() {
+        @MainActor
+        private func saveLocalBookmarks(presentBookmarkSheet: Bool = false) {
             do {
                 let data = try JSONEncoder().encode(bookmarks)
                 Defaults[.local_bookmarks] = data
+                if presentBookmarkSheet {
+                    SheetKit().presentWithEnvironment {
+                        QuranBookmarks()
+                    }
+                }
                 print("Bookmarks saved locally")
             } catch {
                 print("Failed to save local bookmarks: \(error)")
@@ -113,34 +120,22 @@ extension Utilities.Quran {
             syncStatus = .syncing
             
             do {
-                let serverBookmarks = try await fetchServerBookmarks()
+                let serverBookmarks = try await Utilities.Supabase.UserDataTable.getUserBookmarks()
                 let mergedBookmarks = mergeBookmarks(local: bookmarks, server: serverBookmarks)
                 
                 bookmarks = mergedBookmarks
-                try await upsertToServer(mergedBookmarks)
+                try await Utilities.Supabase.UserDataTable.updateUserBookmarks(mergedBookmarks)
                 saveLocalBookmarks()
                 Defaults[.last_bookmarks_sync] = Date()
                 Defaults[.has_pending_bookmark_changes] = false
                 syncStatus = .synced
-                
-                print("Bookmarks synced successfully")
             } catch {
                 syncStatus = .failed
-                print("Sync failed: \(error)")
             }
             
             isSyncing = false
         }
-    
-        private func fetchServerBookmarks() async throws -> [Types.Supabase.Bookmarks] {
-            let response = try await Utilities.Supabase.client
-                .from("ws-user-data")
-                .select("quran_bookmarks")
-                .execute()
-                                        
-            return decodeBookmarkData(response).sorted { $0.created_at > $1.created_at }
-        }
-        
+
         private func mergeBookmarks(local: [Types.Supabase.Bookmarks], server: [Types.Supabase.Bookmarks]) -> [Types.Supabase.Bookmarks] {
             var mergedBookmarks: [UUID: Types.Supabase.Bookmarks] = [:]
             
@@ -177,7 +172,7 @@ extension Utilities.Quran {
             
             if await canSyncWithServer() && !onlyLocally {
                 do {
-                    try await upsertToServer([])
+                    try await Utilities.Supabase.UserDataTable.updateUserBookmarks([])
                     Defaults[.has_pending_bookmark_changes] = false
                 } catch {
                     Defaults[.has_pending_bookmark_changes] = true
@@ -207,11 +202,11 @@ extension Utilities.Quran {
             )
             
             bookmarks.append(newBookmark)
-            saveLocalBookmarks()
+            saveLocalBookmarks(presentBookmarkSheet: true)
             
             if await canSyncWithServer() {
                 do {
-                    try await upsertToServer(bookmarks)
+                    try await Utilities.Supabase.UserDataTable.updateUserBookmarks(bookmarks)
                     Defaults[.has_pending_bookmark_changes] = false
                 } catch {
                     Defaults[.has_pending_bookmark_changes] = true
@@ -239,11 +234,11 @@ extension Utilities.Quran {
             )
             
             bookmarks.append(newBookmark)
-            saveLocalBookmarks()
+            saveLocalBookmarks(presentBookmarkSheet: true)
             
             if await canSyncWithServer() {
                 do {
-                    try await upsertToServer(bookmarks)
+                    try await Utilities.Supabase.UserDataTable.updateUserBookmarks(bookmarks)
                     Defaults[.has_pending_bookmark_changes] = false
                 } catch {
                     Defaults[.has_pending_bookmark_changes] = true
@@ -272,11 +267,10 @@ extension Utilities.Quran {
                 
                 if await canSyncWithServer() {
                     do {
-                        try await upsertToServer(bookmarks)
+                        try await Utilities.Supabase.UserDataTable.updateUserBookmarks(bookmarks)
                         Defaults[.has_pending_bookmark_changes] = false
                     } catch {
                         Defaults[.has_pending_bookmark_changes] = true
-                        print("Failed to sync note: \(error)")
                     }
                 } else {
                     Defaults[.has_pending_bookmark_changes] = true
@@ -307,7 +301,7 @@ extension Utilities.Quran {
                 
                 if await canSyncWithServer() {
                     do {
-                        try await upsertToServer(bookmarks)
+                        try await Utilities.Supabase.UserDataTable.updateUserBookmarks(bookmarks)
                         Defaults[.has_pending_bookmark_changes] = false
                     } catch {
                         Defaults[.has_pending_bookmark_changes] = true
@@ -342,11 +336,10 @@ extension Utilities.Quran {
                 
                 if await canSyncWithServer() {
                     do {
-                        try await upsertToServer(bookmarks)
+                        try await Utilities.Supabase.UserDataTable.updateUserBookmarks(bookmarks)
                         Defaults[.has_pending_bookmark_changes] = false
                     } catch {
                         Defaults[.has_pending_bookmark_changes] = true
-                        print("Failed to sync category removal: \(error)")
                     }
                 } else {
                     Defaults[.has_pending_bookmark_changes] = true
@@ -375,7 +368,7 @@ extension Utilities.Quran {
             
             if await canSyncWithServer() {
                 do {
-                    try await upsertToServer(bookmarks)
+                    try await Utilities.Supabase.UserDataTable.updateUserBookmarks(bookmarks)
                     Defaults[.has_pending_bookmark_changes] = false
                 } catch {
                     Defaults[.has_pending_bookmark_changes] = true
@@ -437,14 +430,7 @@ extension Utilities.Quran {
         func forceSyncWithServer() async {
             await syncWithServer()
         }
-        
-        private func upsertToServer(_ bookmarks: [Types.Supabase.Bookmarks]) async throws {
-            let _: PostgrestResponse<Void> = try await Utilities.Supabase.client
-                .from("ws-user-data")
-                .upsert(["quran_bookmarks": bookmarks])
-                .execute()
-        }
-        
+
         func decodeBookmarkData(_ data: PostgrestResponse<Void>?) -> [Types.Supabase.Bookmarks] {
             let string = data?.string()
             
@@ -464,21 +450,6 @@ extension Utilities.Quran {
                 print("Error decoding bookmark data", error.localizedDescription)
                 return []
             }
-        }
-        
-        @available(*, deprecated, message: "Use refresh() instead")
-        func ensureCanProceed() async -> Bool {
-            return await canSyncWithServer()
-        }
-        
-        @available(*, deprecated, message: "Use upsertToServer() instead")
-        func upsert(_ bookmarks: [Types.Supabase.Bookmarks]) async throws {
-            try await upsertToServer(bookmarks)
-        }
-        
-        @available(*, deprecated, message: "Use fetchServerBookmarks() instead")
-        func listAll() async throws -> [Types.Supabase.Bookmarks] {
-            return try await fetchServerBookmarks()
         }
         
         var hasPendingChanges: Bool {

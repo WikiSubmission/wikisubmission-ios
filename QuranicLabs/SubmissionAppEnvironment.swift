@@ -7,7 +7,7 @@ final class AppEnvironment: ObservableObject {
     static let shared = AppEnvironment()
     
     let BookmarkManager = Utilities.Quran.BookmarkManager.shared
-    let AudioPlayerManager = Utilities.Quran.AudioPlayerManager.shared
+    let AudioPlayerManager = Utilities.Quran.QuranAudioManager.shared
     let PrayerTimesManager = Utilities.PrayerTimes.PrayerTimesManager.shared
     let NetworkMonitor = Utilities.System.NetworkMonitor.shared
     

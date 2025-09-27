@@ -6,6 +6,8 @@ import Clerk
 
 @main
 struct SubmissionApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     @State private var clerk = Clerk.shared
     @State private var clerkLoaded = false
 

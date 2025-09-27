@@ -9,8 +9,8 @@ import MediaPlayer
 import AVFAudio
 
 extension Utilities.Quran {
-    class AudioPlayerManager: ObservableObject, AudioPlayerDelegate {
-        static let shared = AudioPlayerManager()
+    class QuranAudioManager: ObservableObject, AudioPlayerDelegate {
+        static let shared = QuranAudioManager()
         
         @Published var currentVerseId: String? = nil
         @Published var isQueueActive: Bool = false
@@ -31,7 +31,7 @@ extension Utilities.Quran {
         
         func getAudioLink(for verseId: String) -> URL {
             let reciter = UserDefaults.standard.string(forKey: "quran_reciter") ?? "mishary"
-            let urlString = "https://ws-quran-recitations.wikisubmission.org/arabic/\(reciter)/\(verseId.replacingOccurrences(of: ":", with: "-")).mp3"
+            let urlString = "https://cdn.wikisubmission.org/media/quran-recitations/arabic-\(reciter)/\(verseId.replacingOccurrences(of: ":", with: "-")).mp3"
             
             return URL(string: urlString)!
         }
@@ -45,7 +45,7 @@ extension Utilities.Quran {
     }
 }
 
-extension Utilities.Quran.AudioPlayerManager {
+extension Utilities.Quran.QuranAudioManager {
     func audioPlayerDidStartPlaying(player: AudioStreaming.AudioPlayer, with entryId: AudioStreaming.AudioEntryId) {
     }
     

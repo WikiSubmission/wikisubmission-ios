@@ -24,6 +24,7 @@ struct PrayerTimesView: View {
             }
             .navigationTitle("Prayer Times")
             .navigationBarTitleDisplayMode(.large)
+            .scrollIndicators(.hidden)
             .onAppear(perform: setupRefreshTimer)
             .onDisappear(perform: cleanup)
             .searchable(text: $query, isPresented: $presentSearchbar, prompt: "Enter your city")
@@ -114,6 +115,9 @@ private extension PrayerTimesView {
                     TinyCard(title: "Qibla", systemImage: "safari.fill") {
                         QiblaView()
                     }
+                    TinyCard(title: "Notifications", systemImage: "bell.badge.fill") {
+                        NotificationsView()
+                    }
                     TinyCard(title: "Prayer Guide", systemImage: "info.circle.text.page.fill") {
                         WebView(url: URL(string: "https://library.wikisubmission.org/file/salat-brochure")!)
                     }
@@ -133,6 +137,7 @@ private extension PrayerTimesView {
         Group {
             Button("Delete", role: .destructive) {
                 environment.PrayerTimesManager.removeSavedCity()
+                presentSearchbar = true
             }
             Button("Cancel", role: .cancel) {}
         }
@@ -325,7 +330,7 @@ struct PrayerTimesCard: View {
                         systemImage: "clock"
                     )
                     .font(.callout)
-                    .foregroundStyle(prayerData.currentPrayerTimeElapsed.contains("h") ? .gray : .red)
+                    .foregroundStyle(prayerData.currentPrayerTimeElapsed.contains("h") ? .accent : .red)
                 }
                 
                 if isUpcomingPrayer && environment.NetworkMonitor.hasInternet {

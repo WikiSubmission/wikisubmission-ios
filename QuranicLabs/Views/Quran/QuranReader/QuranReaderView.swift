@@ -115,7 +115,7 @@ struct QuranReaderView: View {
                 let isBookmarked = environment.BookmarkManager.isBookmarked(chapter: data.first?.chapter_number)
                 Label("", systemImage: isBookmarked ? "star.fill" : "star")
                     .labelStyle(.iconOnly)
-                    .foregroundStyle(isBookmarked ? .yellow : .accent)
+                    .foregroundStyle(isBookmarked ? .orange : .accent)
             }
             
             // Share button

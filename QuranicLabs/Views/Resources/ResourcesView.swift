@@ -3,7 +3,7 @@ import SwiftUI
 struct ResourcesView: View {
     var body: some View {
         NavigationStack {
-            ScrollView {
+            ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 8) {
                     LargeCard(
                         title: "Quran Talk Blog",

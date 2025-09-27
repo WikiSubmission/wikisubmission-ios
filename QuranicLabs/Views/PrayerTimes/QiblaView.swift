@@ -98,7 +98,7 @@ private struct StatusCardsView: View {
     var body: some View {
         VStack {
             HStack {
-                Text("PREVIEW MODE")
+                Text("PREVIEW")
                 Spacer()
                 Button {
                     let subject = "Re: Qibla Feature".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "Re: Qibla Feature"

@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Defaults
 
 extension Utilities.PrayerTimes {
     class PrayerTimesManager: ObservableObject {
@@ -16,9 +17,15 @@ extension Utilities.PrayerTimes {
                 }
             }
         }
+        
         @Published var isLoading = false
         
-        @ObservedObject var networkMonitor = Utilities.System.NetworkMonitor.shared
+        let networkMonitor = Utilities.System.NetworkMonitor.shared
+        
+        var prayerTimeLocation: String? {
+            get { Defaults[.prayer_time_location] }
+            set { Defaults[.prayer_time_location] = newValue }
+        }
         
         private var refreshTimer: Timer?
         
@@ -35,11 +42,14 @@ extension Utilities.PrayerTimes {
         
         func fetchPrayerTimes(for location: String) {
             
+            prayerTimeLocation = location
+            
             guard networkMonitor.hasInternet else { return }
             
             isLoading = true
-            let encodedCity = location.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? location
-            let urlString = "https://practices.wikisubmission.org/prayer-times/\(encodedCity.lowercased())?client=ios"
+            let encodedLocation = location.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? location
+            let useMidpointMethodForAsr = UserDefaults.standard.bool(forKey: Defaults.Keys.use_midpoint_method_for_asr.name)
+            let urlString = "https://practices.wikisubmission.org/prayer-times/\(encodedLocation.lowercased())?client=ios&\(useMidpointMethodForAsr == true ? "asr_adjustment=true" : "")"
             guard let url = URL(string: urlString) else {
                 DispatchQueue.main.async {
                     self.isLoading = false
@@ -53,7 +63,6 @@ extension Utilities.PrayerTimes {
                 }
                 if let error = error {
                     print("Error fetching prayer times:", error)
-                    
                     return
                 }
                 guard let data = data else {
@@ -74,6 +83,7 @@ extension Utilities.PrayerTimes {
         func refresh() {
             guard let data = prayerTimesData else { return }
             let location = "\(data.city),\(data.region),\(data.country)"
+            prayerTimeLocation = location
             fetchPrayerTimes(for: location)
         }
         
@@ -84,7 +94,12 @@ extension Utilities.PrayerTimes {
         }
         
         func removeSavedCity() {
+            prayerTimeLocation = nil
             prayerTimesData = nil
+            
+            Task {
+                try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+            }
         }
     }
 }

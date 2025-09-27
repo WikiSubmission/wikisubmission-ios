@@ -100,9 +100,6 @@ struct QuranVerseInfo: View {
                     let bookmark = environment.BookmarkManager.get(verseID: data?.verse_id)
                     if (bookmark == nil) {
                         await environment.BookmarkManager.addVerse(data!.verse_id)
-                        SheetKit().presentWithEnvironment {
-                            QuranBookmarks()
-                        }
                     } else {
                         await environment.BookmarkManager.remove(bookmarkID: bookmark!.id)
                     }
