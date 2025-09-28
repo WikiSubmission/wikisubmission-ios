@@ -46,6 +46,9 @@ struct HomeView: View {
                                 TinyCard(title: "Qibla", systemImage: "safari.fill") {
                                     QiblaView()
                                 }
+                                TinyCard(title: "Notifications", systemImage: "bell.square.fill") {
+                                    NotificationsView()
+                                }
                             }
                         }
                         .padding()

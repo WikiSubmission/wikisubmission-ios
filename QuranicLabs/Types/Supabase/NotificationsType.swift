@@ -4,6 +4,8 @@ extension Types.Supabase {
     struct Notifications: Encodable, Decodable {
         let platform: String
         let prayer_notifications: Bool?
+        let daily_verse_notifications: Bool?
+        let daily_chapter_notifications: Bool?
         let device_token: String?
         let updated_at: String?
     }
@@ -16,5 +18,14 @@ extension Types.Supabase {
         let maghrib: Bool?
         let isha: Bool?
         let location: String?
+        let use_midpoint_method_for_asr: Bool?
+    }
+    
+    struct DailyVerseNotifications: Encodable, Decodable {
+        let device_token: String?
+    }
+    
+    struct DailyChapterNotifications: Encodable, Decodable {
+        let device_token: String?
     }
 }

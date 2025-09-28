@@ -1,6 +1,8 @@
 import UIKit
 import SwiftUI
 import UserNotifications
+import SheetKit
+import Defaults
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     
@@ -36,11 +38,40 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     }
     
     // Called when user taps on a notification
+    @MainActor
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse,
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
+        let category = response.notification.request.content.categoryIdentifier
+        
+        print("Tapped \(category) notification")
+                
         let userInfo = response.notification.request.content.userInfo
-        print("Tapped notification:", userInfo)
+                
+        if category == "PRAYER_TIMES" {
+            SheetKit().present {
+                PrayerTimesView()
+            }
+        }
+        
+        if let verseId = userInfo["verse_id"] as? String {
+            
+            print("Tapped on verse \(verseId)")
+            
+            if category == "DAILY_VERSE" {
+                Defaults[.daily_verse] = verseId
+            }
+        }
+        
+        if let chapterNumber = userInfo["chapter_number"] as? Int {
+            if category == "DAILY_CHAPTER" {
+                Defaults[.daily_chapter] = chapterNumber
+            }
+        }
+        
+        if let deepLink = userInfo["deepLink"] as? String, let url = URL(string: deepLink) {
+            UIApplication.shared.open(url)
+        }
         
         completionHandler()
     }

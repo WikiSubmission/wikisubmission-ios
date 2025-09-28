@@ -1,4 +1,5 @@
 import SwiftUI
+import SheetKit
 
 struct TabsView: View {
     @State private var activeTab: TabItem = .home
@@ -28,6 +29,32 @@ struct TabsView: View {
                     Label(TabItem.settings.rawValue, systemImage: TabItem.settings.symbol)
                 }
                 .tag(TabItem.settings)
+        }
+        .onOpenURL { url in
+            guard url.scheme == "wikisubmission" else { return }
+
+            if url.host == "prayer-times" {
+                activeTab = .prayer
+            } else if url.host == "verse" {
+                let verseId = url.lastPathComponent
+                SheetKit().presentWithEnvironment {
+                    NavigationStack {
+                        QuranReaderView(
+                            chapter: Int(verseId.split(separator: ":")[0]) ?? 1,
+                            scrollToVerseID: verseId
+                        )
+                    }
+                }
+            } else if url.host == "chapter" {
+                let chapterNumber = Int(url.lastPathComponent)
+                SheetKit().presentWithEnvironment {
+                    NavigationStack {
+                        QuranReaderView(
+                            chapter: chapterNumber ?? 1
+                        )
+                    }
+                }
+            }
         }
     }
 }

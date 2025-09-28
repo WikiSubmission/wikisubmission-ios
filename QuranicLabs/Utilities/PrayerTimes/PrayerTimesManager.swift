@@ -20,8 +20,6 @@ extension Utilities.PrayerTimes {
         
         @Published var isLoading = false
         
-        let networkMonitor = Utilities.System.NetworkMonitor.shared
-        
         var prayerTimeLocation: String? {
             get { Defaults[.prayer_time_location] }
             set { Defaults[.prayer_time_location] = newValue }
@@ -44,7 +42,7 @@ extension Utilities.PrayerTimes {
             
             prayerTimeLocation = location
             
-            guard networkMonitor.hasInternet else { return }
+            guard Utilities.System.NetworkMonitor.shared.hasInternet else { return }
             
             isLoading = true
             let encodedLocation = location.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? location

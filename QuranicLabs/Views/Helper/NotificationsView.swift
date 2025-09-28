@@ -4,17 +4,21 @@ import UserNotifications
 
 struct NotificationsView: View {
     @State private var authorization: UNAuthorizationStatus? = nil
-    
+    @Environment(\.scenePhase) private var scenePhase
+
+    @Default(.device_token) var deviceToken
     @Default(.prompted_for_notifications) var promptedForNotifications
+    
     @Default(.prayer_notifications) var prayerNotifications
+    @Default(.prayer_time_location) var prayerTimeLocation
     @Default(.fajr_notification) var fajrNotifications
     @Default(.dhuhr_notification) var dhuhrNotifications
     @Default(.asr_notification) var asrNotifications
     @Default(.maghrib_notification) var maghribNotifications
     @Default(.isha_notification) var ishaNotifications
     
-    @Default(.device_token) var deviceToken
-    @Default(.prayer_time_location) var prayerTimeLocation
+    @Default(.random_verse_notifications) var randomVerseNotifications
+    @Default(.random_chapter_notifications) var randomChapterNotifications
     
     var body: some View {
         NavigationStack {
@@ -27,68 +31,42 @@ struct NotificationsView: View {
                                     Text("Prayer Times")
                                 }
                             }
-                            
-                            if prayerNotifications {
-                                Section("PRAYERS") {
-                                    Toggle(isOn: $fajrNotifications) {
-                                        Text("Fajr")
-                                    }
-                                    Toggle(isOn: $dhuhrNotifications) {
-                                        Text("Dhuhr")
-                                    }
-                                    Toggle(isOn: $asrNotifications) {
-                                        Text("Asr")
-                                    }
-                                    Toggle(isOn: $maghribNotifications) {
-                                        Text("Maghrib")
-                                    }
-                                    Toggle(isOn: $ishaNotifications) {
-                                        Text("Isha")
-                                    }
+                            .onChange(of: prayerNotifications) { _, newState in
+                                Task {
+                                    try? await Utilities.Supabase.NotificationsTable.syncWithServer()
                                 }
-                                .onChange(of: prayerNotifications) { _, newValue in
-                                    Task {
-                                        try? await Utilities.Supabase.NotificationsTable.syncWithServer()
-                                    }
-                                }
-                                .onChange(of: fajrNotifications) { _, newValue in
-                                    Task {
-                                        try? await Utilities.Supabase.NotificationsTable.syncWithServer()
-                                    }
-                                }
-                                .onChange(of: dhuhrNotifications) { _, newValue in
-                                    Task {
-                                        try? await Utilities.Supabase.NotificationsTable.syncWithServer()
-                                    }
-                                }
-                                .onChange(of: asrNotifications) { _, newValue in
-                                    Task {
-                                        try? await Utilities.Supabase.NotificationsTable.syncWithServer()
-                                    }
-                                }
-                                .onChange(of: maghribNotifications) { _, newValue in
-                                    Task {
-                                        try? await Utilities.Supabase.NotificationsTable.syncWithServer()
-                                    }
-                                }
-                                .onChange(of: ishaNotifications) { _, newValue in
-                                    Task {
-                                        try? await Utilities.Supabase.NotificationsTable.syncWithServer()
-                                    }
+                                if newState == true {
+                                    alertNotificationsEnabled()
                                 }
                             }
                             
+                            if prayerNotifications {
+                                PrayerNotificationsSection(
+                                    fajrNotifications: $fajrNotifications,
+                                    dhuhrNotifications: $dhuhrNotifications,
+                                    asrNotifications: $asrNotifications,
+                                    maghribNotifications: $maghribNotifications,
+                                    ishaNotifications: $ishaNotifications
+                                )
+                            }
+                            
+                            QuranNotificationsSection(
+                                randomVerseNotifications: $randomVerseNotifications,
+                                randomChapterNotifications: $randomChapterNotifications
+                            )
+                            
                             Button {
-                                let content = UNMutableNotificationContent()
-                                content.title = "Test Notification"
-                                content.body = "This is just a test."
-                                
-                                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false)
-                                let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
-                                
-                                UNUserNotificationCenter.current().add(request)
+                                guard let token = deviceToken, !token.isEmpty else { return }
+                                guard let url = URL(string: "https://notifications.wikisubmission.org/random-verse") else { return }
+                                var request = URLRequest(url: url)
+                                request.httpMethod = "POST"
+                                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                                let body: [String: String] = ["device_token": token]
+                                request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+                                let task = URLSession.shared.dataTask(with: request) { _, _, _ in }
+                                task.resume()
                             } label: {
-                                Label("Send Test Notification", systemImage: "bell.fill")
+                                Text("Send Test Notification")
                             }
                         }
                         .clipShape(RoundedRectangle(cornerRadius: 24))
@@ -122,12 +100,116 @@ struct NotificationsView: View {
                 }
             }
             .navigationTitle("Notifications")
+            .toolbarTitleDisplayMode(.large)
         }
-        .onAppear {
-            UNUserNotificationCenter.current().getNotificationSettings() { settings in
-                self.authorization = settings.authorizationStatus
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                refreshAuthorization()
             }
-            
+        }
+        .task {
+            refreshAuthorization()
+            try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+        }
+    }
+    
+    private func refreshAuthorization() {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                self.authorization = settings.authorizationStatus
+                if settings.authorizationStatus == .authorized {
+                    Task {
+                        try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+                    }
+                }
+            }
+        }
+    }
+    
+    private func alertNotificationsEnabled() {
+        let content = UNMutableNotificationContent()
+        content.title = "All set!"
+        content.body = "Notifications are now enabled. You can adjust what you need in the app!"
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+        
+        UNUserNotificationCenter.current().add(request)
+    }
+}
+
+private struct PrayerNotificationsSection: View {
+    @Binding var fajrNotifications: Bool
+    @Binding var dhuhrNotifications: Bool
+    @Binding var asrNotifications: Bool
+    @Binding var maghribNotifications: Bool
+    @Binding var ishaNotifications: Bool
+    
+    var body: some View {
+        Section(header: Text("PRAYER TIMES"), footer: Text("Prayer reminders are sent 10 minutes before each enabled prayer.")) {
+            Toggle(isOn: $fajrNotifications) {
+                Text("Fajr")
+            }
+            Toggle(isOn: $dhuhrNotifications) {
+                Text("Dhuhr")
+            }
+            Toggle(isOn: $asrNotifications) {
+                Text("Asr")
+            }
+            Toggle(isOn: $maghribNotifications) {
+                Text("Maghrib")
+            }
+            Toggle(isOn: $ishaNotifications) {
+                Text("Isha")
+            }
+        }
+        .onChange(of: fajrNotifications) { _, _ in
+            Task {
+                try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+            }
+        }
+        .onChange(of: dhuhrNotifications) { _, _ in
+            Task {
+                try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+            }
+        }
+        .onChange(of: asrNotifications) { _, _ in
+            Task {
+                try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+            }
+        }
+        .onChange(of: maghribNotifications) { _, _ in
+            Task {
+                try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+            }
+        }
+        .onChange(of: ishaNotifications) { _, _ in
+            Task {
+                try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+            }
+        }
+    }
+}
+
+private struct QuranNotificationsSection: View {
+    @Binding var randomVerseNotifications: Bool
+    @Binding var randomChapterNotifications: Bool
+    
+    var body: some View {
+        Section(header: Text("QURAN"), footer: Text("These are sent once a day.")) {
+            Toggle(isOn: $randomChapterNotifications) {
+                Text("Daily Chapter")
+            }
+            Toggle(isOn: $randomVerseNotifications) {
+                Text("Daily Verse")
+            }
+        }
+        .onChange(of: randomVerseNotifications) { _, _ in
+            Task {
+                try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+            }
+        }
+        .onChange(of: randomChapterNotifications) { _, _ in
             Task {
                 try? await Utilities.Supabase.NotificationsTable.syncWithServer()
             }
