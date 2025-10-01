@@ -12,7 +12,7 @@ extension Utilities.System {
             try? await Clerk.shared.signOut()
             
             // Clear prayer times
-            await AppEnvironment.shared.PrayerTimesManager.removeSavedCity()
+            AppEnvironment.shared.PrayerTimesManager.removeSavedCity()
             
             // Reset all Defaults keys (including onboarded)
             Defaults.removeAll()

@@ -7,7 +7,7 @@ struct AsrMethodToggle: View {
         Toggle("Use midpoint method for Asr prayer", isOn: $useMidPointMethodForAsr)
             .onChange(of: useMidPointMethodForAsr) { _, _ in
                 Task {
-                    try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+                    try? await Utilities.Notifications.syncWithDatabase()
                 }
             }
     }

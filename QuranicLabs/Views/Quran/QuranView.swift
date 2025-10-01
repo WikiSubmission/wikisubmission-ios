@@ -59,6 +59,8 @@ struct QuranView: View {
                         
                         // Search results view
                         searchResultsView
+                        
+                        Color.clear.frame(height: 32)
                     }
                     .frame(maxWidth: .infinity)
                     // Scroll to top on query change
@@ -313,5 +315,5 @@ struct QuranView: View {
 
 #Preview {
     QuranView()
-        .environmentObject(Utilities.Quran.BookmarkManager.shared)
+        .environmentObject(AppEnvironment.shared)
 }

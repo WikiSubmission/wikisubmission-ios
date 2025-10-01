@@ -1,6 +1,7 @@
 import SwiftUI
 import SheetKit
 import Defaults
+import Clerk
 
 struct QuranVerseCard: View {
     let id: String
@@ -21,8 +22,7 @@ struct QuranVerseCard: View {
     @Default(.primary_language) private var primaryLanguage
     @Default(.secondary_language) private var secondaryLanguage
     @Default(.font_size) private var fontSize
-
-    @EnvironmentObject private var environment: AppEnvironment
+    @Default(.bookmarks) private var bookmarks
 
     @Environment(\.colorScheme) private var theme
     
@@ -45,7 +45,7 @@ struct QuranVerseCard: View {
                     content(data: data)
                         .padding(removeFormatting ? 0 : 12)
                         .background(removeFormatting ? Color.clear : Color.secondary.opacity(showHighlight ? 0.14 : theme == .dark ? 0.06 : 0.09))
-                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                        .clipShape(RoundedRectangle(cornerRadius: removeFormatting ? 4 : 24))
                         .task {
                             if isScrolledTo {
                                 showHighlight = true
@@ -66,15 +66,28 @@ struct QuranVerseCard: View {
                             
                             Button {
                                 Task {
-                                    let bookmark = environment.BookmarkManager.get(verseID: data.verse_id)
-                                    if (bookmark == nil) {
-                                        await environment.BookmarkManager.addVerse(data.verse_id)
+                                    if let bookmark = bookmarks.first(where: {
+                                        $0.key == id
+                                    }) {
+                                        try? await Utilities.Bookmarks.removeBookmark(bookmark)
                                     } else {
-                                        await environment.BookmarkManager.remove(bookmarkID: bookmark!.id)
+                                        try? await Utilities.Bookmarks.addBookmark(.init(
+                                            created_at: Date().ISO8601Format(),
+                                            updated_at: nil,
+                                            type: .verse,
+                                            key: id,
+                                            category: nil,
+                                            notes: nil,
+                                            user_id: Clerk.shared.user?.id
+                                        ))
+                                        
+                                        SheetKit().presentWithEnvironment {
+                                            QuranBookmarks()
+                                        }
                                     }
                                 }
                             } label: {
-                                let isBookmarked = environment.BookmarkManager.isBookmarked(verseID: data.verse_id)
+                                let isBookmarked = bookmarks.contains(where: { $0.key == id })
                                 Label(isBookmarked ? "Remove bookmark" : "Bookmark", systemImage: isBookmarked ? "star.fill" : "star")
                                     .foregroundStyle(isBookmarked ? .red : .accent)
                             }
@@ -120,7 +133,7 @@ struct QuranVerseCard: View {
                 .padding(.horizontal, 1)
             Text(parts[1])
                 .foregroundStyle(.secondary)
-            if !removeBookmarkedIcon && environment.BookmarkManager.isBookmarked(verseID: data.verse_id) {
+            if !removeBookmarkedIcon && bookmarks.contains(where: { $0.key == id }) {
                 Image(systemName: "star.fill")
                     .resizable()
                     .scaledToFit()

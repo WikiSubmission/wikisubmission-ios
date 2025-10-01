@@ -1,7 +1,13 @@
+import Foundation
+import Defaults
+
 extension Utilities.System {
-    @MainActor
     static func signOutTasks() async {
-        // Reset bookmarks
-        await AppEnvironment.shared.BookmarkManager.clearAll(onlyLocally: true)
+        // Sync bookmarks
+        if UserDefaults.standard.bool(forKey: Defaults.Keys.bookmarked_synced.name) == false {
+            Task {
+                try? await Utilities.Bookmarks.syncWithDatabase()
+            }
+        }
     }
 }

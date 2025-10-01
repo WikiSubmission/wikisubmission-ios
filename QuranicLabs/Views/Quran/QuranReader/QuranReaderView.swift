@@ -1,6 +1,7 @@
 import SwiftUI
 import Defaults
 import SheetKit
+import Clerk
 
 struct QuranReaderView: View {
     var chapter: Int
@@ -8,9 +9,8 @@ struct QuranReaderView: View {
     
     @State private var data: [Types.Quran.Data] = []
     
-    @EnvironmentObject private var environment: AppEnvironment
-    
     @Default(.primary_language) private var primaryLanguage
+    @Default(.bookmarks) var bookmarks
 
     var body: some View {
         VStack {
@@ -35,42 +35,7 @@ struct QuranReaderView: View {
     }
     
     private var chapterHeader: some View {
-        VStack {
-            Text("SURA \(chapter)")
-                .font(.title)
-                .fontWeight(.ultraLight)
-                .foregroundStyle(.secondary)
-                .pushToLeft()
-            
-            HStack {
-                Text("\(data.first!.getChapterTitle(for: primaryLanguage)) · \(data.first!.chapter_title_arabic)")
-                    .pushToLeft()
-                Text("\(data.first!.chapter_verses) verses")
-                    .foregroundStyle(.secondary)
-            }
-            .fontWeight(.ultraLight)
-            .foregroundStyle(.primary)
-        }
-        .padding()
-        .background(Color.accent.opacity(0.10))
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        .fontDesign(.serif)
-        .contextMenu {
-            Button {
-                Task {
-                    let bookmark = environment.BookmarkManager.get(chapter: chapter)
-                    if (bookmark == nil) {
-                        await environment.BookmarkManager.addChapter(chapter)
-                    } else {
-                        await environment.BookmarkManager.remove(bookmarkID: bookmark!.id)
-                    }
-                }
-            } label: {
-                let isBookmarked = environment.BookmarkManager.isBookmarked(chapter: chapter)
-                Label(isBookmarked ? "Remove bookmark" : "Bookmark", systemImage: isBookmarked ? "x.circle" : "star")
-                    .foregroundStyle(isBookmarked ? .red : .primary)
-            }
-        }
+        QuranChapterCard(chapter: chapter, displayOnly: true)
     }
     
     private var verseList: some View {
@@ -84,6 +49,7 @@ struct QuranReaderView: View {
                         }
                     }
                 }
+                .clipShape(RoundedRectangle(cornerRadius: 24))
                 .onAppear {
                     Task {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -101,18 +67,31 @@ struct QuranReaderView: View {
     
     private var toolbar: some View {
         HStack(alignment: .center, spacing: 0) {
-            // Share button
+            // Bookmark button
             Button {
                 Task {
-                    let bookmark = environment.BookmarkManager.get(chapter: chapter)
-                    if (bookmark == nil) {
-                        await environment.BookmarkManager.addChapter(chapter)
+                    if let bookmark = bookmarks.first(where: {
+                        $0.key == String(chapter)
+                    }) {
+                        try? await Utilities.Bookmarks.removeBookmark(bookmark)
                     } else {
-                        await environment.BookmarkManager.remove(bookmarkID: bookmark!.id)
+                        try? await Utilities.Bookmarks.addBookmark(.init(
+                            created_at: Date().ISO8601Format(),
+                            updated_at: nil,
+                            type: .chapter,
+                            key: String(chapter),
+                            category: nil,
+                            notes: nil,
+                            user_id: Clerk.shared.user?.id
+                        ))
+                        
+                        SheetKit().presentWithEnvironment {
+                            QuranBookmarks()
+                        }
                     }
                 }
             } label: {
-                let isBookmarked = environment.BookmarkManager.isBookmarked(chapter: data.first?.chapter_number)
+                let isBookmarked = bookmarks.contains(where: { $0.key == String(chapter) })
                 Label("", systemImage: isBookmarked ? "star.fill" : "star")
                     .labelStyle(.iconOnly)
                     .foregroundStyle(isBookmarked ? .orange : .accent)

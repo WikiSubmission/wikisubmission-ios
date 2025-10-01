@@ -22,7 +22,7 @@ struct HomeView: View {
                 VStack(spacing: 24) {
                     Group {
                         VStack(spacing: 16) {
-                            FlexStack(verticalSpacing: 8) {
+                            FlexStack(verticalSpacing: 12, horizontalSpacing: 16) {
                                 TinyCard(title: "Search Quran", systemImage: "magnifyingglass.circle.fill") {
                                     QuranView(autoFocus: true)
                                 }

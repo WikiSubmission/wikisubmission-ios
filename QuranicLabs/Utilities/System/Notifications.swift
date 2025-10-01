@@ -37,7 +37,9 @@ extension Utilities.System {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             switch settings.authorizationStatus {
             case .notDetermined:
-                registerForPushNotifications()
+                Task { @MainActor in
+                    registerForPushNotifications()
+                }
             case .authorized, .provisional:
                 DispatchQueue.main.async {
                     UIApplication.shared.registerForRemoteNotifications()

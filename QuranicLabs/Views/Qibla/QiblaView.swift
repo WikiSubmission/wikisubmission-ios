@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct QiblaView: View {
-    @StateObject private var qiblaManager = QiblaManager()
+    @StateObject private var qiblaManager = Utilities.Qibla.QiblaManager()
     
     var body: some View {
         VStack(spacing: 0) {
@@ -27,7 +27,7 @@ struct QiblaView: View {
 }
 
 private struct DirectionalAidView: View {
-    @ObservedObject var qiblaManager: QiblaManager
+    @ObservedObject var qiblaManager: Utilities.Qibla.QiblaManager
     
     var body: some View {
         GeometryReader { geo in
@@ -92,7 +92,7 @@ private struct DirectionalAidView: View {
 }
 
 private struct StatusCardsView: View {
-    @ObservedObject var qiblaManager: QiblaManager
+    @ObservedObject var qiblaManager: Utilities.Qibla.QiblaManager
     @Environment(\.openURL) private var openURL
 
     var body: some View {
@@ -123,7 +123,7 @@ private struct CurrentHeadingView: View {
     let heading: Double
     let color: Color
     
-    @ObservedObject var qiblaManager: QiblaManager
+    @ObservedObject var qiblaManager: Utilities.Qibla.QiblaManager
 
     var body: some View {
         VStack(spacing: 12) {

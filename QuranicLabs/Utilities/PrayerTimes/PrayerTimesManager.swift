@@ -44,6 +44,12 @@ extension Utilities.PrayerTimes {
             
             guard Utilities.System.NetworkMonitor.shared.hasInternet else { return }
             
+            defer {
+                Task {
+                    try? await Utilities.Notifications.syncWithDatabase()
+                }
+            }
+            
             isLoading = true
             let encodedLocation = location.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? location
             let useMidpointMethodForAsr = UserDefaults.standard.bool(forKey: Defaults.Keys.use_midpoint_method_for_asr.name)
@@ -96,7 +102,7 @@ extension Utilities.PrayerTimes {
             prayerTimesData = nil
             
             Task {
-                try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+                try? await Utilities.Notifications.syncWithDatabase()
             }
         }
     }

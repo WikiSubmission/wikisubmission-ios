@@ -37,20 +37,21 @@ struct TabsView: View {
                 activeTab = .prayer
             } else if url.host == "verse" {
                 let verseId = url.lastPathComponent
+                let chapter = Int(verseId.split(separator: ":")[0]) ?? 1
                 SheetKit().presentWithEnvironment {
                     NavigationStack {
                         QuranReaderView(
-                            chapter: Int(verseId.split(separator: ":")[0]) ?? 1,
+                            chapter: chapter,
                             scrollToVerseID: verseId
                         )
                     }
                 }
             } else if url.host == "chapter" {
-                let chapterNumber = Int(url.lastPathComponent)
+                let chapterNumber = Int(url.lastPathComponent) ?? 1
                 SheetKit().presentWithEnvironment {
                     NavigationStack {
                         QuranReaderView(
-                            chapter: chapterNumber ?? 1
+                            chapter: chapterNumber
                         )
                     }
                 }

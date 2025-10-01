@@ -25,5 +25,5 @@ struct QuranRandomVerse: View {
 
 #Preview {
     QuranRandomVerse()
-        .environmentObject(Utilities.Quran.BookmarkManager.shared)
+        .environmentObject(AppEnvironment.shared)
 }

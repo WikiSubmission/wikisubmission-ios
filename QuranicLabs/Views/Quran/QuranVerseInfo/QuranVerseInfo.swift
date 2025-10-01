@@ -1,6 +1,7 @@
 import SwiftUI
 import SheetKit
 import Defaults
+import Clerk
 
 struct QuranVerseInfo: View {
     
@@ -11,6 +12,7 @@ struct QuranVerseInfo: View {
     @State private var wordByWordData: [Types.Quran.WordByWord] = []
     
     @Default(.arabic) var arabic
+    @Default(.bookmarks) var bookmarks
     
     var body: some View {
         if let data = data {
@@ -51,9 +53,9 @@ struct QuranVerseInfo: View {
     
     private var verseCardTop: some View {
         VStack {
-            let bookmark = environment.BookmarkManager.get(verseID: data?.verse_id)
+            let bookmark = bookmarks.first(where: { $0.key == data?.verse_id })
             if let bookmark = bookmark {
-                if environment.BookmarkManager.hasCategory(bookmark) {
+                if bookmark.category != nil {
                     Text(bookmark.category ?? "")
                         .fontDesign(.serif)
                         .foregroundStyle(. yellow)
@@ -97,15 +99,28 @@ struct QuranVerseInfo: View {
             
             Button {
                 Task {
-                    let bookmark = environment.BookmarkManager.get(verseID: data?.verse_id)
-                    if (bookmark == nil) {
-                        await environment.BookmarkManager.addVerse(data!.verse_id)
+                    if let bookmark = bookmarks.first(where: {
+                        $0.key == data?.verse_id
+                    }) {
+                        try? await Utilities.Bookmarks.removeBookmark(bookmark)
                     } else {
-                        await environment.BookmarkManager.remove(bookmarkID: bookmark!.id)
+                        try? await Utilities.Bookmarks.addBookmark(.init(
+                            created_at: Date().ISO8601Format(),
+                            updated_at: nil,
+                            type: .verse,
+                            key: data!.verse_id,
+                            category: nil,
+                            notes: nil,
+                            user_id: Clerk.shared.user?.id
+                        ))
+                        
+                        SheetKit().presentWithEnvironment {
+                            QuranBookmarks()
+                        }
                     }
                 }
             } label: {
-                let isBookmarked = environment.BookmarkManager.isBookmarked(verseID: data?.verse_id)
+                let isBookmarked = bookmarks.contains(where: { $0.key == data?.verse_id })
                 Label(isBookmarked ? "Remove bookmark" : "Bookmark", systemImage: isBookmarked ? "star.fill" : "star")
                     .foregroundStyle(isBookmarked ? .red : .accent)
             }
@@ -252,5 +267,5 @@ struct QuranVerseInfo: View {
 
 #Preview {
     QuranVerseInfo(data: AppData.Quran.sampleVerse)
-        .environmentObject(Utilities.Quran.BookmarkManager.shared)
+        .environmentObject(AppEnvironment.shared)
 }

@@ -10,6 +10,8 @@ struct SubmissionApp: App {
 
     @State private var clerk = Clerk.shared
     @State private var clerkLoaded = false
+    
+    @StateObject private var alertManager = Utilities.System.GlobalAlertManager.shared
 
     var body: some Scene {
         WindowGroup {
@@ -35,6 +37,10 @@ struct SubmissionApp: App {
                                 }
                             }
                         }
+                    }
+                    .sheet(item: $alertManager.alert) { alert in
+                        GlobalAlertView(alert: alert)
+                        .presentationDetents([.medium])
                     }
             } else {
                 ProgressView()

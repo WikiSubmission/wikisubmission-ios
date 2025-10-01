@@ -26,14 +26,14 @@ struct NotificationsView: View {
                 if let authorization = authorization {
                     if authorization == .authorized {
                         List {
-                            Section("ENABLE NOTIFICATIONS") {
+                            Section(header: Text("ENABLE NOTIFICATIONS"), footer: prayerTimeLocation?.count ?? 0 > 0 ? nil : Label("Add a city on the prayer time section so we can calculate your prayer times (and send reminders).", systemImage: "exclamationmark.triangle")) {
                                 Toggle(isOn: $prayerNotifications) {
                                     Text("Prayer Times")
                                 }
                             }
                             .onChange(of: prayerNotifications) { _, newState in
                                 Task {
-                                    try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+                                    try? await Utilities.Notifications.syncWithDatabase()
                                 }
                                 if newState == true {
                                     alertNotificationsEnabled()
@@ -109,7 +109,7 @@ struct NotificationsView: View {
         }
         .task {
             refreshAuthorization()
-            try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+            try? await Utilities.Notifications.syncWithDatabase()
         }
     }
     
@@ -119,7 +119,7 @@ struct NotificationsView: View {
                 self.authorization = settings.authorizationStatus
                 if settings.authorizationStatus == .authorized {
                     Task {
-                        try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+                        try? await Utilities.Notifications.syncWithDatabase()
                     }
                 }
             }
@@ -165,27 +165,27 @@ private struct PrayerNotificationsSection: View {
         }
         .onChange(of: fajrNotifications) { _, _ in
             Task {
-                try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+                try? await Utilities.Notifications.syncWithDatabase()
             }
         }
         .onChange(of: dhuhrNotifications) { _, _ in
             Task {
-                try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+                try? await Utilities.Notifications.syncWithDatabase()
             }
         }
         .onChange(of: asrNotifications) { _, _ in
             Task {
-                try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+                try? await Utilities.Notifications.syncWithDatabase()
             }
         }
         .onChange(of: maghribNotifications) { _, _ in
             Task {
-                try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+                try? await Utilities.Notifications.syncWithDatabase()
             }
         }
         .onChange(of: ishaNotifications) { _, _ in
             Task {
-                try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+                try? await Utilities.Notifications.syncWithDatabase()
             }
         }
     }
@@ -206,12 +206,12 @@ private struct QuranNotificationsSection: View {
         }
         .onChange(of: randomVerseNotifications) { _, _ in
             Task {
-                try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+                try? await Utilities.Notifications.syncWithDatabase()
             }
         }
         .onChange(of: randomChapterNotifications) { _, _ in
             Task {
-                try? await Utilities.Supabase.NotificationsTable.syncWithServer()
+                try? await Utilities.Notifications.syncWithDatabase()
             }
         }
     }
