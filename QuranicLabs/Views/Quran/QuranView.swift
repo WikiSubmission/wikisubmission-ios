@@ -63,6 +63,8 @@ struct QuranView: View {
                         Color.clear.frame(height: 32)
                     }
                     .frame(maxWidth: .infinity)
+                    // Helps with scrolling on Mac
+                    .scrollBounceBehavior(.basedOnSize)
                     // Scroll to top on query change
                     .onChange(of: queryResults) { _, _ in
                         withAnimation {
