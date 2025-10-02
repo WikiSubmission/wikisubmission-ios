@@ -146,7 +146,7 @@ private struct PrayerNotificationsSection: View {
     @Binding var ishaNotifications: Bool
     
     var body: some View {
-        Section(header: Text("PRAYER TIMES"), footer: Text("Prayer reminders are sent 10 minutes before each enabled prayer.")) {
+        Section(header: Text("PRAYER REMINDERS"), footer: Text("Prayer reminders are sent 10 minutes before each enabled prayer.")) {
             Toggle(isOn: $fajrNotifications) {
                 Text("Fajr")
             }
@@ -196,7 +196,7 @@ private struct QuranNotificationsSection: View {
     @Binding var randomChapterNotifications: Bool
     
     var body: some View {
-        Section(header: Text("QURAN"), footer: Text("These are sent once a day.")) {
+        Section(header: Text("QURAN REMINDERS"), footer: Text("These are sent once a day.")) {
             Toggle(isOn: $randomChapterNotifications) {
                 Text("Daily Chapter")
             }
