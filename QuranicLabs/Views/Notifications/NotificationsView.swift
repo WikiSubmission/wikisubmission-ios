@@ -17,8 +17,8 @@ struct NotificationsView: View {
     @Default(.maghrib_notification) var maghribNotifications
     @Default(.isha_notification) var ishaNotifications
     
-    @Default(.random_verse_notifications) var randomVerseNotifications
-    @Default(.random_chapter_notifications) var randomChapterNotifications
+    @Default(.daily_verse_notifications) var randomVerseNotifications
+    @Default(.daily_chapter_notifications) var randomChapterNotifications
     
     var body: some View {
         NavigationStack {

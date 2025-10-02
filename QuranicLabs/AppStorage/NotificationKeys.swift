@@ -11,8 +11,8 @@ extension Defaults.Keys {
     static let isha_notification = Key<Bool>("isha_notification", default: true)
     static let prayer_time_location = Key<String?>("prayer_time_location", default: nil)
     
-    static let random_verse_notifications = Key<Bool>("random_verse_notifications", default: false)
-    static let random_chapter_notifications = Key<Bool>("random_chapter_notifications", default: false)
+    static let daily_verse_notifications = Key<Bool>("daily_verse_notifications", default: false)
+    static let daily_chapter_notifications = Key<Bool>("daily_chapter_notifications", default: false)
     
     static let daily_chapter = Key<Int?>("daily_chapter", default: nil)
     static let daily_verse = Key<String?>("daily_verse", default: nil)

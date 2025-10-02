@@ -8,7 +8,7 @@ extension Utilities.Notifications {
         }
         
         do {
-            try await Utilities.Supabase.anonClient
+            try await Utilities.Supabase.client
                 .from("ws-notifications")
                 .upsert(Types.Notifications.Notification(
                     platform: "ios",
@@ -26,11 +26,11 @@ extension Utilities.Notifications {
                         )
                     ),
                     daily_verse_notifications: .init(
-                        enabled: Defaults[.random_verse_notifications],
+                        enabled: Defaults[.daily_verse_notifications],
                         customization: .init()
                     ),
                     daily_chapter_notifications: .init(
-                        enabled: Defaults[.random_chapter_notifications],
+                        enabled: Defaults[.daily_chapter_notifications],
                         customization: .init()
                     )
                 ),
