@@ -1,21 +1,16 @@
 import Foundation
 import Defaults
-import Clerk
 
 extension Utilities.System {
     static func resetTasks() async {
         Task {
-            // Run sign out tasks
-            await Utilities.System.signOutTasks()
-            
-            // Sign out
-            try? await Clerk.shared.signOut()
-            
             // Clear prayer times
             AppEnvironment.shared.PrayerTimesManager.removeSavedCity()
             
-            // Reset all Defaults keys (including onboarded)
-            Defaults.removeAll()
+            // Reset necassary Defaults keys (including onboarded)
+            Defaults.resetOnboardedState()
+            Defaults.resetQuranPreferences()
+            Defaults.resetPrayerTimeSettings()
         }
     }
 }

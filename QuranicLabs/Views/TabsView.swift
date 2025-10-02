@@ -1,8 +1,9 @@
 import SwiftUI
+import Defaults
 import SheetKit
 
 struct TabsView: View {
-    @State private var activeTab: TabItem = .home
+    @Default(.active_tab) private var activeTab
 
     var body: some View {
         TabView(selection: $activeTab) {
@@ -60,7 +61,7 @@ struct TabsView: View {
     }
 }
 
-enum TabItem: String, CaseIterable, Equatable {
+enum TabItem: String, CaseIterable, Equatable, Defaults.Serializable {
     case home = "Home"
     case prayer = "Prayer"
     case resources = "Resources"

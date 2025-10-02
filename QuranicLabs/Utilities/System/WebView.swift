@@ -8,7 +8,5 @@ struct WebView: UIViewControllerRepresentable {
     return SFSafariViewController(url: url)
   }
   
-  func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {
-    // Update the view controller if needed
-  }
+  func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {}
 }

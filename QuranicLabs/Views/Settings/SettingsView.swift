@@ -12,8 +12,6 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
-                SignIn(removeFormatting: true)
-                    .padding(.vertical)
                 languageSection
                 appearanceSection
                 previewVerseSection
@@ -117,7 +115,7 @@ struct SettingsView: View {
                 Text("\(Info.version), Build \(Info.build)")
                     .foregroundStyle(.secondary)
             }
-            linkButton(title: "Web Reader", url: "https://wikisubmission.org")
+            linkButton(title: "Web Reader", url: "https://wikisubmission.org/quran")
             linkButton(title: "Developer Discord", url: Info.developerDiscordLink)
             linkButton(title: "GitHub", url: "https://github.com/wikisubmission")
         }

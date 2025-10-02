@@ -12,7 +12,6 @@
 		923F0BF82E847D650092BA1B /* AudioStreaming in Frameworks */ = {isa = PBXBuildFile; productRef = 923F0BF72E847D650092BA1B /* AudioStreaming */; };
 		923F0BFB2E847D790092BA1B /* Defaults in Frameworks */ = {isa = PBXBuildFile; productRef = 923F0BFA2E847D790092BA1B /* Defaults */; };
 		923F0BFD2E847D790092BA1B /* DefaultsMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 923F0BFC2E847D790092BA1B /* DefaultsMacros */; };
-		923F0C002E847D8A0092BA1B /* Clerk in Frameworks */ = {isa = PBXBuildFile; productRef = 923F0BFF2E847D8A0092BA1B /* Clerk */; };
 		923F0C032E847D930092BA1B /* SheetKit in Frameworks */ = {isa = PBXBuildFile; productRef = 923F0C022E847D930092BA1B /* SheetKit */; };
 		923F0C062E847DAD0092BA1B /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 923F0C052E847DAD0092BA1B /* Supabase */; };
 		923F0C082E8480DF0092BA1B /* .gitignore in Sources */ = {isa = PBXBuildFile; fileRef = 923F0C072E8480DC0092BA1B /* .gitignore */; };
@@ -53,7 +52,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				923F0C062E847DAD0092BA1B /* Supabase in Frameworks */,
-				923F0C002E847D8A0092BA1B /* Clerk in Frameworks */,
 				923F0BFB2E847D790092BA1B /* Defaults in Frameworks */,
 				923F0BF82E847D650092BA1B /* AudioStreaming in Frameworks */,
 				923F0BF52E847D5E0092BA1B /* AlertKit in Frameworks */,
@@ -108,7 +106,6 @@
 				923F0BF72E847D650092BA1B /* AudioStreaming */,
 				923F0BFA2E847D790092BA1B /* Defaults */,
 				923F0BFC2E847D790092BA1B /* DefaultsMacros */,
-				923F0BFF2E847D8A0092BA1B /* Clerk */,
 				923F0C022E847D930092BA1B /* SheetKit */,
 				923F0C052E847DAD0092BA1B /* Supabase */,
 			);
@@ -144,7 +141,6 @@
 				923F0BF32E847D5E0092BA1B /* XCRemoteSwiftPackageReference "AlertKit" */,
 				923F0BF62E847D650092BA1B /* XCRemoteSwiftPackageReference "AudioStreaming" */,
 				923F0BF92E847D790092BA1B /* XCRemoteSwiftPackageReference "Defaults" */,
-				923F0BFE2E847D8A0092BA1B /* XCRemoteSwiftPackageReference "clerk-ios" */,
 				923F0C012E847D930092BA1B /* XCRemoteSwiftPackageReference "SheetKit" */,
 				923F0C042E847DAD0092BA1B /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
@@ -312,7 +308,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = QuranicLabs/QuranicLabs.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 5KF856M5CC;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -345,7 +341,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = QuranicLabs/QuranicLabs.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 5KF856M5CC;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -419,14 +415,6 @@
 				minimumVersion = 9.0.5;
 			};
 		};
-		923F0BFE2E847D8A0092BA1B /* XCRemoteSwiftPackageReference "clerk-ios" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/clerk/clerk-ios";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.68.1;
-			};
-		};
 		923F0C012E847D930092BA1B /* XCRemoteSwiftPackageReference "SheetKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/fatbobman/SheetKit";
@@ -465,11 +453,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 923F0BF92E847D790092BA1B /* XCRemoteSwiftPackageReference "Defaults" */;
 			productName = DefaultsMacros;
-		};
-		923F0BFF2E847D8A0092BA1B /* Clerk */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 923F0BFE2E847D8A0092BA1B /* XCRemoteSwiftPackageReference "clerk-ios" */;
-			productName = Clerk;
 		};
 		923F0C022E847D930092BA1B /* SheetKit */ = {
 			isa = XCSwiftPackageProductDependency;

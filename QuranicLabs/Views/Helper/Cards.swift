@@ -119,6 +119,63 @@ struct TinyCard<Destination: View>: View {
     }
 }
 
+struct TinyCardWithAction: View {
+    let title: String
+    let systemImage: String?
+    let image: String?
+    let action: () -> Void
+    
+    init(
+        title: String,
+        systemImage: String? = nil,
+        image: String? = nil,
+        action: @escaping () -> Void
+    ) {
+        self.title = title
+        self.systemImage = systemImage
+        self.image = image
+        self.action = action
+    }
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(.accent.opacity(0.07))
+                        .frame(width: 82, height: 70)
+                    
+                    cardImage
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 28, height: 28)
+                        .clipShape(RoundedRectangle(cornerRadius: image != nil ? 12 : 0))
+                        .foregroundStyle(.accent)
+                }
+                
+                Text(title)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.primary)
+            }
+            .frame(width: 80)
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private var cardImage: Image {
+        if let local = image {
+            return Image(local)
+        } else if let system = systemImage {
+            return Image(systemName: system)
+        } else {
+            return Image(systemName: "globe")
+        }
+    }
+}
+
 struct LargeCard<Destination: View>: View {
     let title: String
     let subtitle: String?
@@ -250,4 +307,3 @@ struct LargeCardWithoutDestination: View {
         }
     }
 }
-

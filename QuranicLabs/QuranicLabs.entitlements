@@ -4,9 +4,13 @@
 <dict>
 	<key>aps-environment</key>
 	<string>development</string>
-	<key>com.apple.developer.associated-domains</key>
+	<key>com.apple.developer.applesignin</key>
 	<array>
-		<string>webcredentials:new-vulture-52.clerk.accounts.dev</string>
+		<string>Default</string>
 	</array>
+	<key>com.apple.developer.icloud-container-identifiers</key>
+	<array/>
+	<key>com.apple.developer.ubiquity-kvstore-identifier</key>
+	<string>$(TeamIdentifierPrefix)$(CFBundleIdentifier)</string>
 </dict>
 </plist>

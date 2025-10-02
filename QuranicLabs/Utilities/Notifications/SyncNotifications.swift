@@ -1,5 +1,4 @@
 import Defaults
-import Clerk
 
 extension Utilities.Notifications {
     static func syncWithDatabase() async throws {
@@ -14,7 +13,6 @@ extension Utilities.Notifications {
                 .upsert(Types.Notifications.Notification(
                     platform: "ios",
                     device_token: deviceToken,
-                    user_id: Clerk.shared.user?.id ?? nil,
                     prayer_time_notifications: .init(
                         enabled: Defaults[.prayer_notifications],
                         customization: .init(

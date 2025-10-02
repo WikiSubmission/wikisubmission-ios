@@ -1,6 +1,5 @@
 import Foundation
 import SwiftUI
-import Clerk
 import Combine
 
 final class AppEnvironment: ObservableObject {

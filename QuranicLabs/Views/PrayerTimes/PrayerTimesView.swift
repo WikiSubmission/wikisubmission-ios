@@ -1,6 +1,7 @@
 import SwiftUI
 import CoreLocation
 import SheetKit
+import Defaults
 
 struct PrayerTimesView: View {
     @State private var query = ""
@@ -10,6 +11,8 @@ struct PrayerTimesView: View {
     @State private var presentSearchbar = false
     @State private var refreshTimer: Timer? = nil
     @State private var geocoder = CLGeocoder()
+    
+    @Default(.active_tab) var activeTab
 
     @EnvironmentObject private var environment: AppEnvironment
 
@@ -61,6 +64,9 @@ private extension PrayerTimesView {
             } else {
                 PlaceholderView()
                     .padding(.top, 50)
+                    .onAppear {
+                        presentSearchbar = true
+                    }
                 Spacer()
             }
         }
@@ -120,6 +126,9 @@ private extension PrayerTimesView {
                     }
                     TinyCard(title: "Prayer Guide", systemImage: "info.circle.text.page.fill") {
                         WebView(url: URL(string: "https://library.wikisubmission.org/file/salat-brochure")!)
+                    }
+                    TinyCardWithAction(title: "Settings", systemImage: "gear.circle.fill") {
+                        activeTab = .settings
                     }
                 }
                 .pushToLeft()
@@ -237,7 +246,6 @@ private extension PrayerTimesView {
             
         } catch {
             print("Geocoding error: \(error.localizedDescription)")
-            // Handle error appropriately
         }
     }
 }
@@ -250,14 +258,9 @@ struct PlaceholderView: View {
                 .scaledToFit()
                 .frame(width: 60, height: 60)
                 .foregroundStyle(.accent)
-                .symbolEffect(.pulse.wholeSymbol, options: .repeating)
             
             VStack(spacing: 4) {
-                Text("Find Your Prayer Times")
-                    .font(.headline)
-                    .foregroundStyle(.primary)
-                
-                Text("Search for your city to see prayer times")
+                Text("Search for any city to see live prayer times")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

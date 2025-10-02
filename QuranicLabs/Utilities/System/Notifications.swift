@@ -1,15 +1,14 @@
+import Foundation
 import SwiftUI
+import Defaults
 import UserNotifications
-import SheetKit
 
 extension Utilities.System {
-    @MainActor
     static func registerForPushNotifications() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             if let error = error {
-                SheetKit().present {
-                    ErrorView(details: .init(title: "Missing Notification Permission", message: "\(error.localizedDescription)", icon: "bell.slash", showPermissionSettingsButton: true))
-                }
+                Utilities.System.GlobalAlertManager.shared.showAlert(title: "Missing Notifications Permission", systemImage: "bell.slash", type: .error, showSettingsButton: true)
+                
                 return
             }
             
@@ -18,27 +17,19 @@ extension Utilities.System {
                     UIApplication.shared.registerForRemoteNotifications()
                 }
             } else {
-                SheetKit().present {
-                    ErrorView(details: .init(title: "Notification Permission Denied", message: "Enable it through your device settings", icon: "bell.slash", showPermissionSettingsButton: true))
-                }
-                
-                // Optional: guide the user to settings to enable notifications
-                DispatchQueue.main.async {
-                    if let appSettings = URL(string: UIApplication.openSettingsURLString) {
-                        UIApplication.shared.open(appSettings)
-                    }
-                }
+                Utilities.System.GlobalAlertManager.shared.showAlert(title: "Notifications Are Disabled", systemImage: "bell.slash", type: .error, showSettingsButton: true)
             }
         }
     }
     
-    @MainActor
     static func registerForPushNotificationsIfNeeded() {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             switch settings.authorizationStatus {
             case .notDetermined:
                 Task { @MainActor in
-                    registerForPushNotifications()
+                    if UserDefaults.standard.bool(forKey: Defaults.Keys.prompted_for_notifications.name) {
+                        registerForPushNotifications()
+                    }
                 }
             case .authorized, .provisional:
                 DispatchQueue.main.async {

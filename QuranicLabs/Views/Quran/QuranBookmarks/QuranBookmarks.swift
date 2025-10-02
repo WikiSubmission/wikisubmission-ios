@@ -1,11 +1,9 @@
 import Defaults
 import SwiftUI
-import Clerk
 
 struct QuranBookmarks: View {
     // Defaults
     @Default(.bookmarks) private var bookmarks
-    @Default(.bookmarked_synced) private var bookmarksSynced
     @Default(.primary_language) private var primaryLanguage
 
     // Presentation State
@@ -69,7 +67,6 @@ struct QuranBookmarks: View {
             .presentationDragIndicator(.visible)
 
             // Sheets
-            .sheet(isPresented: $presentSignInFlow) { SignInFlow() }
             .sheet(isPresented: $presentAddChapter) { addChapterSheet }
             .sheet(isPresented: $presentAddVerse) { addVerseSheet }
 
@@ -119,7 +116,6 @@ struct QuranBookmarks: View {
                                     key: bookmark.key,
                                     category: bookmark.category,
                                     notes: noteInput,
-                                    user_id: bookmark.user_id
                                 )
                                 let _ = try? await Utilities.Bookmarks.editBookmark(bookmark, newBookmark: updatedBookmark)
                             }
@@ -142,7 +138,6 @@ struct QuranBookmarks: View {
             addChapterButton
             addVerseButton
             Spacer()
-            syncStatusView
         }
         .font(.caption2)
     }
@@ -150,7 +145,7 @@ struct QuranBookmarks: View {
     @ViewBuilder private var emptyStateView: some View {
         ScrollView {
             VStack(spacing: 128) {
-                VStack(spacing: 16) {
+                VStack(spacing: 20) {
                     Image(systemName: "bookmark")
                         .resizable()
                         .scaledToFit()
@@ -169,7 +164,6 @@ struct QuranBookmarks: View {
                                     key: randomVerse.verse_id,
                                     category: "Random",
                                     notes: nil,
-                                    user_id: Clerk.shared.user?.id
                                 ))
                             }
                         }
@@ -259,7 +253,7 @@ struct QuranBookmarks: View {
             }
 
             if i.type == .verse {
-                QuranVerseCard(id: i.key, linkToChapter: true)
+                QuranVerseCard(id: i.key, linkToChapter: true, removeBookmarkedIcon: true)
             }
 
             if i.type == .chapter {
@@ -330,35 +324,6 @@ struct QuranBookmarks: View {
         }
     }
 
-    @ViewBuilder private var syncStatusView: some View {
-        HStack {
-            if bookmarksSynced {
-                HStack {
-                    Image(systemName: "checkmark")
-                        .foregroundStyle(.green)
-                    Text("Synced")
-                        .foregroundStyle(.secondary)
-                }
-            } else if Clerk.shared.user?.id != nil {
-                HStack {
-                    Image(systemName: "clock.arrow.trianglehead.2.counterclockwise.rotate.90")
-                        .foregroundStyle(.accent)
-                    Text("Pending sync")
-                        .foregroundStyle(.secondary)
-                }
-            } else {
-                HStack {
-                    Image(systemName: "arrow.trianglehead.2.clockwise.rotate.90")
-                        .foregroundStyle(.accent)
-                    Button { presentSignInFlow = true } label: {
-                        Text("Sign in to sync")
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-        }
-    }
-
     private var addChapterSheet: some View {
         NavigationStack {
             VStack {
@@ -373,7 +338,6 @@ struct QuranBookmarks: View {
                                     key: String(i.chapter_number),
                                     category: nil,
                                     notes: nil,
-                                    user_id: Clerk.shared.user?.id
                                 ))
                                 presentAddChapter = false
                             }
@@ -412,14 +376,13 @@ struct QuranBookmarks: View {
                                     key: String(i.verse_id),
                                     category: nil,
                                     notes: nil,
-                                    user_id: Clerk.shared.user?.id
                                 ))
                                 presentAddVerse = false
                             }
                         } label: {
                             HStack {
                                 Image(systemName: "plus.circle.fill")
-                                QuranVerseCard(id: i.verse_id, linkToChapter: false, removeLinkToDetails: true, removeFormatting: true)
+                                QuranVerseCard(id: i.verse_id, linkToChapter: false, removeLinkToDetails: true, removeFormatting: true, removeBookmarkedIcon: true)
                             }
                         }
                         .buttonStyle(.plain)
@@ -438,7 +401,9 @@ struct QuranBookmarks: View {
                 verseDebounceTask = task
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: task)
             }
-            .onAppear { verseSearchResults = [] }
+            .onAppear {
+                verseSearchResults = AppData.Quran.main.filter { $0.chapter_number == 1 }
+            }
             .navigationTitle("Add a verse")
         }
     }
@@ -504,7 +469,6 @@ struct QuranBookmarks: View {
                                     key: bookmark.key,
                                     category: nil,
                                     notes: bookmark.notes,
-                                    user_id: bookmark.user_id
                                 )
                                 try? await Utilities.Bookmarks.editBookmark(bookmark, newBookmark: updatedBookmark)
                                 presentAddCategory = false
@@ -538,7 +502,6 @@ struct QuranBookmarks: View {
                                     key: bookmark.key,
                                     category: newCategory,
                                     notes: bookmark.notes,
-                                    user_id: bookmark.user_id
                                 )
                                 let _ = try? await Utilities.Bookmarks.editBookmark(bookmark, newBookmark: updatedBookmark)
                                 presentAddCategory = false

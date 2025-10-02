@@ -8,7 +8,6 @@ extension Types.Bookmarks {
         let key: String
         let category: String?
         let notes: String?
-        var user_id: String?
     }
     
     enum BookmarkType: String, Encodable, Decodable, Hashable, Defaults.Serializable {

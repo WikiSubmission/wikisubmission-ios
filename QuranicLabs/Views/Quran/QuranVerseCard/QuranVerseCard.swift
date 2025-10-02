@@ -1,7 +1,6 @@
 import SwiftUI
 import SheetKit
 import Defaults
-import Clerk
 
 struct QuranVerseCard: View {
     let id: String
@@ -78,7 +77,6 @@ struct QuranVerseCard: View {
                                             key: id,
                                             category: nil,
                                             notes: nil,
-                                            user_id: Clerk.shared.user?.id
                                         ))
                                         
                                         SheetKit().presentWithEnvironment {

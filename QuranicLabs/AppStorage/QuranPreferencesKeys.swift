@@ -14,3 +14,17 @@ extension Defaults.Keys {
     
     static let sort_chapters_by_revelation_order = Key<Bool>("sort_chapters_by_revelation_order", default: false)
 }
+
+extension Defaults {
+    static func resetQuranPreferences() {
+        Defaults.Keys.arabic.reset()
+        Defaults.Keys.subtitles.reset()
+        Defaults.Keys.footnotes.reset()
+        Defaults.Keys.transliteration.reset()
+        Defaults.Keys.arabic_on_side.reset()
+        Defaults.Keys.primary_language.reset()
+        Defaults.Keys.secondary_language.reset()
+        Defaults.Keys.font_size.reset()
+        Defaults.Keys.sort_chapters_by_revelation_order.reset()
+    }
+}

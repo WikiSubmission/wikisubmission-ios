@@ -23,10 +23,6 @@ extension View {
     func preventHorizontalScroll() -> some View {
         self.modifier(NoHorizontalScrollModifier())
     }
-    
-    func requiresSignIn(reason: String? = nil) -> some View {
-        modifier(SignInRequired(reason: reason))
-    }
      
     func requiresInternet() -> some View {
         modifier(InternetRequired())

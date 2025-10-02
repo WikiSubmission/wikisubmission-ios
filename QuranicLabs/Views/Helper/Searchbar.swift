@@ -36,6 +36,7 @@ struct Searchbar<Element>: View where Element: Identifiable {
     
     @FocusState var isFocused: Bool
     @StateObject var localQuery = QueryDebouncer()
+    @Environment(\.colorScheme) var theme
     
     var placeholder: String
     var autoFocus = true
@@ -52,8 +53,9 @@ struct Searchbar<Element>: View where Element: Identifiable {
             .padding(.leading)
             
             
-            TextField(placeholder, text: $localQuery.text)
+            TextField("", text: $localQuery.text, prompt: Text(placeholder).foregroundStyle(.gray))
                 .font(.title2)
+                .foregroundColor(.accent)
                 .padding(.leading, 8)
                 .padding(.vertical, 10)
                 .autocorrectionDisabled()
@@ -106,12 +108,11 @@ struct Searchbar<Element>: View where Element: Identifiable {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 20, height: 20)
-                        .foregroundStyle(.secondary)
                         .padding(.trailing)
                 }
             }
         }
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color.secondary.opacity(0.06)))
+        .background(RoundedRectangle(cornerRadius: 12).fill(theme == .dark ? Color.black : Color.white))
         .animation(.easeInOut(duration: 0.2), value: localQuery.text.isEmpty)
     }
 }
@@ -148,5 +149,5 @@ struct TypingIndicatorView: View {
 }
 
 #Preview {
-    QuranView()
+    HomeView()
 }

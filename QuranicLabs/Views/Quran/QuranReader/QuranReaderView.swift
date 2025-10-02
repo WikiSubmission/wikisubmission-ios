@@ -1,7 +1,6 @@
 import SwiftUI
 import Defaults
 import SheetKit
-import Clerk
 
 struct QuranReaderView: View {
     var chapter: Int
@@ -82,7 +81,6 @@ struct QuranReaderView: View {
                             key: String(chapter),
                             category: nil,
                             notes: nil,
-                            user_id: Clerk.shared.user?.id
                         ))
                         
                         SheetKit().presentWithEnvironment {

@@ -3,7 +3,8 @@ import Defaults
 import SheetKit
 
 struct QuranView: View {
-    var hideSearchbar: Bool = false
+    @Binding var shouldScrollToTop: Bool
+
     var initialQuery: String? = nil
     var autoFocus: Bool = false
     
@@ -12,7 +13,6 @@ struct QuranView: View {
     @State private var queryState: SearchbarQueryState = .idle
     @State private var queryResults: [Types.Quran.Data] = []
     @State private var queryResultsType: Types.Quran.ParsedQuery? = nil
-    @State private var showScrollToTop: Bool = false
     
     @FocusState private var isKeyboardActive: Bool
     
@@ -26,73 +26,42 @@ struct QuranView: View {
 
     var body: some View {
         NavigationStack {
-            
             VStack(spacing: 4) {
-                if !hideSearchbar {
-                    // Search bar area
-                    VStack(spacing: 4) {
-                        // Search bar
-                        searchBarView
-                        
-                        // Search bar (bottom text)
-                        searchBarBottomTextView
-                    }
-                    .padding(.horizontal)
-                }
+                LazyVStack(pinnedViews: [.sectionHeaders]) {
+                    Section(header:
+                        VStack {
+                            searchBarView
+                        }
+                    ) {
+                        VStack(spacing: 4) {
+                            // Bottom text
+                            searchBarBottomTextView
 
-                // Main content area
-                ScrollViewReader { proxy in
-
-                    // Scrollable
-                    ScrollView(.vertical, showsIndicators: true) {
-                        // Top anchor
-                        Color.clear.frame(height: 0).id("top")
-                        
-                        // Chapter options
-                        chapterOptionsRow
-                        
-                        // Default view: list of chapters
-                        chapterListView
-                        
-                        // Search results suggestions (if applicable)
-                        searchResultsSuggestionsView
-                        
-                        // Search results view
-                        searchResultsView
-                        
-                        Color.clear.frame(height: 32)
-                    }
-                    .frame(maxWidth: .infinity)
-                    // Helps with scrolling on Mac
-                    .scrollBounceBehavior(.basedOnSize)
-                    // Scroll to top on query change
-                    .onChange(of: queryResults) { _, _ in
-                        withAnimation {
-                            proxy.scrollTo("top", anchor: .top)
+                            // Chapter options
+                            chapterOptionsRow
+                            
+                            // Default view: list of chapters
+                            chapterListView
+                            
+                            // Search results suggestions (if applicable)
+                            searchResultsSuggestionsView
+                            
+                            // Search results view
+                            searchResultsView
+                            
+                            Color.clear.frame(height: 32)
                         }
                     }
-                    // Overlay button: a "scroll to top"
-                    .overlay(
-                        Group {
-                            if showScrollToTop {
-                                Button {
-                                    withAnimation(.spring()) {
-                                        proxy.scrollTo("top", anchor: .top)
-                                    }
-                                } label: {
-                                    Image(systemName: "arrow.up")
-                                        .foregroundColor(.white)
-                                        .padding()
-                                        .background(Circle().fill(Color.accentColor))
-                                }
-                                .padding()
-                            }
-                        },
-                        alignment: .bottomTrailing
-                    )
                 }
+                .frame(maxWidth: .infinity)
+                .scrollBounceBehavior(.basedOnSize)
                 .padding(.horizontal)
                 .toolbar { toolbarMenu }
+                .onChange(of: typingState) { _, state in
+                    if state == .doneTyping {
+                        shouldScrollToTop = true
+                    }
+                }
             }
         }
         .task {
@@ -115,7 +84,7 @@ struct QuranView: View {
             queryState: $queryState,
             queryResults: $queryResults,
             queryFunction: queryFunction,
-            placeholder: "Verse, chapter, text...",
+            placeholder: "Verse, chapter, or text",
             autoFocus: false
         )
         .focused($isKeyboardActive)
@@ -131,6 +100,7 @@ struct QuranView: View {
                         .font(.caption)
                     Spacer()
                 }
+                .padding(.vertical, 8)
             }
             
             if queryResults.count > 1 {
@@ -146,7 +116,7 @@ struct QuranView: View {
                                     QuranShareVerses(data: queryResults)
                                 }
                             } label: {
-                                Label("Share/copy...", systemImage: "square.and.arrow.up")
+                                Image(systemName: "square.and.arrow.up")
                             }
                             .buttonStyle(SignatureButtonStyle())
                         }
@@ -154,9 +124,9 @@ struct QuranView: View {
                     .foregroundStyle(.secondary)
                     .font(.caption)
                 }
+                .padding(.top, 4)
             }
         }
-        .padding(.vertical, 0.5)
     }
     
     private var searchResultsSuggestionsView: some View {
@@ -202,11 +172,11 @@ struct QuranView: View {
                         }
                     }
                     .buttonStyle(SignatureButtonStyle())
+                    .padding(.vertical, 8)
                 }
             }
         }
         .font(.caption)
-        .padding(.bottom, 4)
     }
     
     private var chapterListView: some View {
@@ -316,6 +286,6 @@ struct QuranView: View {
 }
 
 #Preview {
-    QuranView()
+    HomeView()
         .environmentObject(AppEnvironment.shared)
 }
