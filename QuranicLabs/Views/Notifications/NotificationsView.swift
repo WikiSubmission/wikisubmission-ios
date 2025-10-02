@@ -17,8 +17,8 @@ struct NotificationsView: View {
     @Default(.maghrib_notification) var maghribNotifications
     @Default(.isha_notification) var ishaNotifications
     
-    @Default(.daily_verse_notifications) var randomVerseNotifications
-    @Default(.daily_chapter_notifications) var randomChapterNotifications
+    @Default(.daily_verse_notifications) var dailyVerseNotifications
+    @Default(.daily_chapter_notifications) var dailyChapterNotifications
     
     var body: some View {
         NavigationStack {
@@ -51,8 +51,8 @@ struct NotificationsView: View {
                             }
                             
                             QuranNotificationsSection(
-                                randomVerseNotifications: $randomVerseNotifications,
-                                randomChapterNotifications: $randomChapterNotifications
+                                randomVerseNotifications: $dailyVerseNotifications,
+                                randomChapterNotifications: $dailyChapterNotifications
                             )
                             
                             Button {
