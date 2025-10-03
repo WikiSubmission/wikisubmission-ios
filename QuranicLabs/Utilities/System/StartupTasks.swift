@@ -1,5 +1,6 @@
 import Foundation
 import Defaults
+import AVFoundation
 
 extension Utilities.System {
     static func startupTasks() async {
@@ -11,5 +12,14 @@ extension Utilities.System {
         
         // Register for push notifications (if applicable)
         Utilities.System.registerForPushNotificationsIfNeeded()
+        
+        // Configure audio instance
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playback, mode: .default)
+            try audioSession.setActive(true)
+        } catch {
+            print("AVAudioSession setup failed: \(error)")
+        }
     }
 }

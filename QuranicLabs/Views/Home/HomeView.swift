@@ -6,7 +6,9 @@ struct HomeView: View {
     @State private var shouldScrollToTop = false
     @Environment(\.colorScheme) private var theme
     @Default(.active_tab) private var activeTab
-
+    @Default(.daily_chapter) private var dailyChapter
+    @Default(.daily_verse) private var dailyVerse
+    @Default(.primary_language) private var primaryLanguage
     var body: some View {
         NavigationStack {
             ScrollViewReader { proxy in
@@ -47,6 +49,13 @@ struct HomeView: View {
                                         NotificationsView()
                                     }
                                 }
+                            }
+                            .padding()
+                        }
+                        
+                        if let dailyChapter = dailyChapter, let chapter = AppData.Quran.main.first(where: { $0.chapter_number == dailyChapter }) {
+                            LargeCard(title: "Your Daily Chapter", subtitle: "Sura \(chapter.chapter_number), \(chapter.getChapterTitle(for: primaryLanguage))", systemImage: "book.fill") {
+                                QuranReaderView(chapter: dailyChapter)
                             }
                             .padding()
                         }

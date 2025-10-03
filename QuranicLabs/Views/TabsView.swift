@@ -14,49 +14,22 @@ struct TabsView: View {
                 .tag(TabItem.home)
 
             PrayerTimesView()
-            .tabItem {
-                Label(TabItem.prayer.rawValue, systemImage: TabItem.prayer.symbol)
-            }
-            .tag(TabItem.prayer)
+                .tabItem {
+                    Label(TabItem.prayer.rawValue, systemImage: TabItem.prayer.symbol)
+                }
+                .tag(TabItem.prayer)
             
             ResourcesView()
-            .tabItem {
-                Label(TabItem.resources.rawValue, systemImage: TabItem.resources.symbol)
-            }
-            .tag(TabItem.resources)
+                .tabItem {
+                    Label(TabItem.resources.rawValue, systemImage: TabItem.resources.symbol)
+                }
+                .tag(TabItem.resources)
 
             SettingsView()
                 .tabItem {
                     Label(TabItem.settings.rawValue, systemImage: TabItem.settings.symbol)
                 }
                 .tag(TabItem.settings)
-        }
-        .onOpenURL { url in
-            guard url.scheme == "wikisubmission" else { return }
-
-            if url.host == "prayer-times" {
-                activeTab = .prayer
-            } else if url.host == "verse" {
-                let verseId = url.lastPathComponent
-                let chapter = Int(verseId.split(separator: ":")[0]) ?? 1
-                SheetKit().presentWithEnvironment {
-                    NavigationStack {
-                        QuranReaderView(
-                            chapter: chapter,
-                            scrollToVerseID: verseId
-                        )
-                    }
-                }
-            } else if url.host == "chapter" {
-                let chapterNumber = Int(url.lastPathComponent) ?? 1
-                SheetKit().presentWithEnvironment {
-                    NavigationStack {
-                        QuranReaderView(
-                            chapter: chapterNumber
-                        )
-                    }
-                }
-            }
         }
     }
 }

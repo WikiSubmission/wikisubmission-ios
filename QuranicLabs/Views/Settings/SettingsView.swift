@@ -9,6 +9,8 @@ struct SettingsView: View {
 
     @Environment(\.openURL) private var openURL
     
+    @Default(.quran_reciter) var reciter
+    
     var body: some View {
         NavigationStack {
             List {
@@ -16,8 +18,8 @@ struct SettingsView: View {
                 appearanceSection
                 previewVerseSection
                 readerTogglesSection
-                prayerTimesTogglesSection
                 miscalleneousSection
+                prayerTimesTogglesSection
                 appActionsSection
                 appInfoSection
             }
@@ -67,6 +69,22 @@ struct SettingsView: View {
                 NotificationsView()
             } label: {
                 Label("Notifications", systemImage: "bell.fill")
+            }
+            
+            NavigationLink {
+                NavigationStack {
+                    ScrollView {
+                        QuranReciterSelection()
+                    }
+                    .navigationTitle("Reciter")
+                }
+            } label: {
+                HStack {
+                    Label("Reciter", systemImage: "waveform.path")
+                    Spacer()
+                    Text(reciter.displayName)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
     }

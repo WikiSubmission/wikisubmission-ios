@@ -2,6 +2,8 @@
 // See LICENSE file for full license text.
 
 import SwiftUI
+import Defaults
+import SheetKit
 
 @main
 struct SubmissionApp: App {
@@ -9,6 +11,7 @@ struct SubmissionApp: App {
     
     @StateObject private var alertManager = Utilities.System.GlobalAlertManager.shared
 
+    @Default(.active_tab) var activeTab
     var body: some Scene {
         WindowGroup {
             MainView()
@@ -18,7 +21,36 @@ struct SubmissionApp: App {
                 }
                 .sheet(item: $alertManager.alert) { alert in
                     GlobalAlertView(alert: alert)
-                    .presentationDetents([.medium])
+                        .presentationDetents([.medium])
+                }
+                .onOpenURL { url in
+                    guard url.scheme == "wikisubmission" else { return }
+                    
+                    if url.host == "prayer-times" {
+                        activeTab = .prayer
+                    } else if url.host == "verse" {
+                        activeTab = .home
+                        let verseId = url.lastPathComponent
+                        let chapter = Int(verseId.split(separator: ":")[0]) ?? 1
+                        SheetKit().presentWithEnvironment {
+                            NavigationStack {
+                                QuranReaderView(
+                                    chapter: chapter,
+                                    scrollToVerseID: verseId
+                                )
+                            }
+                        }
+                    } else if url.host == "chapter" {
+                        activeTab = .home
+                        let chapterNumber = Int(url.lastPathComponent) ?? 1
+                        SheetKit().presentWithEnvironment {
+                            NavigationStack {
+                                QuranReaderView(
+                                    chapter: chapterNumber
+                                )
+                            }
+                        }
+                    }
                 }
         }
     }

@@ -10,7 +10,9 @@ struct QuranReaderView: View {
     
     @Default(.primary_language) private var primaryLanguage
     @Default(.bookmarks) var bookmarks
-
+    
+    @ObservedObject var audioManager = Utilities.Quran.QuranAudioManager.shared
+    
     var body: some View {
         VStack {
             if data.count > 0 {
@@ -34,7 +36,7 @@ struct QuranReaderView: View {
     }
     
     private var chapterHeader: some View {
-        QuranChapterCard(chapter: chapter, displayOnly: true)
+        QuranChapterCard(chapter: chapter, removeBookmarkedIcon: true, displayOnly: true)
     }
     
     private var verseList: some View {
@@ -49,6 +51,13 @@ struct QuranReaderView: View {
                     }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 24))
+                .onChange(of: audioManager.currentVerse) { _, verse in
+                    if let verse = verse {
+                        withAnimation {
+                            proxy.scrollTo(verse.verse_id, anchor: .top)
+                        }
+                    }
+                }
                 .onAppear {
                     Task {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -66,6 +75,23 @@ struct QuranReaderView: View {
     
     private var toolbar: some View {
         HStack(alignment: .center, spacing: 0) {
+            // Play button
+            Button {
+                if !audioManager.isPlaying {
+                    if let startFromVerseID = scrollToVerseID {
+                        let startingVerse = Int(startFromVerseID.split(separator: ":")[1])
+                        Utilities.Quran.QuranAudioManager.shared.playQueue(data, startFromVerse: startingVerse)
+                    } else {
+                        Utilities.Quran.QuranAudioManager.shared.playQueue(data)
+                    }
+                } else {
+                    Utilities.Quran.QuranAudioManager.shared.stopQueue()
+                }
+            } label: {
+                Image(systemName: audioManager.isPlaying ? "stop.fill" : "play")
+                    .foregroundStyle(audioManager.isPlaying ? .red : .accent)
+            }
+            
             // Bookmark button
             Button {
                 Task {

@@ -6,7 +6,10 @@ struct MainView: View {
     
     var body: some View {
         if onboarded {
-            TabsView()
+            ZStack {
+                TabsView()
+                QuranNowPlayingBar()
+            }
         } else {
             FirstTimeView()
         }

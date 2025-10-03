@@ -13,6 +13,10 @@ extension Defaults.Keys {
     static let font_size = Key<Double>("font_size", default: 19)
     
     static let sort_chapters_by_revelation_order = Key<Bool>("sort_chapters_by_revelation_order", default: false)
+    
+    static let quran_reciter = Key<QuranReciters>("quran_reciter", default: .mishary)
+    static let last_played_verse = Key<String>("last_played_verse", default: "1:1")
+    static let last_opened_chapter = Key<Int>("last_opened_chapter", default: 39)
 }
 
 extension Defaults {

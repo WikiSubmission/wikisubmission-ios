@@ -23,6 +23,10 @@ struct QuranView: View {
     private var initialQueryValue: String {
         initialQuery ?? ""
     }
+    
+    @Default(.last_played_verse) var lastPlayedVerse
+    @Default(.daily_verse) var dailyVerse
+    @Default(.last_opened_chapter) var lastOpenedChapter
 
     var body: some View {
         NavigationStack {
@@ -174,6 +178,37 @@ struct QuranView: View {
                             }
                         } label: {
                             Label("PDF", systemImage: "arrow.down.document.fill")
+                        }
+                        
+                        if let chapter = Int(lastPlayedVerse.split(separator: ":")[0]), AppData.Quran.versesByChapter[chapter]?.last?.verse_id != lastPlayedVerse {
+                            NavigationLink {
+                                NavigationStack {
+                                    QuranReaderView(chapter: chapter, scrollToVerseID: lastPlayedVerse)
+                                        .onAppear {
+                                            Utilities.Quran.QuranAudioManager.shared.playQueue(AppData.Quran.versesByChapter[chapter] ?? [], startFromVerse: Int(lastPlayedVerse.split(separator: ":")[1]))
+                                        }
+                                }
+                            } label: {
+                                Label("Play \(lastPlayedVerse)", systemImage: "play.square.stack.fill")
+                            }
+                        }
+                        
+                        if let dailyVerse = dailyVerse, let chapter = Int(dailyVerse.split(separator: ":")[0]) {
+                            NavigationLink {
+                                NavigationStack {
+                                    QuranReaderView(chapter: chapter, scrollToVerseID: dailyVerse)
+                                }
+                            } label: {
+                                Label("Daily Verse", systemImage: "book.pages.fill")
+                            }
+                        }
+                        
+                        NavigationLink {
+                            NavigationStack {
+                                QuranReaderView(chapter: lastOpenedChapter)
+                            }
+                        } label: {
+                            Label("Sura \(lastOpenedChapter)", systemImage: "text.line.magnify")
                         }
                     }
                     .buttonStyle(SignatureButtonStyle())

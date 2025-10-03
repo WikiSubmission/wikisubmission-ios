@@ -47,9 +47,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         let userInfo = response.notification.request.content.userInfo
         
         if let verseId = userInfo["verse_id"] as? String {
-            
-            print("Tapped on verse \(verseId)")
-            
             if category == "DAILY_VERSE" {
                 UserDefaults.standard.set(verseId, forKey: Defaults.Keys.daily_verse.name)
             }

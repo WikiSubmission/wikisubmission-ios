@@ -25,6 +25,8 @@ struct QuranVerseCard: View {
 
     @Environment(\.colorScheme) private var theme
     
+    @ObservedObject var audioManager = Utilities.Quran.QuranAudioManager.shared
+    
     @State private var data: Types.Quran.Data?
     @State private var showHighlight = false
     
@@ -90,6 +92,18 @@ struct QuranVerseCard: View {
                                     .foregroundStyle(isBookmarked ? .red : .accent)
                             }
                             
+                            Button {
+                                audioManager.playQueue([data])
+                            } label: {
+                                Label("Play Verse", systemImage: "play")
+                            }
+                            
+                            Button {
+                                audioManager.playQueue(AppData.Quran.main.filter { $0.chapter_number == data.chapter_number }, startFromVerse: data.verse_number)
+                            } label: {
+                                Label("Play Chapter From Here", systemImage: "play.square.stack")
+                            }
+                            
                             QuranMenu()
                         }
                 }
@@ -148,6 +162,14 @@ struct QuranVerseCard: View {
                         .frame(width: 16, height: 16)
                         .foregroundStyle(.secondary)
                         .fontWeight(.ultraLight)
+                }
+                
+                if audioManager.currentVerse?.verse_id == id {
+                    if audioManager.isPlaying {
+                        AnimatedWaveform()
+                    } else if audioManager.player.state == .bufferring {
+                        ProgressView()
+                    }
                 }
             }
         }
