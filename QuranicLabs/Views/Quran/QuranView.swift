@@ -180,7 +180,7 @@ struct QuranView: View {
                             Label("PDF", systemImage: "arrow.down.document.fill")
                         }
                         
-                        if let chapter = Int(lastPlayedVerse.split(separator: ":")[0]), AppData.Quran.versesByChapter[chapter]?.last?.verse_id != lastPlayedVerse {
+                        if let chapter = Int(lastPlayedVerse.split(separator: ":")[0]), AppData.Quran.versesByChapter[chapter]?.last?.verse_id != lastPlayedVerse, Utilities.Quran.QuranAudioManager.shared.isPlaying == false {
                             NavigationLink {
                                 NavigationStack {
                                     QuranReaderView(chapter: chapter, scrollToVerseID: lastPlayedVerse)

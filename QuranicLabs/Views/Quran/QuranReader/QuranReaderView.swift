@@ -56,7 +56,7 @@ struct QuranReaderView: View {
                     Color.clear.frame(height: 0).id("top")
                     VStack {
                         ForEach(data, id: \.verse_id) { verse in
-                            QuranVerseCard(id: verse.verse_id, isScrolledTo: scrollToVerseID == verse.verse_id ? true : false)
+                            QuranVerseCard(id: verse.verse_id, showPlayChapterFromHere: true, isScrolledTo: scrollToVerseID == verse.verse_id ? true : false)
                                 .background(
                                     GeometryReader { geo in
                                         Color.clear.preference(

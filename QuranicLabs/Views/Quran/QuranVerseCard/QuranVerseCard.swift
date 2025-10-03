@@ -6,6 +6,7 @@ struct QuranVerseCard: View {
     let id: String
     var highlight = ""
     var linkToChapter = false
+    var showPlayChapterFromHere = false
     var removeLinkToDetails = false
     var removeFormatting = false
     var removeContextMenu = false
@@ -98,10 +99,12 @@ struct QuranVerseCard: View {
                                 Label("Play Verse", systemImage: "play")
                             }
                             
-                            Button {
-                                audioManager.playQueue(AppData.Quran.main.filter { $0.chapter_number == data.chapter_number }, startFromVerse: data.verse_number)
-                            } label: {
-                                Label("Play Chapter From Here", systemImage: "play.square.stack")
+                            if showPlayChapterFromHere {
+                                Button {
+                                    audioManager.playQueue(AppData.Quran.main.filter { $0.chapter_number == data.chapter_number }, startFromVerse: data.verse_number)
+                                } label: {
+                                    Label("Play Chapter From Here", systemImage: "play.square.stack")
+                                }
                             }
                             
                             QuranMenu()
