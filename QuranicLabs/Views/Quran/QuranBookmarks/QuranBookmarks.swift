@@ -65,7 +65,7 @@ struct QuranBookmarks: View {
             .navigationTitle("Bookmarks")
             .navigationBarTitleDisplayMode(.large)
             .presentationDragIndicator(.visible)
-
+            .toolbar { bookmarksToolbar }
             // Sheets
             .sheet(isPresented: $presentAddChapter) { addChapterSheet }
             .sheet(isPresented: $presentAddVerse) { addVerseSheet }
@@ -144,14 +144,14 @@ struct QuranBookmarks: View {
 
     @ViewBuilder private var emptyStateView: some View {
         ScrollView {
-            VStack(spacing: 128) {
+            VStack {
                 VStack(spacing: 20) {
                     Image(systemName: "bookmark")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 50, height: 50)
+                        .frame(width: 32, height: 32)
                         .foregroundStyle(.primary)
-                    Text("You have no bookmarks yet. Click on any chapter or verse to add them here.")
+                    Text("You have no bookmarks yet.\n\nClick on any chapter or verse to add them here.")
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                     Button {
@@ -171,6 +171,7 @@ struct QuranBookmarks: View {
                         Text("Add a random verse...")
                     }
                 }
+                .font(.caption)
             }
         }
     }
@@ -183,13 +184,12 @@ struct QuranBookmarks: View {
                 }
             }
         }
-        .toolbar { bookmarksToolbar }
     }
 
     @ToolbarContentBuilder private var bookmarksToolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .topBarTrailing) {
-            if !uniqueCategories.isEmpty {
-                HStack(spacing: 0) {
+            HStack(spacing: 0) {
+                if !uniqueCategories.isEmpty {
                     Menu {
                         Button {
                             withAnimation { selectedCategory = nil }
@@ -220,22 +220,22 @@ struct QuranBookmarks: View {
                         Label("Filter: \(selectedCategory ?? "All Categories")", systemImage: "line.3.horizontal.decrease.circle")
                             .foregroundColor(selectedCategory == nil ? .accent : .orange)
                     }
-                    
-                    Menu {
-                        Button {
-                            presentDeleteAllBookmarksDialog = true
-                        } label: {
-                            Label("Delete all bookmarks", systemImage: "x.circle.fill")
-                        }
-                        .foregroundStyle(.red)
-                        
-                        QuranMenu()
-                    } label: {
-                        Label("", systemImage: "ellipsis.circle")
-                            .labelStyle(.iconOnly)
-                    }
-                    
                 }
+                
+                Menu {
+                    Button {
+                        presentDeleteAllBookmarksDialog = true
+                    } label: {
+                        Label("Delete all bookmarks", systemImage: "x.circle.fill")
+                    }
+                    .foregroundStyle(.red)
+                    
+                    QuranMenu()
+                } label: {
+                    Label("", systemImage: "ellipsis.circle")
+                        .labelStyle(.iconOnly)
+                }
+                
             }
         }
     }
