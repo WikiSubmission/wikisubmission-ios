@@ -62,6 +62,11 @@ struct QuranView: View {
                         shouldScrollToTop = true
                     }
                 }
+                .onChange(of: isKeyboardActive) { _, state in
+                    if state == true {
+                        shouldScrollToTop = true
+                    }
+                }
             }
         }
         .task {
