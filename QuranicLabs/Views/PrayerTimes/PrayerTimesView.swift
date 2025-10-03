@@ -65,7 +65,9 @@ private extension PrayerTimesView {
                 PlaceholderView()
                     .padding(.top, 50)
                     .onAppear {
-                        presentSearchbar = true
+                        if environment.PrayerTimesManager.prayerTimesData == nil {
+                            presentSearchbar = true
+                        }
                     }
                 Spacer()
             }
