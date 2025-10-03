@@ -61,6 +61,9 @@ private extension PrayerTimesView {
                 locationsList
             } else if let prayerData = environment.PrayerTimesManager.prayerTimesData {
                 prayerTimesScrollView(for: prayerData)
+                    .onAppear {
+                        presentSearchbar = false
+                    }
             } else {
                 PlaceholderView()
                     .padding(.top, 50)
