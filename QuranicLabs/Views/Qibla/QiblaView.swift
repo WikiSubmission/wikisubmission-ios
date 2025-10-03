@@ -1,13 +1,22 @@
 import SwiftUI
+import Defaults
 
 struct QiblaView: View {
     @StateObject private var qiblaManager = Utilities.Qibla.QiblaManager()
-    
+    @Default(.calculate_qibla_from_north_america) private var calculateQiblafromNorthAmerica
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 50) {
-                    StatusCardsView(qiblaManager: qiblaManager)
+                    VStack {
+                        StatusCardsView(qiblaManager: qiblaManager)
+                        
+                        Picker("Location", selection: $calculateQiblafromNorthAmerica) {
+                            Label("North America", systemImage: "map.fill").tag(true)
+                            Label("Worldwide", systemImage: "globe").tag(false)
+                        }
+                        .pickerStyle(.segmented)
+                    }
 
                     CurrentHeadingView(heading: qiblaManager.currentHeading, color: qiblaManager.headingColor, qiblaManager: qiblaManager)
                     
@@ -19,6 +28,11 @@ struct QiblaView: View {
         .navigationTitle("Qibla")
         .onAppear {
             qiblaManager.start()
+        }
+        .onChange(of: calculateQiblafromNorthAmerica) { _, _ in
+            let defaultLat = qiblaManager.defaultLocation.latitude
+            let defaultLon = qiblaManager.defaultLocation.longitude
+            qiblaManager.recalculateQiblaDirection(latitude: defaultLat, longitude: defaultLon)
         }
         .onDisappear {
             qiblaManager.stop()
@@ -98,7 +112,7 @@ private struct StatusCardsView: View {
     var body: some View {
         VStack {
             HStack {
-                Text("PREVIEW")
+                Text("EXPERIMENTAL")
                 Spacer()
                 Button {
                     let subject = "Re: Qibla Feature".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "Re: Qibla Feature"

@@ -1,16 +1,21 @@
 import Foundation
 import SwiftUI
 import CoreLocation
+import Defaults
 
 extension Utilities.Qibla {
     final class QiblaManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         @Published var currentHeading: Double = 0
         @Published var qiblaDirection: Double = 0
         
+        private var calculateQiblafromNorthAmerica: Bool {
+            Defaults[.calculate_qibla_from_north_america]
+        }
+        
         private let locationManager = CLLocationManager()
         
         // Default location
-        private let defaultLocation = CLLocationCoordinate2D(latitude: 39.8283, longitude: -98.5795)
+        let defaultLocation = CLLocationCoordinate2D(latitude: 39.8283, longitude: -98.5795)
         
         // Cardinal points (fixed on compass)
         let cardinalPoints = [
@@ -91,12 +96,31 @@ extension Utilities.Qibla {
         
         // Qibla calculation method
         private func directionToMecca(userLatitude: Double, userLongitude: Double) -> CLLocationDirection {
-            let latDifference = 21.4225241 - userLatitude
-            let lonDifference = 39.8261818 - userLongitude
-            
-            let angle = abs(atan2(lonDifference, latDifference) * 180 / .pi)
-            
-            return angle
+            if calculateQiblafromNorthAmerica {
+                // Original custom planar method (Southeast for N. America)
+                let latDifference = 21.4225241 - userLatitude
+                let lonDifference = 39.8261818 - userLongitude
+                let angle = abs(atan2(lonDifference, latDifference) * 180 / .pi)
+                return angle
+            } else {
+                // Great-circle (worldwide) formula
+                let meccaLat = 21.4225241 * .pi / 180
+                let meccaLon = 39.8261818 * .pi / 180
+                let userLat = userLatitude * .pi / 180
+                let userLon = userLongitude * .pi / 180
+
+                let deltaLon = meccaLon - userLon
+                let y = sin(deltaLon)
+                let x = cos(userLat) * tan(meccaLat) - sin(userLat) * cos(deltaLon)
+
+                var bearing = atan2(y, x) * 180 / .pi
+                bearing = (bearing + 360).truncatingRemainder(dividingBy: 360)
+                return bearing
+            }
+        }
+        
+        func recalculateQiblaDirection(latitude: Double, longitude: Double) {
+            qiblaDirection = directionToMecca(userLatitude: latitude, userLongitude: longitude)
         }
         
         // Helper method to get compass direction string
