@@ -202,14 +202,6 @@ struct QuranView: View {
                                 Label("Daily Verse", systemImage: "book.pages.fill")
                             }
                         }
-                        
-                        NavigationLink {
-                            NavigationStack {
-                                QuranReaderView(chapter: lastOpenedChapter)
-                            }
-                        } label: {
-                            Label("Sura \(lastOpenedChapter)", systemImage: "text.line.magnify")
-                        }
                     }
                     .buttonStyle(SignatureButtonStyle())
                     .padding(.vertical, 8)

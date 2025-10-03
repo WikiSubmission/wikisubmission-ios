@@ -17,6 +17,7 @@ extension Defaults.Keys {
     static let quran_reciter = Key<QuranReciters>("quran_reciter", default: .mishary)
     static let last_played_verse = Key<String>("last_played_verse", default: "1:1")
     static let last_opened_chapter = Key<Int>("last_opened_chapter", default: 39)
+    static let last_read_verse = Key<String>("last_read_verse", default: "1:1")
 }
 
 extension Defaults {

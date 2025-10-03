@@ -8,6 +8,7 @@ struct HomeView: View {
     @Default(.active_tab) private var activeTab
     @Default(.daily_chapter) private var dailyChapter
     @Default(.daily_verse) private var dailyVerse
+    @Default(.last_read_verse) private var lastReadVerse
     @Default(.primary_language) private var primaryLanguage
     var body: some View {
         NavigationStack {
@@ -25,28 +26,33 @@ struct HomeView: View {
                         Group {
                             VStack(spacing: 16) {
                                 FlexStack(verticalSpacing: 12, horizontalSpacing: 16) {
-                                    TinyCard(title: "Random", systemImage: "bubbles.and.sparkles.fill") {
+                                    TinyCard(title: "Random", systemImage: "bubbles.and.sparkles") {
                                         QuranRandomVerse()
                                     }
-                                    TinyCard(title: "Bookmarks", systemImage: "bookmark.fill") {
+                                    TinyCard(title: "Bookmarks", systemImage: "bookmark") {
                                         QuranBookmarks()
                                     }
-                                    TinyCard(title: "Introduction", systemImage: "apple.image.playground.fill") {
+                                    TinyCard(title: "Introduction", systemImage: "apple.image.playground") {
                                         WebView(url: URL(string: "https://library.wikisubmission.org/file/quran-the-final-testament-introduction")!)
                                             .navigationTitle("Introduction")
                                     }
-                                    TinyCard(title: "Appendices", systemImage: "info.square.fill") {
+                                    TinyCard(title: "Appendices", systemImage: "info.square") {
                                         WebView(url: URL(string: "https://wikisubmission.org/appendices")!)
                                             .navigationTitle("Appendices")
                                     }
-                                    TinyCardWithAction(title: "Prayer Times", systemImage: "bolt.heart.fill") {
+                                    TinyCardWithAction(title: "Prayer Times", systemImage: "bolt.heart") {
                                         activeTab = .prayer
                                     }
-                                    TinyCard(title: "Qibla", systemImage: "safari.fill") {
+                                    TinyCard(title: "Qibla", systemImage: "safari") {
                                         QiblaView()
                                     }
-                                    TinyCard(title: "Notifications", systemImage: "bell.square.fill") {
+                                    TinyCard(title: "Notifications", systemImage: "bell.square") {
                                         NotificationsView()
+                                    }
+                                    TinyCard(title: "\(lastReadVerse)", systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90") {
+                                        NavigationStack {
+                                            QuranReaderView(chapter: Int(lastReadVerse.split(separator: ":")[0]) ?? 1, scrollToVerseID: lastReadVerse)
+                                        }
                                     }
                                 }
                             }

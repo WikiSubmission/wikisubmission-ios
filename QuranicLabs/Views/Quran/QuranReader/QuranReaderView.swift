@@ -2,6 +2,15 @@ import SwiftUI
 import Defaults
 import SheetKit
 
+struct VerseVisibilityPreferenceKey: PreferenceKey {
+    static var defaultValue: String? = nil
+    static func reduce(value: inout String?, nextValue: () -> String?) {
+        if let next = nextValue() {
+            value = next
+        }
+    }
+}
+
 struct QuranReaderView: View {
     var chapter: Int
     var scrollToVerseID: String? = nil
@@ -10,6 +19,7 @@ struct QuranReaderView: View {
     
     @Default(.primary_language) private var primaryLanguage
     @Default(.bookmarks) var bookmarks
+    @Default(.last_read_verse) var lastReadVerse
     
     @ObservedObject var audioManager = Utilities.Quran.QuranAudioManager.shared
     
@@ -47,6 +57,19 @@ struct QuranReaderView: View {
                     VStack {
                         ForEach(data, id: \.verse_id) { verse in
                             QuranVerseCard(id: verse.verse_id, isScrolledTo: scrollToVerseID == verse.verse_id ? true : false)
+                                .background(
+                                    GeometryReader { geo in
+                                        Color.clear.preference(
+                                            key: VerseVisibilityPreferenceKey.self,
+                                            value: (geo.frame(in: .global).minY > 50 && geo.frame(in: .global).minY < 400) ? verse.verse_id : nil
+                                        )
+                                    }
+                                )
+                        }
+                    }
+                    .onPreferenceChange(VerseVisibilityPreferenceKey.self) { verseID in
+                        if let verseID = verseID {
+                            lastReadVerse = verseID
                         }
                     }
                 }
