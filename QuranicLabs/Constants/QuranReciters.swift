@@ -21,7 +21,7 @@ enum QuranReciters: String, CaseIterable, Defaults.Serializable {
 
     var image: String {
         switch self {
-        case .mishary: return "mishary"   // put asset names here
+        case .mishary: return "mishary"
         case .basit: return "basit"
         case .minshawi: return "minshawi"
         }
