@@ -63,20 +63,16 @@ extension Utilities.Bookmarks {
     
     /// Syncs local storage bookmarks with bookmarks from iCloud
     static func syncLocalBookmarksWithICloud() {
-        // Load bookmarks from both sources
-        let iCloudBookmarks = getBookmarksFromiCloud()
         let localBookmarks = Defaults[.bookmarks]
+        let iCloudBookmarks = getBookmarksFromiCloud()
         
-        // Merge without duplicates (by .key)
-        var combined: [Types.Bookmarks.Bookmark] = localBookmarks
-        for icloudBookmark in iCloudBookmarks {
-            if !combined.contains(where: { $0.key == icloudBookmark.key }) {
-                combined.append(icloudBookmark)
-            }
+        if localBookmarks.isEmpty && !iCloudBookmarks.isEmpty {
+            // Case: fresh install or reset → restore from iCloud
+            Defaults[.bookmarks] = iCloudBookmarks
+        } else {
+            // Case: normal usage → push local to iCloud
+            saveBookmarksToiCloud(localBookmarks)
         }
-        // Save merged list to both local and iCloud
-        Defaults[.bookmarks] = combined
-        saveBookmarksToiCloud(combined)
     }
     
     /// Starts observing iCloud changes and syncs them to local storage when they occur
