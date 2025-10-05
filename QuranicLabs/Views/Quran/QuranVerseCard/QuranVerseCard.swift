@@ -22,6 +22,7 @@ struct QuranVerseCard: View {
     @Default(.primary_language) private var primaryLanguage
     @Default(.secondary_language) private var secondaryLanguage
     @Default(.font_size) private var fontSize
+    @Default(.use_serif_font_design) var useSerifFontDesign
     @Default(.bookmarks) private var bookmarks
 
     @Environment(\.colorScheme) private var theme
@@ -131,7 +132,7 @@ struct QuranVerseCard: View {
             verseID(data: data)
             subtitle(data: data)
             primaryAndArabicText(data: data)
-                .fontDesign(.serif)
+                .fontDesign(useSerifFontDesign ? .serif : .default)
             secondaryText(data: data)
             transliteration(data: data)
             footnote(data: data)

@@ -54,6 +54,7 @@ struct SettingsView: View {
             FootnotesToggle()
             TransliterationToggle()
             ArabicPositionToggle()
+            UseSerifFontDesignToggle()
         }
     }
     
