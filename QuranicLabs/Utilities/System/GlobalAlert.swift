@@ -13,7 +13,8 @@ extension Utilities.System {
             subtitle: String? = nil,
             systemImage: String = "exclamationmark.triangle",
             type: GlobalAlertType,
-            showSettingsButton: Bool?
+            showSettingsButton: Bool = false,
+            showAppStoreButton: Bool = false
         ) {
             DispatchQueue.main.async {
                 self.alert = GlobalAlert(
@@ -21,7 +22,8 @@ extension Utilities.System {
                     subtitle: subtitle,
                     systemImage: systemImage,
                     type: type,
-                    showSettingsButton: showSettingsButton
+                    showSettingsButton: showSettingsButton,
+                    showAppStoreButton: showAppStoreButton
                 )
             }
         }
@@ -34,6 +36,7 @@ extension Utilities.System {
         let systemImage: String
         let type: GlobalAlertType
         let showSettingsButton: Bool?
+        let showAppStoreButton: Bool?
     }
 
     enum GlobalAlertType {

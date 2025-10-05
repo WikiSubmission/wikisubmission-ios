@@ -13,6 +13,9 @@ extension Utilities.System {
         // Register for push notifications (if applicable)
         Utilities.System.registerForPushNotificationsIfNeeded()
         
+        // Check for app updates and notify (if applicable)
+        await Utilities.System.checkForAppUpdates()
+        
         // Configure audio instance
         do {
             let audioSession = AVAudioSession.sharedInstance()

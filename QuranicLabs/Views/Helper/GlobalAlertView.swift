@@ -29,6 +29,15 @@ struct GlobalAlertView: View {
                     }
                     .buttonStyle(SignatureButtonStyle())
                 }
+                
+                if alert.showAppStoreButton ?? false {
+                    Button {
+                        UIApplication.shared.open(URL(string: Info.appStoreURL)!)
+                    } label: {
+                        Text("Open App Store")
+                    }
+                    .buttonStyle(SignatureButtonStyle())
+                }
             }
         }
         .padding()
@@ -47,7 +56,8 @@ struct GlobalAlertView: View {
             subtitle: "An internet connection is required to use this feature.",
             systemImage: "wifi.exclamationmark",
             type: .success,
-            showSettingsButton: false
+            showSettingsButton: false,
+            showAppStoreButton: false
         ))
     }
 }
