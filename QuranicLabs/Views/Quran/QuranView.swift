@@ -217,65 +217,67 @@ struct QuranView: View {
     
     private var searchResultList: some View {
         VStack {
-            // Filter row, if more than one category.
-            HStack {
-                if hasMultipleSearchResultTypes {
-                    Button {
-                        withAnimation {
-                            searchResultsFiltered = .init(type: .unknown, chapters: [], verseIDs: [], text: [], subtitles: [], footnotes: [])
-                            searchResultsFilter = .all
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack {
+                    if hasMultipleSearchResultTypes {
+                        Button {
+                            withAnimation {
+                                searchResultsFiltered = .init(type: .unknown, chapters: [], verseIDs: [], text: [], subtitles: [], footnotes: [])
+                                searchResultsFilter = .all
+                            }
+                        } label: {
+                            Text("All (\(totalResultsCount))")
                         }
-                    } label: {
-                        Text("All (\(totalResultsCount))")
+                        .fontWeight(searchResultsFilter == .all ? .bold : .regular)
                     }
-                    .fontWeight(searchResultsFilter == .all ? .bold : .regular)
-                }
-                
-                if searchResults.text.count > 0 {
-                    Button {
-                        withAnimation {
-                            searchResultsFiltered = .init(type: .unknown, chapters: [], verseIDs: [], text: [], subtitles: [], footnotes: [])
-                            searchResults.type = searchResults.type
-                            searchResultsFiltered.subtitles = searchResults.text
-                            searchResultsFilter = .text
+                    
+                    if searchResults.text.count > 0 {
+                        Button {
+                            withAnimation {
+                                searchResultsFiltered = .init(type: .unknown, chapters: [], verseIDs: [], text: [], subtitles: [], footnotes: [])
+                                searchResults.type = searchResults.type
+                                searchResultsFiltered.subtitles = searchResults.text
+                                searchResultsFilter = .text
+                            }
+                        } label: {
+                            Text("Text (\(searchResults.text.count))")
                         }
-                    } label: {
-                        Text("Text (\(searchResults.text.count))")
+                        .fontWeight(searchResultsFilter == .text ? .bold : .regular)
                     }
-                    .fontWeight(searchResultsFilter == .text ? .bold : .regular)
-                }
-                
-                if searchResults.subtitles.count > 0 {
-                    Button {
-                        withAnimation {
-                            searchResultsFiltered = .init(type: .unknown, chapters: [], verseIDs: [], text: [], subtitles: [], footnotes: [])
-                            searchResults.type = searchResults.type
-                            searchResultsFiltered.subtitles = searchResults.subtitles
-                            searchResultsFilter = .subtitles
+                    
+                    if searchResults.subtitles.count > 0 {
+                        Button {
+                            withAnimation {
+                                searchResultsFiltered = .init(type: .unknown, chapters: [], verseIDs: [], text: [], subtitles: [], footnotes: [])
+                                searchResults.type = searchResults.type
+                                searchResultsFiltered.subtitles = searchResults.subtitles
+                                searchResultsFilter = .subtitles
+                            }
+                        } label: {
+                            Text("Subtitles (\(searchResults.subtitles.count))")
                         }
-                    } label: {
-                        Text("Subtitles (\(searchResults.subtitles.count))")
+                        .fontWeight(searchResultsFilter == .subtitles ? .bold : .regular)
                     }
-                    .fontWeight(searchResultsFilter == .subtitles ? .bold : .regular)
-                }
-                
-                if searchResults.footnotes.count > 0 {
-                    Button {
-                        withAnimation {
-                            searchResultsFiltered = .init(type: .unknown, chapters: [], verseIDs: [], text: [], subtitles: [], footnotes: [])
-                            searchResults.type = searchResults.type
-                            searchResultsFiltered.subtitles = searchResults.footnotes
-                            searchResultsFilter = .footnotes
+                    
+                    if searchResults.footnotes.count > 0 {
+                        Button {
+                            withAnimation {
+                                searchResultsFiltered = .init(type: .unknown, chapters: [], verseIDs: [], text: [], subtitles: [], footnotes: [])
+                                searchResults.type = searchResults.type
+                                searchResultsFiltered.subtitles = searchResults.footnotes
+                                searchResultsFilter = .footnotes
+                            }
+                        } label: {
+                            Text("Footnotes (\(searchResults.footnotes.count))")
                         }
-                    } label: {
-                        Text("Footnotes (\(searchResults.footnotes.count))")
+                        .fontWeight(searchResultsFilter == .footnotes ? .bold : .regular)
                     }
-                    .fontWeight(searchResultsFilter == .footnotes ? .bold : .regular)
+                    
+                    Spacer()
                 }
-                
-                Spacer()
+                .font(.footnote)
+                .buttonStyle(SignatureButtonStyle())
             }
-            .buttonStyle(SignatureButtonStyle())
             
             ForEach(searchResultsFilter == .all ? searchResults.chapters : searchResultsFiltered.chapters, id: \.self) { chapter in
                 QuranChapterCard(chapter: chapter)
