@@ -128,6 +128,14 @@ extension Utilities.Quran {
                     return results
                 }
                 
+                let chapterTitleMatches = AppData.Quran.chapters.first {
+                    $0.getChapterTitle(for: language).lowercased().contains(query) || $0.chapter_title_transliterated.lowercased().contains(query)
+                }
+                
+                if let chapter = chapterTitleMatches?.chapter_number {
+                    results.chapters.append(chapter)
+                }
+                
                 let searchTerm = term.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
                 for data in AppData.Quran.main {
                     let verseText = data.getPrimaryText(for: language).lowercased()

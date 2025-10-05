@@ -163,9 +163,7 @@ struct QuranView: View {
                 DispatchQueue.main.async {
                     searchResults = Utilities.Quran.DataAPI.search(term: finalQuery)
                     searchResultsLoading = false
-                    
-                    print(searchResults)
-                    
+                                        
                     if !hasMultipleSearchResultTypes {
                         self.searchResultsFilter = singleSearchResultType
                         self.searchResultsFiltered = singleSearchResultData
