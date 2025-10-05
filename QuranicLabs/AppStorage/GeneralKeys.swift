@@ -9,5 +9,6 @@ extension Defaults.Keys {
 extension Defaults {
     static func resetOnboardedState() {
         Defaults.Keys.onboarded.reset()
+        Defaults.Keys.active_tab.reset()
     }
 }
