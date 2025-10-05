@@ -284,19 +284,19 @@ struct QuranView: View {
             }
             
             ForEach(searchResultsFilter == .all ? searchResults.verseIDs : searchResultsFiltered.verseIDs, id: \.self) { verseId in
-                QuranVerseCard(id: verseId)
+                QuranVerseCard(id: verseId, linkToChapter: true)
             }
             
             ForEach(searchResultsFilter == .all ? searchResults.text : searchResultsFiltered.text, id: \.self) { verse in
-                QuranVerseCard(id: verse.verse_id, highlight: query)
+                QuranVerseCard(id: verse.verse_id, highlight: query, linkToChapter: true)
             }
             
             ForEach(searchResultsFilter == .all ? searchResults.subtitles : searchResultsFiltered.subtitles, id: \.self) { verse in
-                QuranVerseCard(id: verse.verse_id, highlight: query)
+                QuranVerseCard(id: verse.verse_id, highlight: query, linkToChapter: true)
             }
             
             ForEach(searchResultsFilter == .all ? searchResults.footnotes : searchResultsFiltered.footnotes, id: \.self) { verse in
-                QuranVerseCard(id: verse.verse_id, highlight: query)
+                QuranVerseCard(id: verse.verse_id, highlight: query, linkToChapter: true)
             }
         }
     }
