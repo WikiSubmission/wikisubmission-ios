@@ -159,9 +159,12 @@ struct QuranView: View {
                 searchResultsFiltered = .init(type: .unknown, chapters: [], verseIDs: [], text: [], subtitles: [], footnotes: [])
                 searchResultsLoading = true
                 
+                
                 DispatchQueue.main.async {
                     searchResults = Utilities.Quran.DataAPI.search(term: finalQuery)
                     searchResultsLoading = false
+                    
+                    print(searchResults)
                     
                     if !hasMultipleSearchResultTypes {
                         self.searchResultsFilter = singleSearchResultType

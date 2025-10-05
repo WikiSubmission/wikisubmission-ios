@@ -36,10 +36,6 @@ extension Utilities.Quran {
             var results: Types.Quran.SearchResult = .init(type: .unknown, chapters: [], verseIDs: [], text: [], subtitles: [], footnotes: [])
 
             let query = term.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !query.isEmpty, query.count > 2 else {
-                results.type = .invalid
-                return results
-            }
             
             if query.contains(",") && query.contains(":") {
                 handleMultipleVerses(query: query, results: &results)
@@ -127,6 +123,11 @@ extension Utilities.Quran {
                     results.verseIDs.append(query)
                 }
             } else if parsedQuery == .search {
+                guard !query.isEmpty, query.count > 2 else {
+                    results.type = .invalid
+                    return results
+                }
+                
                 let searchTerm = term.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
                 for data in AppData.Quran.main {
                     let verseText = data.getPrimaryText(for: language).lowercased()
