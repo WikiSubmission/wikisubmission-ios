@@ -51,7 +51,7 @@ struct QuranView: View {
                     }
                 }
             }
-            .padding(.horizontal, 8)
+            .padding(.horizontal)
             .padding(.bottom, 8)
             .toolbar {
                 toolbarMenu

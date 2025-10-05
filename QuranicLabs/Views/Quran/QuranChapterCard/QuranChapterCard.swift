@@ -15,11 +15,12 @@ struct QuranChapterCard: View {
         AppData.Quran.chapters.first { $0.chapter_number == chapter }
     }
     
-    @Default(.primary_language) var primaryLanguage
-    
-    @Environment(\.colorScheme) var theme
-        
+    @Default(.primary_language) private var primaryLanguage
+    @Default(.use_serif_font_design) private var useSerifFontDesign
     @Default(.bookmarks) private var bookmarks
+
+    @Environment(\.colorScheme) private var theme
+        
 
     var body: some View {
         if let data {
@@ -45,7 +46,7 @@ struct QuranChapterCard: View {
                                 }
                                 Text("Sura \(data.chapter_number)")
                                     .foregroundStyle(.accent)
-                                    .fontDesign(.serif)
+                                    .fontDesign(useSerifFontDesign ? .serif : .default)
                                 Text(data.chapter_title_transliterated)
                                     .foregroundStyle(theme == .dark ? .white : .black)
                                     .fontWeight(.semibold)
@@ -53,7 +54,7 @@ struct QuranChapterCard: View {
                             HStack {
                                 Text(data.getChapterTitle(for: primaryLanguage))
                                     .foregroundStyle(theme == .dark ? .white : .black)
-                                    .fontDesign(.serif)
+                                    .fontDesign(useSerifFontDesign ? .serif : .default)
                             }
                         }
                         Spacer()
