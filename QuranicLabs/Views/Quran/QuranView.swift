@@ -133,6 +133,7 @@ struct QuranView: View {
             
             if !liveInput.text.isEmpty {
                 Button {
+                    shouldScrollToTop = true
                     searchBarFocused = true
                     liveInput.text = ""
                     typingState = .idle
