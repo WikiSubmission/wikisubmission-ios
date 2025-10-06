@@ -13,7 +13,7 @@ extension Utilities.System {
         // Configure audio instance
         do {
             let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(.playback, mode: .default)
+            try audioSession.setCategory(.playback, mode: .default, options: [.mixWithOthers])
             try audioSession.setActive(true)
         } catch {
             print("AVAudioSession setup failed: \(error)")
