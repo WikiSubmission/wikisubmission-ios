@@ -15,6 +15,15 @@ struct ResourcesView: View {
                     }
                     
                     LargeCard(
+                        title: "Masjid Tucson",
+                        subtitle: "Learn about Submission and access useful resources",
+                        image: "masjidtucson"
+                    ) {
+                        WebView(url: URL(string: "https://masjidtucson.org")!)
+                            .navigationTitle("MasjidTucson")
+                    }
+                    
+                    LargeCard(
                         title: "Submission Archives",
                         subtitle: "Useful videos and community archives",
                         image: "submissionarchives"
@@ -25,7 +34,7 @@ struct ResourcesView: View {
                     
                     LargeCard(
                         title: "Submission Server",
-                        subtitle: "Access the worldwide Submitter community",
+                        subtitle: "Public space to interact with Submitters around the world",
                         image: "19"
                     ) {
                         WebView(url: URL(string: "https://discord.gg/submissionserver")!)
