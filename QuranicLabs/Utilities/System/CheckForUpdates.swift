@@ -11,6 +11,22 @@ extension Utilities.System {
             return
         }
 
+        func isVersion(_ v1: String, greaterThan v2: String) -> Bool {
+            let v1Components = v1.split(separator: ".").compactMap { Int($0) }
+            let v2Components = v2.split(separator: ".").compactMap { Int($0) }
+            let maxCount = max(v1Components.count, v2Components.count)
+            for i in 0..<maxCount {
+                let v1Part = i < v1Components.count ? v1Components[i] : 0
+                let v2Part = i < v2Components.count ? v2Components[i] : 0
+                if v1Part > v2Part {
+                    return true
+                } else if v1Part < v2Part {
+                    return false
+                }
+            }
+            return false
+        }
+
         do {
             let query: Utilities.System.WSiOSUpdates = try await Utilities.Supabase.client
                 .from("ws-ios-updates")
@@ -21,8 +37,9 @@ extension Utilities.System {
             
             let liveVersion = query.ios_version
             let currentVersion = Info.version
+            let liveVersionGreaterThanCurrentVersion = isVersion(liveVersion, greaterThan: currentVersion)
             
-            if liveVersion != currentVersion {
+            if liveVersionGreaterThanCurrentVersion {
                 Utilities.System.GlobalAlertManager.shared.showAlert(
                     title: "An app update is available",
                     subtitle: "You are on V\(currentVersion). An upgrade to V\(liveVersion) is now available.",
@@ -32,7 +49,7 @@ extension Utilities.System {
                 )
             }
         
-            if forceCheck && liveVersion == currentVersion {
+            if forceCheck && (liveVersion == currentVersion || !liveVersionGreaterThanCurrentVersion) {
                 Utilities.System.GlobalAlertManager.shared.showAlert(
                     title: "You're on the latest version",
                     subtitle: "You are on V\(currentVersion) (latest). We'll let you know if there's an update.",
