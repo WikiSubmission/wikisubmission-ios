@@ -1,6 +1,8 @@
+import Foundation
+
 extension Types.Quran {
     struct Data: Identifiable, Codable, Hashable {
-        var id: String { verse_id }
+        var id = UUID()
         let verse_id: String
         let verse_id_arabic: String
         let chapter_number: Int
