@@ -12,5 +12,6 @@ extension Defaults {
     static func resetOnboardedState() {
         Defaults.Keys.onboarded.reset()
         Defaults.Keys.active_tab.reset()
+        Defaults.Keys.last_checked_for_update.reset()
     }
 }
