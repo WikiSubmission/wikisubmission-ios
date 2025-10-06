@@ -24,6 +24,12 @@ struct TabsView: View {
                     Label(TabItem.resources.rawValue, systemImage: TabItem.resources.symbol)
                 }
                 .tag(TabItem.resources)
+            
+            ZikrView()
+                .tabItem {
+                    Label(TabItem.zikr.rawValue, systemImage: TabItem.zikr.symbol)
+                }
+                .tag(TabItem.zikr)
 
             SettingsView()
                 .tabItem {
@@ -38,6 +44,7 @@ enum TabItem: String, CaseIterable, Equatable, Defaults.Serializable {
     case home = "Home"
     case prayer = "Prayer"
     case resources = "Resources"
+    case zikr = "Zikr"
     case settings = "Settings"
     
     var symbol: String {
@@ -45,6 +52,7 @@ enum TabItem: String, CaseIterable, Equatable, Defaults.Serializable {
         case .home: return "house.fill"
         case .prayer: return "bolt.heart.fill"
         case .resources: return "info.circle.text.page.fill"
+        case .zikr: return "music.note"
         case .settings: return "gearshape.fill"
         }
     }
