@@ -16,6 +16,7 @@ struct QuranReaderView: View {
     var scrollToVerseID: String? = nil
     
     @State private var data: [Types.Quran.Data] = []
+    @State private var scrolledToVerseOnce = false
     
     @Default(.primary_language) private var primaryLanguage
     @Default(.bookmarks) var bookmarks
@@ -83,10 +84,14 @@ struct QuranReaderView: View {
                 }
                 .onAppear {
                     Task {
+                        guard scrolledToVerseOnce == false else {
+                            return
+                        }
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             if let scrollToVerseID = scrollToVerseID {
                                 withAnimation {
                                     proxy.scrollTo(scrollToVerseID, anchor: .top)
+                                    scrolledToVerseOnce = true
                                 }
                             }
                         }
