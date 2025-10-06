@@ -106,6 +106,15 @@ struct SettingsView: View {
             .alert("Cannot open Mail app", isPresented: $showMailError) {
                 Button("OK", role: .cancel) {}
             }
+            
+            Button {
+                Task {
+                    await Utilities.System.checkForAppUpdates(forceCheck: true)
+                }
+            } label: {
+                Label("Check for updates", systemImage: "rectangle.grid.2x2.fill")
+                    .foregroundStyle(.green)
+            }
 
             Button(role: .destructive) { showResetConfirmation = true } label: {
                 Label("Reset", systemImage: "arrow.counterclockwise")
