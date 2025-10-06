@@ -17,6 +17,8 @@
 	<dict>
 		<key>NSExceptionDomains</key>
 		<dict>
+			<key>cdn.wikisubmission.org</key>
+			<string></string>
 			<key>practices.wikisubmission.org</key>
 			<string></string>
 			<key>wikisubmission.org</key>
