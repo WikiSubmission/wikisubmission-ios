@@ -1,5 +1,6 @@
 import Defaults
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct QuranBookmarks: View {
     // Defaults
@@ -14,6 +15,8 @@ struct QuranBookmarks: View {
     @State private var presentSignInFlow = false
     @State private var presentAddChapter = false
     @State private var presentAddVerse = false
+    @State private var presentImportBookmarks = false
+    @State private var importBookmarksError: Error? = nil
 
     // Inputs
     @State private var noteInput = ""
@@ -66,6 +69,47 @@ struct QuranBookmarks: View {
             .navigationBarTitleDisplayMode(.large)
             .presentationDragIndicator(.visible)
             .toolbar { bookmarksToolbar }
+
+            // File importer for bookmarks JSON
+            .fileImporter(
+                isPresented: $presentImportBookmarks,
+                allowedContentTypes: [UTType.json],
+                allowsMultipleSelection: false
+            ) { result in
+                switch result {
+                case .success(let urls):
+                    guard let url = urls.first else { return }
+                    do {
+                        // Start security access
+                        guard url.startAccessingSecurityScopedResource() else {
+                            throw NSError(domain: "FileAccess", code: 1, userInfo: [
+                                NSLocalizedDescriptionKey: "Unable to access the selected file."
+                            ])
+                        }
+                        defer { url.stopAccessingSecurityScopedResource() }
+
+                        let data = try Data(contentsOf: url)
+                        let existing = Defaults[.bookmarks]
+                        let imported = try JSONDecoder().decode([Types.Bookmarks.Bookmark].self, from: data)
+                        let merged = existing + imported
+                        Defaults[.bookmarks] = merged
+                    } catch {
+                        importBookmarksError = error
+                    }
+                case .failure(let error):
+                    importBookmarksError = error
+                }
+            }
+            // Show alert on import error
+            .alert("Failed to import bookmarks", isPresented: Binding(
+                get: { importBookmarksError != nil },
+                set: { if !$0 { importBookmarksError = nil } }
+            )) {
+                Button("OK", role: .cancel) { importBookmarksError = nil }
+            } message: {
+                Text(importBookmarksError?.localizedDescription ?? "Unknown error")
+            }
+
             // Sheets
             .sheet(isPresented: $presentAddChapter) { addChapterSheet }
             .sheet(isPresented: $presentAddVerse) { addVerseSheet }
@@ -189,6 +233,7 @@ struct QuranBookmarks: View {
     @ToolbarContentBuilder private var bookmarksToolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .topBarTrailing) {
             HStack(spacing: 0) {
+                
                 if !uniqueCategories.isEmpty {
                     Menu {
                         Button {
@@ -223,6 +268,20 @@ struct QuranBookmarks: View {
                 }
                 
                 Menu {
+                    Button {
+                        presentImportBookmarks = true
+                    } label: {
+                        Label("Import bookmarks...", systemImage: "square.and.arrow.down.fill")
+                    }
+                    
+                    if !bookmarks.isEmpty {
+                        Button {
+                            Utilities.Bookmarks.exportBookmarks()
+                        } label: {
+                            Label("Export bookmarks...", systemImage: "square.and.arrow.up.fill")
+                        }
+                    }
+                    
                     Button {
                         presentDeleteAllBookmarksDialog = true
                     } label: {

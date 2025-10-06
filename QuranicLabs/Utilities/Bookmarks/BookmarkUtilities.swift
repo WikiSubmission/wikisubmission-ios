@@ -1,84 +1,81 @@
 import Foundation
 import Defaults
+import UIKit
 
 extension Utilities.Bookmarks {
-    
-    private static let iCloudBookmarksKey = "wikisubmission-bookmarks"
     
     /// Returns bookmarks stored locally in user defaults.
     static private func getLocalStore() -> [Types.Bookmarks.Bookmark] {
         return Defaults[.bookmarks]
     }
     
-    static func getBookmarksFromiCloud() -> [Types.Bookmarks.Bookmark] {
-        let store = NSUbiquitousKeyValueStore.default
-        if let data = store.data(forKey: Self.iCloudBookmarksKey),
-           let bookmarks = try? JSONDecoder().decode([Types.Bookmarks.Bookmark].self, from: data) {
-            return bookmarks
-        }
-        return []
-    }
-    
-    static func saveBookmarksToiCloud(_ bookmarks: [Types.Bookmarks.Bookmark]) {
-        let store = NSUbiquitousKeyValueStore.default
-        if let data = try? JSONEncoder().encode(bookmarks) {
-            store.set(data, forKey: Self.iCloudBookmarksKey)
-            store.synchronize()
-        }
-    }
-
-    /// Adds a bookmark to local storage and syncs it to iCloud
+    /// Adds a bookmark to local storage
     static func addBookmark(_ bookmark: Types.Bookmarks.Bookmark) async throws -> Void {
         var bookmarks = Defaults[.bookmarks]
         guard !bookmarks.contains(where: { $0.key == bookmark.key }) else { return }
         bookmarks.append(bookmark)
         Defaults[.bookmarks] = bookmarks
-        saveBookmarksToiCloud(bookmarks)
     }
     
-    /// Removes a bookmark from local storage and syncs the change to iCloud
+    /// Removes a bookmark from local storage
     static func removeBookmark(_ bookmark: Types.Bookmarks.Bookmark) async throws -> Void {
         var bookmarks = Defaults[.bookmarks]
         let initialCount = bookmarks.count
         bookmarks.removeAll(where: { $0.key == bookmark.key })
         guard bookmarks.count < initialCount else { return }
         Defaults[.bookmarks] = bookmarks
-        saveBookmarksToiCloud(bookmarks)
     }
     
-    /// Edits a bookmark in local storage and syncs the change to iCloud
+    /// Edits a bookmark in local storage
     static func editBookmark(_ bookmark: Types.Bookmarks.Bookmark, newBookmark: Types.Bookmarks.Bookmark) async throws -> Void {
         var bookmarks = Defaults[.bookmarks]
         guard let index = bookmarks.firstIndex(where: { $0.key == bookmark.key }) else { return }
         bookmarks[index] = newBookmark
         Defaults[.bookmarks] = bookmarks
-        saveBookmarksToiCloud(bookmarks)
     }
     
-    /// Deletes all bookmarks locally and in iCloud
+    /// Deletes all bookmarks locally
     static func deleteAll() async throws {
         Defaults[.bookmarks] = []
-        saveBookmarksToiCloud([])
     }
     
-    /// Syncs local storage bookmarks with bookmarks from iCloud
-    static func syncLocalBookmarksWithICloud() {
-        let localBookmarks = Defaults[.bookmarks]
-        let iCloudBookmarks = getBookmarksFromiCloud()
+    /// Exports all bookmarks as a JSON file and presents a share sheet to share the file
+    static func exportBookmarks() {
+        // Get bookmarks from local storage
+        let bookmarks = Defaults[.bookmarks]
         
-        if localBookmarks.isEmpty && !iCloudBookmarks.isEmpty {
-            // Case: fresh install or reset → restore from iCloud
-            Defaults[.bookmarks] = iCloudBookmarks
-        } else {
-            // Case: normal usage → push local to iCloud
-            saveBookmarksToiCloud(localBookmarks)
-        }
-    }
-    
-    /// Starts observing iCloud changes and syncs them to local storage when they occur
-    static func startICloudObserver() {
-        NotificationCenter.default.addObserver(forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification, object: NSUbiquitousKeyValueStore.default, queue: .main) { _ in
-            syncLocalBookmarksWithICloud()
+        // Initialize JSON encoder with pretty printed format
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        
+        do {
+            // Encode bookmarks to JSON data
+            let data = try encoder.encode(bookmarks)
+            
+            // Generate a filename with current date and time to ensure uniqueness
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyyMMdd-HHmmss"
+            let dateString = dateFormatter.string(from: Date())
+            let filename = "QuranBookmarks-\(dateString).json"
+            
+            // Create a temporary file URL in the system's temporary directory
+            let tempDirectory = FileManager.default.temporaryDirectory
+            let tempFileURL = tempDirectory.appendingPathComponent(filename)
+            
+            // Write the encoded JSON data to the temporary file
+            try data.write(to: tempFileURL, options: .atomic)
+            
+            // Present a share sheet (UIActivityViewController) to share the JSON file URL
+            DispatchQueue.main.async {
+                let activityVC = UIActivityViewController(activityItems: [tempFileURL], applicationActivities: nil)
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let rootVC = windowScene.windows.first?.rootViewController {
+                    rootVC.present(activityVC, animated: true, completion: nil)
+                }
+            }
+            
+        } catch {
+            Utilities.System.GlobalAlertManager.shared.showAlert(title: "Error Exporting Bookmarks", subtitle: "\(error.localizedDescription)", systemImage: "square.and.arrow.up.trianglebadge.exclamationmark.fill", type: .error)
         }
     }
 }
