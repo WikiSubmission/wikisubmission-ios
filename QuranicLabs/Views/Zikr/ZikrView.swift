@@ -29,17 +29,22 @@ struct ZikrView: View {
                                     .foregroundStyle(.secondary)
                                 Spacer()
                             }
-                            Divider()
                             let favoriteTracks = vm.artists.flatMap { artist in
                                 artist.tracks.filter { $0.favoritedAt != nil }
                             }
                             if !favoriteTracks.isEmpty {
                                 LazyVStack(alignment: .leading, spacing: 8) {
-                                    Section(header: Text("Favorites")
-                                        .font(.title2)
-                                        .fontWeight(.light)
+                                    Section(header:
+                                                HStack {
+                                                    Image(systemName: "music.note")
+                                                        .font(.title3)
+                                                    Text("Favorites")
+                                                        .font(.title)
+                                                        .fontWeight(.semibold)
+                                                    Spacer()
+                                                }
                                         .foregroundStyle(.accent)
-                                        .pushToLeft()) {
+                                    ) {
                                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 120)), GridItem(.adaptive(minimum: 120))], spacing: 8) {
                                             ForEach(favoriteTracks) { track in
                                                 if let artist = vm.artists.first(where: { $0.tracks.contains(where: { $0.id == track.id }) }) {
@@ -66,7 +71,7 @@ struct ZikrView: View {
                             ForEach(vm.artists) { artist in
                                 LazyVStack(alignment: .leading, spacing: 8, pinnedViews: .sectionHeaders) {
                                     Section(header: Text("\(artist.id.capitalized)")
-                                        .font(.title2)
+                                        .font(.title)
                                         .fontWeight(.light)
                                         .foregroundStyle(.secondary)
                                         .pushToLeft()) {
@@ -97,6 +102,32 @@ struct ZikrView: View {
                 }
             }
             .navigationTitle("Zikr")
+            .toolbar {
+                HStack(spacing: 0) {
+                    if audioManager.isPlaying {
+                        AnimatedWaveform()
+                        Button {
+                            ZikrAudioManager.shared.isLooping.toggle()
+                        } label: {
+                            Label("Loop", systemImage: audioManager.isLooping ? "repeat.circle.fill" : "repeat.circle")
+                        }
+                    }
+                    if audioManager.currentTrack != nil {
+                        Button {
+                            ZikrAudioManager.shared.togglePlayPause()
+                        } label: {
+                            Label("Pause", systemImage: audioManager.isPlaying ? "pause.fill" : "play.fill")
+                        }
+                    }
+                    if audioManager.isPlaying {
+                        Button {
+                            ZikrAudioManager.shared.stop()
+                        } label: {
+                            Label("Stop", systemImage: "stop.fill")
+                        }
+                    }
+                }
+            }
             .task { await vm.fetchMediaIndex() }
         }
     }
@@ -258,6 +289,7 @@ class ZikrAudioManager: ObservableObject {
     @Published var isPlaying: Bool = false
     @Published var currentTrack: String? = nil
     @Published var currentArtist: String? = nil
+    @Published var isLooping: Bool = true
     
     private var player: AVPlayer?
     private var timeObserverToken: Any?
@@ -325,8 +357,10 @@ class ZikrAudioManager: ObservableObject {
             }
             let progress = time.seconds / duration
             if progress >= 1.0 {
-                player.seek(to: .zero)
-                player.play()
+                if self?.isLooping == true {
+                    player.seek(to: .zero)
+                    player.play()
+                }
             }
         }
     }
