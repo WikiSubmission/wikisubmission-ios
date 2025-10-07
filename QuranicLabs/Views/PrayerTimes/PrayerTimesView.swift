@@ -13,6 +13,7 @@ struct PrayerTimesView: View {
     @State private var geocoder = CLGeocoder()
     
     @Default(.active_tab) var activeTab
+    @Default(.qibla_enabled) private var qibla
 
     @EnvironmentObject private var environment: AppEnvironment
 
@@ -123,8 +124,10 @@ private extension PrayerTimesView {
                 Divider()
                 
                 FlexStack {
-                    TinyCard(title: "Qibla", systemImage: "safari.fill") {
-                        QiblaView()
+                    if qibla {
+                        TinyCard(title: "Qibla", systemImage: "safari.fill") {
+                            QiblaView()
+                        }
                     }
                     TinyCard(title: "Notifications", systemImage: "bell.badge.fill") {
                         NotificationsView()

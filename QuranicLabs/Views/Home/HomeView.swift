@@ -10,7 +10,8 @@ struct HomeView: View {
     @Default(.daily_verse) private var dailyVerse
     @Default(.last_read_verse) private var lastReadVerse
     @Default(.primary_language) private var primaryLanguage
-    
+    @Default(.qibla_enabled) private var qibla
+
     @Environment(\.colorScheme) private var theme
     
     var body: some View {
@@ -46,8 +47,15 @@ struct HomeView: View {
                                     TinyCardWithAction(title: "Prayer Times", systemImage: "bolt.heart") {
                                         activeTab = .prayer
                                     }
-                                    TinyCard(title: "Qibla", systemImage: "safari") {
-                                        QiblaView()
+                                    if qibla {
+                                        TinyCard(title: "Qibla", systemImage: "safari") {
+                                            QiblaView()
+                                        }
+                                    }
+                                    if !qibla {
+                                        TinyCard(title: "Zikr", systemImage: "music.note") {
+                                            ZikrView()
+                                        }
                                     }
                                     TinyCard(title: "Notifications", systemImage: "bell.square") {
                                         NotificationsView()

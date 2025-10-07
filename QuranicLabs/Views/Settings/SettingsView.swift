@@ -20,6 +20,7 @@ struct SettingsView: View {
                 readerTogglesSection
                 miscalleneousSection
                 prayerTimesTogglesSection
+                experimentalSection
                 appActionsSection
                 appInfoSection
             }
@@ -65,7 +66,7 @@ struct SettingsView: View {
     }
     
     private var miscalleneousSection: some View {
-        Section() {
+        Section {
             NavigationLink {
                 NotificationsView()
             } label: {
@@ -87,6 +88,12 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+        }
+    }
+    
+    private var experimentalSection: some View {
+        Section(header: Text("Experimental Features")) {
+            QiblaToggle()
         }
     }
 
