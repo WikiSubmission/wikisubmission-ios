@@ -162,7 +162,7 @@ struct QuranView: View {
                 
                 
                 DispatchQueue.main.async {
-                    searchResults = Utilities.Quran.DataAPI.search(term: finalQuery)
+                    searchResults = Utilities.Quran.DataAPI.search(term: finalQuery, language: primaryLanguage, fuzzy: true)
                     searchResultsLoading = false
                                         
                     if !hasMultipleSearchResultTypes {
