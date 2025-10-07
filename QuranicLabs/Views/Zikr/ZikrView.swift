@@ -18,7 +18,7 @@ struct ZikrView: View {
                 if vm.isLoading {
                     ProgressView()
                 } else {
-                    ScrollView {
+                    ScrollView(.vertical, showsIndicators: false) {
                         VStack(spacing: 24) {
                             HStack(alignment: .top, spacing: 4) {
                                 Image(systemName: "info.circle")
