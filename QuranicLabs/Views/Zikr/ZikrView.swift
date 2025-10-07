@@ -75,7 +75,7 @@ struct ZikrView: View {
                                         .fontWeight(.light)
                                         .foregroundStyle(.secondary)
                                         .pushToLeft()) {
-                                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 120)), GridItem(.adaptive(minimum: 120))], spacing: 8) {
+                                            LazyVGrid(columns: [GridItem(.adaptive(minimum: UIDevice.current.userInterfaceIdiom == .pad ? .infinity : 120)), GridItem(.adaptive(minimum: UIDevice.current.userInterfaceIdiom == .pad ? .infinity : 120))], spacing: 8) {
                                             ForEach(artist.tracks) { track in
                                                 TrackItem(
                                                     artistObject: artist,
