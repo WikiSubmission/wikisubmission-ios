@@ -15,7 +15,7 @@ struct GlobalAlertView: View {
                     .bold()
                 
                 if let subtitle = alert.subtitle {
-                    Text(subtitle)
+                    Text(.init(subtitle))
                         .font(.body)
                         .multilineTextAlignment(.center)
                         .foregroundColor(.secondary)
