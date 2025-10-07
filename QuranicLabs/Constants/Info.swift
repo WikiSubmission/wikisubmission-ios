@@ -1,6 +1,7 @@
 import Foundation
 
 struct Info {
+    static let bundleIdentifier = Bundle.main.bundleIdentifier ?? "Unknown"
     static let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
     static let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"
     static let appStoreURL = "https://apple.co/3uMVbz1"

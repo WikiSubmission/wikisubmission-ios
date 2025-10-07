@@ -28,17 +28,19 @@ extension Utilities.System {
         }
 
         do {
-            let query: Utilities.System.WSiOSUpdates = try await Utilities.Supabase.client
-                .from("ws-ios-updates")
-                .select("*")
-                .single()
-                .execute()
-                .value
-            
-            let liveVersion = query.ios_version
+            let urlString = "https://itunes.apple.com/lookup?bundleId=\(Info.bundleIdentifier)"
+            guard let url = URL(string: urlString) else {
+                return
+            }
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let lookupResponse = try JSONDecoder().decode(LookupResponse.self, from: data)
+            guard let appInfo = lookupResponse.results.first else {
+                return
+            }
+            let liveVersion = appInfo.version
             let currentVersion = Info.version
             let liveVersionGreaterThanCurrentVersion = isVersion(liveVersion, greaterThan: currentVersion)
-            
+
             if liveVersionGreaterThanCurrentVersion {
                 Utilities.System.GlobalAlertManager.shared.showAlert(
                     title: "An app update is available",
@@ -48,7 +50,7 @@ extension Utilities.System {
                     showAppStoreButton: true
                 )
             }
-        
+
             if forceCheck && (liveVersion == currentVersion || !liveVersionGreaterThanCurrentVersion) {
                 Utilities.System.GlobalAlertManager.shared.showAlert(
                     title: "You're on the latest version",
@@ -57,7 +59,7 @@ extension Utilities.System {
                     type: .notice,
                 )
             }
-        
+
             // Update the last checked timestamp after successful check
             Defaults[.last_checked_for_update] = now
         } catch {
@@ -65,8 +67,12 @@ extension Utilities.System {
         }
     }
     
-    struct WSiOSUpdates: Decodable {
-        let ios_version: String
-        let ios_version_notes: String
+    struct LookupResponse: Decodable {
+        struct AppInfo: Decodable {
+            let version: String
+            let releaseNotes: String?
+            let trackViewUrl: String?
+        }
+        let results: [AppInfo]
     }
 }
