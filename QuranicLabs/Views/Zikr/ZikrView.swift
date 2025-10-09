@@ -11,123 +11,170 @@ extension Defaults.Keys {
 struct ZikrView: View {
     @StateObject private var vm = ZikrViewModel()
     @ObservedObject private var audioManager = ZikrAudioManager.shared
-    
+
+    private func handleTrackTap(artist: Artist, track: Artist.Track) {
+        // if the same track is playing, toggle pause
+        if audioManager.currentTrack == track.title {
+            if audioManager.isPlaying {
+                ZikrAudioManager.shared.togglePlayPause()
+            } else {
+                ZikrAudioManager.shared.playTrack(artist: artist.id, track: track.title)
+            }
+        } else {
+            // if a new track is tapped, stop current and start new one
+            ZikrAudioManager.shared.stop()
+            ZikrAudioManager.shared.playTrack(artist: artist.id, track: track.title)
+        }
+    }
+
+    private var headerInfo: some View {
+        HStack(alignment: .top, spacing: 4) {
+            Image(systemName: "info.circle")
+                .foregroundStyle(.accent)
+                .font(.caption)
+            Text("The list is frequently updated over time. The copyrights for all materials are retained by the original holders. [Contact us](mailto:developer@wikisubmission.org?subject=Re:%20Zikr) for inquiries or contributions.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+    }
+
+    private var favoriteTracksSection: some View {
+        let favoriteTracks = vm.artists.flatMap { artist in
+            artist.tracks.filter { $0.favoritedAt != nil }
+        }
+        return Group {
+            if !favoriteTracks.isEmpty {
+                LazyVStack(alignment: .leading, spacing: 8) {
+                    Section(header:
+                        HStack {
+                            Image(systemName: "music.note")
+                                .font(.title3)
+                            Text("Favorites")
+                                .font(.title)
+                                .fontWeight(.semibold)
+                            Spacer()
+                        }
+                        .foregroundStyle(.accent)
+                    ) {
+                        VStack {
+                            ForEach(favoriteTracks) { track in
+                                if let artist = vm.artists.first(where: { $0.tracks.contains(where: { $0.id == track.id }) }) {
+                                    TrackItem(
+                                        artistObject: artist,
+                                        trackObject: track,
+                                        isPlaying: audioManager.currentTrack == track.title && audioManager.isPlaying,
+                                        action: { handleTrackTap(artist: artist, track: track) },
+                                        vm: vm,
+                                        showArtist: true
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var artistLists: some View {
+        ForEach(vm.artists) { artist in
+            LazyVStack(alignment: .leading, spacing: 8, pinnedViews: .sectionHeaders) {
+                Section(header:
+                    Text("\(artist.id.capitalized)")
+                        .font(.title)
+                        .fontWeight(.light)
+                        .foregroundStyle(.secondary)
+                        .pushToLeft()
+                ) {
+                    VStack {
+                        ForEach(artist.tracks) { track in
+                            TrackItem(
+                                artistObject: artist,
+                                trackObject: track,
+                                isPlaying: audioManager.currentTrack == track.title && audioManager.isPlaying,
+                                action: { handleTrackTap(artist: artist, track: track) },
+                                vm: vm,
+                                showArtist: false
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var nowPlayingBar: some View {
+        VStack {
+            if let currentTrack = audioManager.currentTrack,
+               let currentArtist = audioManager.currentArtist {
+                VStack(spacing: 0) {
+                    Divider()
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(currentTrack.split(separator: ".")[0])
+                                .font(.headline)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                            Text(currentArtist.capitalized)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                        }
+                        Spacer()
+                        Button(action: {
+                            audioManager.togglePlayPause()
+                        }) {
+                            Image(systemName: audioManager.isPlaying ? "pause.fill" : "play.fill")
+                                .font(.title2)
+                        }
+                        .buttonStyle(.plain)
+                        Button(action: {
+                            audioManager.stop()
+                        }) {
+                            Image(systemName: "stop.fill")
+                                .font(.title2)
+                        }
+                        .buttonStyle(.plain)
+                        Button(action: {
+                            audioManager.isLooping.toggle()
+                        }) {
+                            Image(systemName: audioManager.isLooping ? "repeat.circle.fill" : "repeat.circle")
+                                .font(.title2)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                    .background(.ultraThinMaterial)
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .animation(.default, value: audioManager.currentTrack)
+            }
+        }
+    }
+
     var body: some View {
         NavigationStack {
-            VStack {
+            VStack(spacing: 0) {
                 if vm.isLoading {
                     ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(spacing: 24) {
-                            HStack(alignment: .top, spacing: 4) {
-                                Image(systemName: "info.circle")
-                                    .foregroundStyle(.accent)
-                                    .font(.caption)
-                                Text("The list is frequently updated over time. The copyrights for all materials are retained by the original holders. [Contact us](mailto:developer@wikisubmission.org?subject=Re:%20Zikr) for inquiries or contributions.")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                Spacer()
-                            }
-                            let favoriteTracks = vm.artists.flatMap { artist in
-                                artist.tracks.filter { $0.favoritedAt != nil }
-                            }
-                            if !favoriteTracks.isEmpty {
-                                LazyVStack(alignment: .leading, spacing: 8) {
-                                    Section(header:
-                                                HStack {
-                                                    Image(systemName: "music.note")
-                                                        .font(.title3)
-                                                    Text("Favorites")
-                                                        .font(.title)
-                                                        .fontWeight(.semibold)
-                                                    Spacer()
-                                                }
-                                        .foregroundStyle(.accent)
-                                    ) {
-                                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 120)), GridItem(.adaptive(minimum: 120))], spacing: 8) {
-                                            ForEach(favoriteTracks) { track in
-                                                if let artist = vm.artists.first(where: { $0.tracks.contains(where: { $0.id == track.id }) }) {
-                                                    TrackItem(
-                                                        artistObject: artist,
-                                                        trackObject: track,
-                                                        isPlaying: audioManager.currentTrack == track.title,
-                                                        action: {
-                                                            if audioManager.isPlaying && audioManager.currentTrack == track.title {
-                                                                ZikrAudioManager.shared.stop()
-                                                            } else {
-                                                                ZikrAudioManager.shared.stop()
-                                                                ZikrAudioManager.shared.playTrack(artist: artist.id, track: track.title)
-                                                            }
-                                                        },
-                                                        vm: vm
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            ForEach(vm.artists) { artist in
-                                LazyVStack(alignment: .leading, spacing: 8, pinnedViews: .sectionHeaders) {
-                                    Section(header: Text("\(artist.id.capitalized)")
-                                        .font(.title)
-                                        .fontWeight(.light)
-                                        .foregroundStyle(.secondary)
-                                        .pushToLeft()) {
-                                            LazyVGrid(columns: [GridItem(.adaptive(minimum: UIDevice.current.userInterfaceIdiom == .pad ? .infinity : 120)), GridItem(.adaptive(minimum: UIDevice.current.userInterfaceIdiom == .pad ? .infinity : 120))], spacing: 8) {
-                                            ForEach(artist.tracks) { track in
-                                                TrackItem(
-                                                    artistObject: artist,
-                                                    trackObject: track,
-                                                    isPlaying: audioManager.currentTrack == track.title,
-                                                    action: {
-                                                        if audioManager.isPlaying && audioManager.currentTrack == track.title {
-                                                            ZikrAudioManager.shared.stop()
-                                                        } else {
-                                                            ZikrAudioManager.shared.stop()
-                                                            ZikrAudioManager.shared.playTrack(artist: artist.id, track: track.title)
-                                                        }
-                                                    },
-                                                    vm: vm
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            headerInfo
+                            favoriteTracksSection
+                            artistLists
                         }
                         .padding()
+                        .padding(.bottom, audioManager.currentTrack != nil ? 64 : 0) // Add bottom padding for now playing bar
                     }
                 }
+                nowPlayingBar
             }
             .navigationTitle("Zikr")
-            .toolbar {
-                HStack(spacing: 0) {
-                    if audioManager.isPlaying {
-                        AnimatedWaveform()
-                        Button {
-                            ZikrAudioManager.shared.isLooping.toggle()
-                        } label: {
-                            Label("Loop", systemImage: audioManager.isLooping ? "repeat.circle.fill" : "repeat.circle")
-                        }
-                    }
-                    if audioManager.currentTrack != nil {
-                        Button {
-                            ZikrAudioManager.shared.togglePlayPause()
-                        } label: {
-                            Label("Pause", systemImage: audioManager.isPlaying ? "pause.fill" : "play.fill")
-                        }
-                    }
-                    if audioManager.isPlaying {
-                        Button {
-                            ZikrAudioManager.shared.stop()
-                        } label: {
-                            Label("Stop", systemImage: "stop.fill")
-                        }
-                    }
-                }
-            }
             .task { await vm.fetchMediaIndex() }
         }
     }
@@ -139,34 +186,52 @@ struct TrackItem: View {
     let isPlaying: Bool
     let action: () -> Void
     @ObservedObject var vm: ZikrViewModel
-    
+    var showArtist: Bool = false
+
     var body: some View {
-        Button {
-            action()
-        } label: {
-            VStack {
-                HStack(spacing: 18) {
-                    Image(systemName: isPlaying ? "stop.fill" : "play.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 12, height: 12)
-                        .foregroundStyle(isPlaying ? .red : .accent)
+        Button(action: action) {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(colors: isPlaying ? [Color.accentColor.opacity(0.8), Color.accentColor.opacity(0.4)] : [Color.gray.opacity(0.3), Color.gray.opacity(0.15)]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 44, height: 44)
+                    Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                        .foregroundColor(isPlaying ? .secondary : .accentColor)
+                        .font(.system(size: 20, weight: .bold))
+                }
+                VStack(alignment: .leading, spacing: 2) {
                     Text(trackObject.title.split(separator: ".")[0])
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                        .lineLimit(2)
                         .multilineTextAlignment(.leading)
-                        .lineLimit(3)
-                    Spacer()
-                    Button {
-                        vm.toggleFavorite(track: trackObject)
-                    } label: {
-                        Image(systemName: trackObject.favoritedAt != nil ? "heart.fill" : "heart")
+                        .truncationMode(.tail)
+                    if showArtist {
+                        Text(artistObject.id.capitalized)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
                     }
                 }
-                .padding(.vertical, 8)
-                .padding(.horizontal, 12)
+                Spacer()
+                Button {
+                    vm.toggleFavorite(track: trackObject)
+                } label: {
+                    Image(systemName: trackObject.favoritedAt != nil ? "heart.fill" : "heart")
+                        .foregroundColor(trackObject.favoritedAt != nil ? .red : .gray)
+                        .font(.title3)
+                }
+                .buttonStyle(.plain)
             }
-            .frame(minHeight: 44)
-            .frame(maxHeight: .infinity, alignment: .center)
-            .font(.caption2)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 14)
             .background(Color.accent.opacity(0.08).padding(-8))
             .clipShape(RoundedRectangle(cornerRadius: 24))
         }
@@ -256,7 +321,7 @@ class ZikrViewModel: ObservableObject {
             Defaults[.zikr_cached_index] = self.artists
             Defaults[.zikr_cached_index_timestamp] = Date()
         } catch {
-            print("Failed to fetch or decode: \(error)")
+            print("Zikr: failed to fetch or decode: \(error)")
         }
     }
     
@@ -307,7 +372,7 @@ class ZikrAudioManager: ObservableObject {
             return
         }
         
-        guard let url = URL(string: "https://cdn.wikisubmission.org/media/zikr/\(artist)/\(track)") else { return }
+        guard let url = URL(string: "\(Info.cdnEndpoint)/media/zikr/\(artist)/\(track)") else { return }
         
         stop()
         
