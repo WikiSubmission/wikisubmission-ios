@@ -259,8 +259,9 @@ struct QuranVerseCard: View {
                 Spacer()
             }
             .font(.system(size: CGFloat(primaryLanguage == .persian ? fontSize + 2 : fontSize)))
-            .multilineTextAlignment(secondaryLanguage == .persian ? .trailing : .leading)
+            .multilineTextAlignment(secondaryLanguage == .persian ? .leading : .trailing)
             .foregroundStyle(.primary.opacity(0.9))
+            .environment(\.layoutDirection, secondaryLanguage == .persian ? .rightToLeft : .leftToRight)
         }
     }
 
