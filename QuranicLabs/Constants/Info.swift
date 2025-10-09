@@ -7,5 +7,6 @@ struct Info {
     static let appStoreURL = "https://apple.co/3uMVbz1"
     static let contactEmail = "developer@wikisubmission.org"
     static let developerDiscordLink = "https://discord.gg/ArTXN6cwtk"
-    static let prayerTimesEndpoint = "https://practices.wikisubmission.org/prayer-times/"
+    static let practicesEndpoint = "https://practices.wikisubmission.org"
+    static let cdnEndpoint = "https://cdn.wikisubmission.org"
 }

@@ -34,7 +34,7 @@ extension Utilities.PrayerTimes {
             
             let useMidpointMethodForAsr = UserDefaults.standard.bool(forKey: Defaults.Keys.use_midpoint_method_for_asr.name)
             
-            var url = URLComponents(string: Info.prayerTimesEndpoint)!
+            var url = URLComponents(string: "\(Info.practicesEndpoint)/prayer-times/")!
             
             url.queryItems = [
                 URLQueryItem(name: "q", value: "\(encodedLocation.lowercased())"), // location
