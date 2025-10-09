@@ -4,6 +4,9 @@ import AVFoundation
 
 extension Utilities.System {
     static func startupTasks() async {
+        // Run any migrations (if applicable)
+        Utilities.System.migrationTasks()
+        
         // Register for push notifications (if applicable)
         Utilities.System.registerForPushNotificationsIfNeeded()
         

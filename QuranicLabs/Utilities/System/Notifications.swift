@@ -6,7 +6,7 @@ import UserNotifications
 extension Utilities.System {
     static func registerForPushNotifications() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-            if let error = error {
+            if error != nil {
                 Utilities.System.GlobalAlertManager.shared.showAlert(title: "Missing Notifications Permission", systemImage: "bell.slash", type: .error, showSettingsButton: true)
                 
                 return

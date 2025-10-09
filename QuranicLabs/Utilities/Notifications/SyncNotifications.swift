@@ -16,7 +16,7 @@ extension Utilities.Notifications {
                     prayer_time_notifications: .init(
                         enabled: Defaults[.prayer_notifications],
                         customization: .init(
-                            location: Defaults[.prayer_time_location],
+                            location: Defaults[.prayer_times_location],
                             fajr: Defaults[.fajr_notification],
                             dhuhr: Defaults[.dhuhr_notification],
                             asr: Defaults[.asr_notification],

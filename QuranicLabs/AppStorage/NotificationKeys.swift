@@ -9,7 +9,6 @@ extension Defaults.Keys {
     static let asr_notification = Key<Bool>("asr_notification", default: true)
     static let maghrib_notification = Key<Bool>("maghrib_notification", default: true)
     static let isha_notification = Key<Bool>("isha_notification", default: true)
-    static let prayer_time_location = Key<String?>("prayer_time_location", default: nil)
     
     static let daily_verse_notifications = Key<Bool>("daily_verse_notifications", default: false)
     static let daily_chapter_notifications = Key<Bool>("daily_chapter_notifications", default: false)

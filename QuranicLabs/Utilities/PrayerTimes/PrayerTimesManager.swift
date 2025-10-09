@@ -6,41 +6,20 @@ extension Utilities.PrayerTimes {
     class PrayerTimesManager: ObservableObject {
         static let shared = PrayerTimesManager()
         
-        @Published var prayerTimesData: Types.PrayerTimes.PrayerTimesResponse? {
-            didSet {
-                if let data = prayerTimesData {
-                    if let encoded = try? JSONEncoder().encode(data) {
-                        UserDefaults.standard.set(encoded, forKey: "prayerTimesData")
-                    }
-                } else {
-                    UserDefaults.standard.removeObject(forKey: "prayerTimesData")
-                }
-            }
-        }
-        
         @Published var isLoading = false
-        
-        var prayerTimeLocation: String? {
-            get { Defaults[.prayer_time_location] }
-            set { Defaults[.prayer_time_location] = newValue }
-        }
-        
+                
         private var refreshTimer: Timer?
         
         init() {
-            if let data = UserDefaults.standard.data(forKey: "prayerTimesData") {
-                prayerTimesData = try? JSONDecoder().decode(Types.PrayerTimes.PrayerTimesResponse.self, from: data)
-            }
+            Utilities.System.migrationTasks()
             startTimer()
         }
         
-        deinit {
-            refreshTimer?.invalidate()
-        }
+        deinit { refreshTimer?.invalidate() }
         
         func fetchPrayerTimes(for location: String) {
             
-            prayerTimeLocation = location
+            Defaults[.prayer_times_location] = location
             
             guard Utilities.System.NetworkMonitor.shared.hasInternet else { return }
             
@@ -52,16 +31,21 @@ extension Utilities.PrayerTimes {
             
             isLoading = true
             let encodedLocation = location.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? location
+            
             let useMidpointMethodForAsr = UserDefaults.standard.bool(forKey: Defaults.Keys.use_midpoint_method_for_asr.name)
-            let urlString = "https://practices.wikisubmission.org/prayer-times/\(encodedLocation.lowercased())?client=ios\(useMidpointMethodForAsr == true ? "&asr_adjustment=true" : "")"
-            guard let url = URL(string: urlString) else {
-                DispatchQueue.main.async {
-                    self.isLoading = false
-                }
-                return
+            
+            var url = URLComponents(string: Info.prayerTimesEndpoint)!
+            
+            url.queryItems = [
+                URLQueryItem(name: "q", value: "\(encodedLocation.lowercased())"), // location
+                URLQueryItem(name: "client", value: "ios") // client
+            ]
+
+            if useMidpointMethodForAsr {
+                url.queryItems?.append(URLQueryItem(name: "asr_adjustment", value: "true")) // asr adjustment, if requested
             }
             
-            URLSession.shared.dataTask(with: url) { data, _, error in
+            URLSession.shared.dataTask(with: url.url!) { data, _, error in
                 DispatchQueue.main.async {
                     self.isLoading = false
                 }
@@ -76,7 +60,7 @@ extension Utilities.PrayerTimes {
                 do {
                     let decoded = try JSONDecoder().decode(Types.PrayerTimes.PrayerTimesResponse.self, from: data)
                     DispatchQueue.main.async {
-                        self.prayerTimesData = decoded
+                        Defaults[.prayer_times] = decoded
                     }
                 } catch {
                     print("Decoding error:", error)
@@ -85,9 +69,9 @@ extension Utilities.PrayerTimes {
         }
         
         func refresh() {
-            guard let data = prayerTimesData else { return }
+            guard let data = Defaults[.prayer_times] else { return }
             let location = "\(data.city),\(data.region),\(data.country)"
-            prayerTimeLocation = location
+            Defaults[.prayer_times_location] = location
             fetchPrayerTimes(for: location)
         }
         
@@ -98,8 +82,8 @@ extension Utilities.PrayerTimes {
         }
         
         func removeSavedCity() {
-            prayerTimeLocation = nil
-            prayerTimesData = nil
+            Defaults[.prayer_times_location] = nil
+            Defaults[.prayer_times] = nil
             
             Task {
                 try? await Utilities.Notifications.syncWithDatabase()

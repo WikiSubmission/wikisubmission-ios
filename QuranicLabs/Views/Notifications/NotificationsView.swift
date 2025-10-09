@@ -10,7 +10,7 @@ struct NotificationsView: View {
     @Default(.prompted_for_notifications) var promptedForNotifications
     
     @Default(.prayer_notifications) var prayerNotifications
-    @Default(.prayer_time_location) var prayerTimeLocation
+    @Default(.prayer_times_location) var prayerTimeLocation
     @Default(.fajr_notification) var fajrNotifications
     @Default(.dhuhr_notification) var dhuhrNotifications
     @Default(.asr_notification) var asrNotifications

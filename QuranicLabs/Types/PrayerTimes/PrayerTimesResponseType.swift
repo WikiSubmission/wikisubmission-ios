@@ -1,48 +1,41 @@
 import Foundation
+import Defaults
 
 extension Types.PrayerTimes {
-    struct PrayerTimesResponse: Codable {
-        let statusString: String
-        let locationString: String
+    struct PrayerTimesResponse: Codable, Defaults.Serializable {
+        let status_string: String
+        let location_string: String
         let country: String
-        let countryCode: String
+        let country_code: String
         let city: String
         let region: String
-        let localTime: String
-        let localTimezone: String
-        let localTimezoneId: String
+        let local_time: String
+        let local_timezone: String
+        let local_timezone_id: String
         let coordinates: Coordinates
-        let times: [String: String]
-        let timesInUTC: [String: String]
-        let timesLeft: [String: String]
-        let currentPrayer: String
-        let upcomingPrayer: String
-        let currentPrayerTimeElapsed: String
-        let upcomingPrayerTimeLeft: String
-        
+        let times: Types.PrayerTimes.PrayerTimesResponseTimes
+        let times_left: Types.PrayerTimes.PrayerTimesResponseTimes
+        let current_prayer: Types.PrayerTimes.PrayerTypes
+        let upcoming_prayer: Types.PrayerTimes.PrayerTypes
+        let current_prayer_time_elapsed: String
+        let upcoming_prayer_time_left: String
+
         struct Coordinates: Codable {
             let latitude: Double
             let longitude: Double
         }
-
-        enum CodingKeys: String, CodingKey {
-            case statusString = "status_string"
-            case locationString = "location_string"
-            case country
-            case countryCode = "country_code"
-            case city
-            case region
-            case localTime = "local_time"
-            case localTimezone = "local_timezone"
-            case localTimezoneId = "local_timezone_id"
-            case coordinates
-            case times
-            case timesInUTC = "times_in_utc"
-            case timesLeft = "times_left"
-            case currentPrayer = "current_prayer"
-            case upcomingPrayer = "upcoming_prayer"
-            case currentPrayerTimeElapsed = "current_prayer_time_elapsed"
-            case upcomingPrayerTimeLeft = "upcoming_prayer_time_left"
-        }
+    }
+    
+    enum PrayerTypes: String, Codable, CaseIterable {
+        case fajr, dhuhr, asr, maghrib, isha, sunrise
+    }
+    
+    struct PrayerTimesResponseTimes: Codable {
+        let fajr: String
+        let dhuhr: String
+        let asr: String
+        let maghrib: String
+        let isha: String
+        let sunrise: String
     }
 }
