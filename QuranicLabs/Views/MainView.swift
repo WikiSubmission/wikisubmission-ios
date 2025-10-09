@@ -9,6 +9,7 @@ struct MainView: View {
             ZStack {
                 TabsView()
                 QuranNowPlayingBar()
+                ZikrNowPlayingBar()
             }
         } else {
             FirstTimeView()

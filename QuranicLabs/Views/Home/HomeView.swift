@@ -26,22 +26,6 @@ struct HomeView: View {
                     }
                     .padding()
                     
-                    if ZikrAudioManager.shared.isPlaying {
-                        Button {
-                            activeTab = .zikr
-                        } label: {
-                            HStack {
-                                AnimatedWaveform()
-                                Text("\(ZikrAudioManager.shared.currentTrack?.capitalized.split(separator: ".")[0] ?? "")")
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .padding(.horizontal)
-                        .buttonStyle(SignatureButtonStyle())
-                    }
-                    
                     VStack(spacing: 24) {
                         Group {
                             VStack(spacing: 16) {

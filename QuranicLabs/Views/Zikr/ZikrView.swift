@@ -104,56 +104,6 @@ struct ZikrView: View {
         }
     }
 
-    private var nowPlayingBar: some View {
-        VStack {
-            if let currentTrack = audioManager.currentTrack,
-               let currentArtist = audioManager.currentArtist {
-                VStack(spacing: 0) {
-                    Divider()
-                    HStack(spacing: 12) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(currentTrack.split(separator: ".")[0])
-                                .font(.headline)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                            Text(currentArtist.capitalized)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                        }
-                        Spacer()
-                        Button(action: {
-                            audioManager.togglePlayPause()
-                        }) {
-                            Image(systemName: audioManager.isPlaying ? "pause.fill" : "play.fill")
-                                .font(.title2)
-                        }
-                        .buttonStyle(.plain)
-                        Button(action: {
-                            audioManager.stop()
-                        }) {
-                            Image(systemName: "stop.fill")
-                                .font(.title2)
-                        }
-                        .buttonStyle(.plain)
-                        Button(action: {
-                            audioManager.isLooping.toggle()
-                        }) {
-                            Image(systemName: audioManager.isLooping ? "repeat.circle.fill" : "repeat.circle")
-                                .font(.title2)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    .padding(.horizontal)
-                    .padding(.vertical, 8)
-                    .background(.ultraThinMaterial)
-                }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.default, value: audioManager.currentTrack)
-            }
-        }
-    }
 
     var body: some View {
         NavigationStack {
@@ -162,17 +112,19 @@ struct ZikrView: View {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: 24) {
-                            headerInfo
-                            favoriteTracksSection
-                            artistLists
+                    ScrollViewReader { _ in
+                        ScrollView(.vertical, showsIndicators: false) {
+                            VStack(spacing: 24) {
+                                headerInfo
+                                favoriteTracksSection
+                                artistLists
+                            }
+                            .padding()
+                            .padding(.bottom, audioManager.currentTrack != nil ? 64 : 0)
                         }
-                        .padding()
-                        .padding(.bottom, audioManager.currentTrack != nil ? 64 : 0) // Add bottom padding for now playing bar
                     }
                 }
-                nowPlayingBar
+//                ZikrNowPlayingBar(audioManager: audioManager)
             }
             .navigationTitle("Zikr")
             .task { await vm.fetchMediaIndex() }
@@ -206,12 +158,14 @@ struct TrackItem: View {
                         .font(.system(size: 20, weight: .bold))
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(trackObject.title.split(separator: ".")[0])
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
-                        .truncationMode(.tail)
+                    HStack {
+                        Text(trackObject.title.split(separator: ".")[0])
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                            .truncationMode(.tail)
+                    }
                     if showArtist {
                         Text(artistObject.id.capitalized)
                             .font(.subheadline)
@@ -224,15 +178,17 @@ struct TrackItem: View {
                 Button {
                     vm.toggleFavorite(track: trackObject)
                 } label: {
-                    Image(systemName: trackObject.favoritedAt != nil ? "heart.fill" : "heart")
-                        .foregroundColor(trackObject.favoritedAt != nil ? .red : .gray)
-                        .font(.title3)
+                    HStack {
+                        Image(systemName: trackObject.favoritedAt != nil ? "heart.fill" : "heart")
+                            .foregroundColor(trackObject.favoritedAt != nil ? .red : .gray)
+                            .font(.title3)
+                    }
                 }
                 .buttonStyle(.plain)
             }
             .padding(.vertical, 10)
             .padding(.horizontal, 14)
-            .background(Color.accent.opacity(0.08).padding(-8))
+            .background(Color.accent.opacity(isPlaying ? 0.17 : 0.08).padding(-8))
             .clipShape(RoundedRectangle(cornerRadius: 24))
         }
         .contextMenu {
@@ -261,9 +217,8 @@ class ZikrViewModel: ObservableObject {
     @Published var artists: [Artist] = []
     @Published var isLoading = false
     
-    private let baseURL = "https://cdn.wikisubmission.org"
-    
     init() {
+        Utilities.Quran.QuranAudioManager.shared.player.stop()
         mergeFavorites()
     }
     
@@ -271,7 +226,7 @@ class ZikrViewModel: ObservableObject {
         var trackObjects: [Artist.Track] = []
         
         for trackName in trackList {
-            let trackURL = "\(baseURL)/media/zikr/\(artistKey)/\(trackName)"
+            let trackURL = "\(Info.cdnEndpoint)/media/zikr/\(artistKey)/\(trackName)"
             let isFavorited = Defaults[.zikr_favorited_tracks].contains(trackURL)
             let favoritedAt = isFavorited ? Date() : nil
             
@@ -295,7 +250,7 @@ class ZikrViewModel: ObservableObject {
             return
         }
         
-        guard let url = URL(string: "\(baseURL)/index.json") else { return }
+        guard let url = URL(string: "\(Info.cdnEndpoint)/index.json") else { return }
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -430,7 +385,6 @@ class ZikrAudioManager: ObservableObject {
         }
     }
 }
-
 
 #Preview {
     ZikrView()
