@@ -51,7 +51,7 @@ extension Utilities.System {
                 )
             }
 
-            if forceCheck && (liveVersion == currentVersion || !liveVersionGreaterThanCurrentVersion) {
+            else if forceCheck && (liveVersion == currentVersion || !liveVersionGreaterThanCurrentVersion) {
                 Utilities.System.GlobalAlertManager.shared.showAlert(
                     title: "You're on the latest version",
                     subtitle: "You are on V\(currentVersion) (latest). We'll let you know if there's an update.",
