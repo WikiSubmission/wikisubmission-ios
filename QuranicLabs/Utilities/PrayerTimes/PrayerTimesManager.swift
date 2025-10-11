@@ -8,14 +8,9 @@ extension Utilities.PrayerTimes {
         
         @Published var isLoading = false
                 
-        private var refreshTimer: Timer?
-        
         init() {
             Utilities.System.migrationTasks()
-            startTimer()
         }
-        
-        deinit { refreshTimer?.invalidate() }
         
         func fetchPrayerTimes(for location: String) {
             
@@ -73,12 +68,6 @@ extension Utilities.PrayerTimes {
             let location = "\(data.city),\(data.region),\(data.country)"
             Defaults[.prayer_times_location] = location
             fetchPrayerTimes(for: location)
-        }
-        
-        private func startTimer() {
-            refreshTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
-                self?.refresh()
-            }
         }
         
         func removeSavedCity() {
