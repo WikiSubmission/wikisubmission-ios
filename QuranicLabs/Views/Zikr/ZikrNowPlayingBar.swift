@@ -1,25 +1,33 @@
 import SwiftUI
+import Defaults
 
 struct ZikrNowPlayingBar: View {
     @ObservedObject var audioManager = ZikrAudioManager.shared
-
+    @Default(.active_tab) private var activeTab
     var body: some View {
         VStack {
             Spacer()
             if let currentTrack = audioManager.currentTrack,
                let currentArtist = audioManager.currentArtist {
                 HStack(spacing: 16) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(currentTrack.split(separator: ".")[0])
-                            .font(.headline)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                        Text(currentArtist.capitalized)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
+                    Button {
+                        if activeTab != .zikr {
+                            activeTab = .zikr
+                        }
+                    } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(currentTrack.split(separator: ".")[0])
+                                .font(.headline)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                            Text(currentArtist.capitalized)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                        }
                     }
+                    .buttonStyle(.plain)
                     Spacer()
                     HStack(spacing: 4) {
                         Button(action: {
