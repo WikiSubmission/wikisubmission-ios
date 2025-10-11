@@ -12,29 +12,29 @@ extension Utilities.System {
         }
 
         func isVersion(_ v1: String, greaterThan v2: String) -> Bool {
-            let v1Components = v1.split(separator: ".").compactMap { Int($0) }
-            let v2Components = v2.split(separator: ".").compactMap { Int($0) }
-            let maxCount = max(v1Components.count, v2Components.count)
-            for i in 0..<maxCount {
-                let v1Part = i < v1Components.count ? v1Components[i] : 0
-                let v2Part = i < v2Components.count ? v2Components[i] : 0
-                if v1Part > v2Part {
-                    return true
-                } else if v1Part < v2Part {
-                    return false
-                }
-            }
-            return false
+            let parts1 = v1.split(separator: ".").compactMap { Int($0) }
+            let parts2 = v2.split(separator: ".").compactMap { Int($0) }
+            let maxCount = max(parts1.count, parts2.count)
+            let padded1 = parts1 + Array(repeating: 0, count: maxCount - parts1.count)
+            let padded2 = parts2 + Array(repeating: 0, count: maxCount - parts2.count)
+            return padded1.lexicographicallyPrecedes(padded2) == false && padded1 != padded2
         }
 
         do {
-            let urlString = "https://itunes.apple.com/lookup?bundleId=\(Info.bundleIdentifier)"
+            let timestamp = Int(Date().timeIntervalSince1970)
+            let urlString = "https://itunes.apple.com/lookup?bundleId=\(Info.bundleIdentifier)&_t=\(timestamp)"
             guard let url = URL(string: urlString) else {
                 return
             }
-            let (data, _) = try await URLSession.shared.data(from: url)
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+            request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+            request.setValue("Mozilla/5.0", forHTTPHeaderField: "User-Agent") // mimic browser
+            let (data, _) = try await URLSession.shared.data(for: request)
             let lookupResponse = try JSONDecoder().decode(LookupResponse.self, from: data)
             guard let appInfo = lookupResponse.results.first else {
+                print("iTunes API: App info not found")
                 return
             }
             let liveVersion = appInfo.version
