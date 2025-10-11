@@ -27,7 +27,7 @@ extension Utilities.PrayerTimes {
             isLoading = true
             let encodedLocation = location.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? location
             
-            let useMidpointMethodForAsr = UserDefaults.standard.bool(forKey: Defaults.Keys.use_midpoint_method_for_asr.name)
+            let useMidpointMethodForAsr = Defaults[.use_midpoint_method_for_asr]
             
             var url = URLComponents(string: "\(Info.practicesEndpoint)/prayer-times/")!
             
