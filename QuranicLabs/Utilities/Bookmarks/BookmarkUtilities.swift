@@ -1,6 +1,9 @@
 import Foundation
 import Defaults
 import UIKit
+#if os(macOS)
+import AppKit
+#endif
 
 extension Utilities.Bookmarks {
     
@@ -65,7 +68,8 @@ extension Utilities.Bookmarks {
             // Write the encoded JSON data to the temporary file
             try data.write(to: tempFileURL, options: .atomic)
             
-            // Present a share sheet (UIActivityViewController) to share the JSON file URL
+            // Present a share sheet (UIActivityViewController on iOS, NSSharingServicePicker on macOS) to share the JSON file URL
+            #if os(iOS)
             DispatchQueue.main.async {
                 let activityVC = UIActivityViewController(activityItems: [tempFileURL], applicationActivities: nil)
                 if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
@@ -73,6 +77,15 @@ extension Utilities.Bookmarks {
                     rootVC.present(activityVC, animated: true, completion: nil)
                 }
             }
+            #elseif os(macOS)
+            DispatchQueue.main.async {
+                let sharingPicker = NSSharingServicePicker(items: [tempFileURL])
+                if let keyWindow = NSApplication.shared.keyWindow,
+                   let contentView = keyWindow.contentView {
+                    sharingPicker.show(relativeTo: contentView.bounds, of: contentView, preferredEdge: .minY)
+                }
+            }
+            #endif
             
         } catch {
             Utilities.System.GlobalAlertManager.shared.showAlert(title: "Error Exporting Bookmarks", subtitle: "\(error.localizedDescription)", systemImage: "square.and.arrow.up.trianglebadge.exclamationmark.fill", type: .error)
