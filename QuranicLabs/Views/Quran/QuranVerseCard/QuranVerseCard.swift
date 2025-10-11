@@ -217,8 +217,8 @@ struct QuranVerseCard: View {
             Spacer()
         }
         .font(.system(size: CGFloat(primaryLanguage == .persian ? fontSize + 2 : fontSize)))
-        .multilineTextAlignment(primaryLanguage == .persian ? .leading : .trailing)
-        .environment(\.layoutDirection, secondaryLanguage == .persian ? .rightToLeft : .leftToRight)
+        .multilineTextAlignment(.leading)
+        .environment(\.layoutDirection, primaryLanguage == .persian ? .rightToLeft : .leftToRight)
     }
 
     @ViewBuilder private func arabicText(data: Types.Quran.Data) -> some View {
@@ -260,7 +260,7 @@ struct QuranVerseCard: View {
                 Spacer()
             }
             .font(.system(size: CGFloat(primaryLanguage == .persian ? fontSize + 2 : fontSize)))
-            .multilineTextAlignment(secondaryLanguage == .persian ? .leading : .trailing)
+            .multilineTextAlignment(.leading)
             .foregroundStyle(.primary.opacity(0.9))
             .environment(\.layoutDirection, secondaryLanguage == .persian ? .rightToLeft : .leftToRight)
         }
