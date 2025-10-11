@@ -214,7 +214,6 @@ struct QuranVerseCard: View {
         let text = data.getPrimaryText(for: primaryLanguage)
         HStack {
             ConditionalHighlight(text: text, query: highlight)
-            Spacer()
         }
         .font(.system(size: CGFloat(primaryLanguage == .persian ? fontSize + 2 : fontSize)))
         .multilineTextAlignment(.leading)
@@ -257,7 +256,6 @@ struct QuranVerseCard: View {
         if let secondaryText = data.getSecondaryText(for: secondaryLanguage) {
             HStack {
                 ConditionalHighlight(text: secondaryText, query: highlight)
-                Spacer()
             }
             .font(.system(size: CGFloat(primaryLanguage == .persian ? fontSize + 2 : fontSize)))
             .multilineTextAlignment(.leading)
