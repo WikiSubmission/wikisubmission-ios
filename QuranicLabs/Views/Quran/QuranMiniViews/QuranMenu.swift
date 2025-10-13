@@ -41,6 +41,8 @@ struct QuranMenu: View {
                 SubtitlesToggle()
                 FootnotesToggle()
                 TransliterationToggle()
+                ArabicPositionToggle()
+                UseSerifFontDesignToggle()
             }
             
             // Language
