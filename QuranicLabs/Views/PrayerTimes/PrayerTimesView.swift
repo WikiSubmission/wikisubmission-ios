@@ -13,7 +13,7 @@ struct PrayerTimesView: View {
     @State private var geocoder = CLGeocoder()
     
     @Default(.prayer_times) private var prayerTimes
-    @Default(.active_tab) var activeTab
+    @Default(.active_tab) private var activeTab
     @Default(.qibla_enabled) private var qibla
 
     @EnvironmentObject private var environment: AppEnvironment
@@ -243,6 +243,7 @@ struct PrayerTimesView: View {
 struct PrayerTimesCard: View {
     let prayerData: Types.PrayerTimes.PrayerTimesResponse
     @EnvironmentObject private var environment: AppEnvironment
+    @Default(.use_midpoint_method_for_asr) private var useMidpointMethodForAsr
 
     private var hasInternet: Bool { environment.NetworkMonitor.hasInternet }
 
@@ -295,10 +296,13 @@ struct PrayerTimesCard: View {
             )
             VStack(spacing: 4) {
                 if !hasInternet {
-                    Label("Offline", systemImage: "wifi.slash")
-                        .foregroundStyle(.secondary)
-                        .fontWeight(.medium)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    HStack(spacing: 4) {
+                        Image(systemName: "wifi.slash")
+                        Text("Offline")
+                    }
+                    .fontWeight(.bold)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
                 }
 
                 Text(prayerData.local_timezone)
@@ -308,6 +312,15 @@ struct PrayerTimesCard: View {
                 Text("Last updated: \(prayerData.local_time)")
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
+                
+                if (useMidpointMethodForAsr) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "info.circle")
+                        Text("Using midpoint method for Asr")
+                    }
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                }
             }
             .font(.caption)
         }
