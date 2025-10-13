@@ -114,7 +114,7 @@ struct SettingsView: View {
 
     private var appActionsSection: some View {
         Group {
-            Section(footer: Text("Our email is developer@wikisubmission.org. We are also available on [Discord](\(Info.developerDiscordLink)).")) {
+            Section(footer: Text("Our email is developer@wikisubmission.org.")) {
                 Button {
                     let subject = "Re: iOS App".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "Re: iOS App"
                     if let url = URL(string: "mailto:\(Info.contactEmail)?subject=\(subject)"),
