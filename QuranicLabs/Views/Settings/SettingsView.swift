@@ -49,28 +49,17 @@ struct SettingsView: View {
     }
 
     private var readerTogglesSection: some View {
-        Section(header: Text("Reader")) {
-            ArabicToggle()
-            SubtitlesToggle()
-            FootnotesToggle()
-            TransliterationToggle()
-            ArabicPositionToggle()
-            UseSerifFontDesignToggle()
-        }
-    }
-    
-    private var prayerTimesTogglesSection: some View {
-        Section(header: Text("Prayer Times")) {
-            AsrMethodToggle()
-        }
-    }
-    
-    private var miscalleneousSection: some View {
-        Section {
-            NavigationLink {
-                NotificationsView()
-            } label: {
-                Label("Notifications", systemImage: "bell.fill")
+        Group {
+            Section(header: Text("Quran Reading")) {
+                ArabicToggle()
+                SubtitlesToggle()
+                FootnotesToggle()
+                TransliterationToggle()
+                ArabicPositionToggle()
+            }
+            
+            Section {
+                UseSerifFontDesignToggle()
             }
             
             NavigationLink {
@@ -90,39 +79,58 @@ struct SettingsView: View {
             }
         }
     }
+
+    private var prayerTimesTogglesSection: some View {
+        Section(header: Text("Prayer Times"), footer: Text("Midpoint method refers to the exact mid-point between noon and sunset, which starts slightly earlier than traditional methods.")) {
+            AsrMethodToggle()
+        }
+    }
+    
+    private var miscalleneousSection: some View {
+        Group {
+            Section(header: Text("General")) {
+                NavigationLink {
+                    NotificationsView()
+                } label: {
+                    Label("Notifications", systemImage: "bell.fill")
+                }
+                
+                Button {
+                    Task {
+                        await Utilities.System.checkForAppUpdates(forceCheck: true)
+                    }
+                } label: {
+                    Label("Check for updates", systemImage: "rectangle.grid.2x2.fill")
+                }
+            }
+        }
+    }
     
     private var experimentalSection: some View {
-        Section(header: Text("Experimental Features")) {
+        Section(header: Text("Experimental Features"), footer: Text("These features are still under development and will be made generally available only once proven stable.")) {
             QiblaToggle()
         }
     }
 
     private var appActionsSection: some View {
-        Section(header: Text("App Actions")) {
-            Button {
-                let subject = "Regarding App".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "Regarding App"
-                if let url = URL(string: "mailto:\(Info.contactEmail)?subject=\(subject)"),
-                   UIApplication.shared.canOpenURL(url) {
-                    openURL(url)
-                } else {
-                    showMailError = true
+        Group {
+            Section(footer: Text("Our email is developer@wikisubmission.org. We are also available on [Discord](\(Info.developerDiscordLink)).")) {
+                Button {
+                    let subject = "Re: iOS App".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "Re: iOS App"
+                    if let url = URL(string: "mailto:\(Info.contactEmail)?subject=\(subject)"),
+                       UIApplication.shared.canOpenURL(url) {
+                        openURL(url)
+                    } else {
+                        showMailError = true
+                    }
+                } label: {
+                    Label("Contact / Inquiries", systemImage: "envelope.fill")
                 }
-            } label: {
-                Label("Contact / Inquiries", systemImage: "envelope.fill")
-            }
-            .alert("Cannot open Mail app", isPresented: $showMailError) {
-                Button("OK", role: .cancel) {}
+                .alert("Cannot open Mail app", isPresented: $showMailError) {
+                    Button("OK", role: .cancel) {}
+                }
             }
             
-            Button {
-                Task {
-                    await Utilities.System.checkForAppUpdates(forceCheck: true)
-                }
-            } label: {
-                Label("Check for updates", systemImage: "rectangle.grid.2x2.fill")
-                    .foregroundStyle(.green)
-            }
-
             Button(role: .destructive) { showResetConfirmation = true } label: {
                 Label("Reset", systemImage: "arrow.counterclockwise")
                     .foregroundColor(.red)
