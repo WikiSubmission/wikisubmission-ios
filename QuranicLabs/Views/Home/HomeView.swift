@@ -10,7 +10,6 @@ struct HomeView: View {
     @Default(.daily_verse) private var dailyVerse
     @Default(.last_read_verse) private var lastReadVerse
     @Default(.primary_language) private var primaryLanguage
-    @Default(.qibla_enabled) private var qibla
 
     @Environment(\.colorScheme) private var theme
     
@@ -36,28 +35,19 @@ struct HomeView: View {
                                     TinyCard(title: "Bookmarks", systemImage: "bookmark") {
                                         QuranBookmarks()
                                     }
-                                    TinyCard(title: "Introduction", systemImage: "apple.image.playground") {
-                                        WebView(url: URL(string: "https://library.wikisubmission.org/file/quran-the-final-testament-introduction")!)
-                                            .navigationTitle("Introduction")
+                                    TinyCard(title: "Appendices", systemImage: "info") {
+                                        AppendicesView()
                                     }
-                                    TinyCard(title: "Appendices", systemImage: "info.square") {
-                                        WebView(url: URL(string: "https://wikisubmission.org/appendices")!)
-                                            .navigationTitle("Appendices")
+                                    TinyCard(title: "Resources", systemImage: "brain.filled.head.profile") {
+                                        ResourcesView()
                                     }
                                     TinyCardWithAction(title: "Prayer Times", systemImage: "bolt.heart") {
                                         activeTab = .prayer
                                     }
-                                    if qibla {
-                                        TinyCard(title: "Qibla", systemImage: "safari") {
-                                            QiblaView()
-                                        }
+                                    TinyCardWithAction(title: "Zikr", systemImage: "music.note") {
+                                        activeTab = .zikr
                                     }
-                                    if !qibla {
-                                        TinyCardWithAction(title: "Zikr", systemImage: "music.note") {
-                                            activeTab = .zikr
-                                        }
-                                    }
-                                    TinyCard(title: "Notifications", systemImage: "bell.square") {
+                                    TinyCard(title: "Notifications", systemImage: "bell") {
                                         NotificationsView()
                                     }
                                     TinyCard(title: "\(lastReadVerse)", systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90") {
