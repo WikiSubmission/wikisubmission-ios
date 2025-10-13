@@ -137,6 +137,7 @@ struct QuranVerseCard: View {
             transliteration(data: data)
             footnote(data: data)
         }
+        .lineLimit(nil)
     }
 
     @ViewBuilder private func verseID(data: Types.Quran.Data) -> some View {
@@ -214,6 +215,7 @@ struct QuranVerseCard: View {
         let text = data.getPrimaryText(for: primaryLanguage)
         HStack {
             ConditionalHighlight(text: text, query: highlight)
+            Spacer()
         }
         .font(.system(size: CGFloat(primaryLanguage == .persian ? fontSize + 2 : fontSize)))
         .multilineTextAlignment(.leading)
@@ -256,6 +258,7 @@ struct QuranVerseCard: View {
         if let secondaryText = data.getSecondaryText(for: secondaryLanguage) {
             HStack {
                 ConditionalHighlight(text: secondaryText, query: highlight)
+                Spacer()
             }
             .font(.system(size: CGFloat(primaryLanguage == .persian ? fontSize + 2 : fontSize)))
             .multilineTextAlignment(.leading)
@@ -330,5 +333,6 @@ private struct ShimmerAnimation: ViewModifier {
 
 #Preview {
     QuranVerseCard_Preview()
+    QuranReaderView(chapter: 19)
         .environmentObject(AppEnvironment.shared)
 }
