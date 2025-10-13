@@ -32,7 +32,7 @@ struct ZikrView: View {
             Image(systemName: "info.circle")
                 .foregroundStyle(.accent)
                 .font(.caption)
-            Text("The list is frequently updated over time. The copyrights for all materials are retained by the original holders. [Contact us](mailto:developer@wikisubmission.org?subject=Re:%20Zikr) for inquiries or contributions.")
+            Text("The list is frequently updated over time. The copyrights for all materials are retained by the original holders.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Spacer()
