@@ -6,21 +6,21 @@ struct ResourcesView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 8) {
                     LargeCard(
+                        title: "Masjid Tucson",
+                        subtitle: "Learn about Submission and access useful resources",
+                        image: "masjidtucson"
+                    ) {
+                        WebView(url: URL(string: "https://masjidtucson.org")!)
+                            .navigationTitle("Masjid Tucson")
+                    }
+                    
+                    LargeCard(
                         title: "Quran Talk Blog",
                         subtitle: "Reflections and unique insights from the Quran",
                         image: "qurantalk"
                     ) {
                         WebView(url: URL(string: "https://qurantalkblog.com")!)
                             .navigationTitle("Quran Talk Blog")
-                    }
-                    
-                    LargeCard(
-                        title: "Masjid Tucson",
-                        subtitle: "Learn about Submission and access useful resources",
-                        image: "masjidtucson"
-                    ) {
-                        WebView(url: URL(string: "https://masjidtucson.org")!)
-                            .navigationTitle("MasjidTucson")
                     }
                     
                     LargeCard(

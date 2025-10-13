@@ -357,6 +357,12 @@ struct QuranView: View {
                                 Label("Daily Verse", systemImage: "book.pages.fill")
                             }
                         }
+                        
+                        NavigationLink {
+                            ResourcesView()
+                        } label: {
+                            Label("Resources", systemImage: "info.bubble")
+                        }
                     }
                     .buttonStyle(SignatureButtonStyle())
                     .padding(.vertical, 8)
@@ -386,6 +392,12 @@ struct QuranView: View {
                 
                 // Navigations
                 Section {
+                    NavigationLink {
+                        ResourcesView()
+                    } label: {
+                        Label("Resources", systemImage: "info.bubble")
+                    }
+                    
                     NavigationLink {
                         QuranRandomVerse()
                     } label: {
