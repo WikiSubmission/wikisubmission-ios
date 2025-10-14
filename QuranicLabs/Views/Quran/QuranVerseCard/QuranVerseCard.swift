@@ -132,7 +132,6 @@ struct QuranVerseCard: View {
             verseID(data: data)
             subtitle(data: data)
             primaryAndArabicText(data: data)
-                .fontDesign(useSerifFontDesign ? .serif : .default)
             secondaryText(data: data)
             transliteration(data: data)
             footnote(data: data)
@@ -198,14 +197,18 @@ struct QuranVerseCard: View {
                 HStack(alignment: .top, spacing: 12) {
                     primaryText(data: data)
                         .fixedSize(horizontal: false, vertical: true)
+                        .fontDesign(useSerifFontDesign ? .serif : .default)
                     arabicText(data: data)
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(minWidth: 0, maxWidth: .infinity, alignment: .trailing)
+                        .lineSpacing(4)
                 }
             } else {
                 VStack(alignment: .leading, spacing: 8) {
                     primaryText(data: data)
+                        .fontDesign(useSerifFontDesign ? .serif : .default)
                     arabicText(data: data)
+                        .lineSpacing(4)
                 }
             }
         }
