@@ -72,9 +72,8 @@ extension Utilities.Bookmarks {
             #if os(iOS)
             DispatchQueue.main.async {
                 let activityVC = UIActivityViewController(activityItems: [tempFileURL], applicationActivities: nil)
-                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                   let rootVC = windowScene.windows.first?.rootViewController {
-                    rootVC.present(activityVC, animated: true, completion: nil)
+                if let topVC = UIApplication.shared.topMostViewController() {
+                    topVC.present(activityVC, animated: true, completion: nil)
                 }
             }
             #elseif os(macOS)
