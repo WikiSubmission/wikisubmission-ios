@@ -340,7 +340,7 @@ struct PrayerTimesCard: View {
         return HStack(alignment: .center, spacing: 8) {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(name.capitalized)
-                    .fontWeight(isCurrentPrayer ? .semibold : .regular)
+                    .fontWeight(isCurrentPrayer && hasInternet ? .semibold : .regular)
                     .font(.callout)
 
                 if isCurrentPrayer && hasInternet {
@@ -362,7 +362,7 @@ struct PrayerTimesCard: View {
             Spacer()
 
             Text(time)
-                .fontWeight(isCurrentPrayer ? .semibold : .regular)
+                .fontWeight(isCurrentPrayer && hasInternet ? .semibold : .regular)
         }
         .foregroundColor(accentColor)
         .padding(.horizontal, 8)
