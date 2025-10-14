@@ -1,6 +1,7 @@
 import SwiftUI
 import SheetKit
 import Defaults
+import StoreKit
 
 struct SettingsView: View {
     @Default(.onboarded) private var onboarded
@@ -128,6 +129,19 @@ struct SettingsView: View {
                 }
                 .alert("Cannot open Mail app", isPresented: $showMailError) {
                     Button("OK", role: .cancel) {}
+                }
+            }
+            
+            Section {
+                Button {
+                    if let scene = UIApplication.shared.connectedScenes
+                        .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+                        AppStore.requestReview(in: scene)
+                    } else {
+                        openURL(URL(string: Info.appStoreURL)!)
+                    }
+                } label: {
+                    Label("Review the App", systemImage: "star.fill")
                 }
             }
             
