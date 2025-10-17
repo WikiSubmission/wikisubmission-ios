@@ -4,6 +4,11 @@ import Defaults
 
 extension Utilities.System {
     static func checkForAppUpdates(forceCheck: Bool = false) async {
+        guard Utilities.System.NetworkMonitor.shared.hasInternet else {
+            Utilities.System.GlobalAlertManager.shared.showAlert(title: "No Internet Connection", subtitle: "An internet connection is required to check for updates.", systemImage: "wifi.slash", type: .error)
+            return
+        }
+        
         let now = Date()
         let lastChecked = Defaults[.last_checked_for_update] as Date?
         if let lastChecked = lastChecked, now.timeIntervalSince(lastChecked) < 7200 && !forceCheck || forceCheck && now.timeIntervalSince(lastChecked) < 5 {
