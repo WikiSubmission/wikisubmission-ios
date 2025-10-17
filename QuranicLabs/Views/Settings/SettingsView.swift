@@ -143,6 +143,12 @@ struct SettingsView: View {
                 } label: {
                     Label("Review the App", systemImage: "star.fill")
                 }
+                
+                Button {
+                    openURL(URL(string: Info.appStoreURL)!)
+                } label: {
+                    Label("Open in App Store", systemImage: "globe.fill")
+                }
             }
             
             Button(role: .destructive) { showResetConfirmation = true } label: {
