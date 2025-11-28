@@ -57,11 +57,16 @@ struct NotificationsView: View {
                             
                             Button {
                                 guard let token = deviceToken, !token.isEmpty else { return }
-                                guard let url = URL(string: "https://notifications.wikisubmission.org/random-verse") else { return }
+                                guard let url = URL(string: "https://push-notifications.wikisubmission.org/send-notification") else { return }
                                 var request = URLRequest(url: url)
                                 request.httpMethod = "POST"
                                 request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                                let body: [String: String] = ["device_token": token]
+                                let body: [String: String] = [
+                                    "device_token": token,
+                                    "platform": "ios",
+                                    "type": "random_verse",
+                                    "force": "true"
+                                ]
                                 request.httpBody = try? JSONSerialization.data(withJSONObject: body)
                                 let task = URLSession.shared.dataTask(with: request) { _, _, _ in }
                                 task.resume()

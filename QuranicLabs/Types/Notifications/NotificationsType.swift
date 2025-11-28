@@ -1,9 +1,20 @@
 extension Types.Notifications {
     struct Notification: Encodable, Decodable {
-        let platform: String?
         let device_token: String?
-        let prayer_time_notifications: Types.Notifications.NotificationPreferences<Types.Notifications.Customizations.PrayerTimeCustomization>?
-        let daily_verse_notifications: Types.Notifications.NotificationPreferences<Types.Notifications.Customizations.NoCustomization>?
-        let daily_chapter_notifications: Types.Notifications.NotificationPreferences<Types.Notifications.Customizations.NoCustomization>?
+        let updated_at: String?
+        let prayer_times_notifications: Types.Notifications.PrayerTimesSettings
+        let daily_verse_notifications: Bool
+        let daily_chapter_notifications: Bool
+    }
+    
+    struct PrayerTimesSettings: Encodable, Decodable {
+        let enabled: Bool
+        let location: String?
+        let fajr: Bool
+        let dhuhr: Bool
+        let asr: Bool
+        let mahgrib: Bool
+        let isha: Bool
+        let use_midpoint_method_for_asr: Bool
     }
 }
