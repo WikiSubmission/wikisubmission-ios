@@ -15,6 +15,7 @@ struct ZikrView: View {
     @State private var selectedArtist: UUID? = nil
     @State private var selectedCategory: UUID? = nil
     @State private var nowPlayingSheetTrack: UnifiedTrack? = nil
+    @State private var isLoading: Bool = false
 
     var body: some View {
         NavigationStack {
@@ -31,10 +32,20 @@ struct ZikrView: View {
                 }
             }
             .edgesIgnoringSafeArea(.bottom)
+            .overlay(alignment: .center) {
+                if isLoading {
+                    ProgressView()
+                }
+            }
             .task {
+                isLoading = true
                 await vm.fetchFromDB()
+                // ensure audio gets the latest lists after fetch
                 audio.allTracks = vm.tracks
                 audio.favoriteTrackUrls = favoritedTracks
+                // small delay optional to ensure UI has time to settle before hiding loader
+                try? await Task.sleep(nanoseconds: 80_000_000)
+                isLoading = false
             }
             .onChange(of: vm.tracks) { _, newTracks in
                 audio.allTracks = newTracks
@@ -53,16 +64,18 @@ struct ZikrView: View {
     private var content: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 18) {
-                HStack(alignment: .top, spacing: 4) {
-                    Image(systemName: "info.circle")
-                        .foregroundStyle(.accent)
-                        .font(.caption)
-                    Text("The list is frequently updated over time. The copyrights for all materials are retained by the original holders.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Spacer()
+                if !isLoading {
+                    HStack(alignment: .top, spacing: 4) {
+                        Image(systemName: "info.circle")
+                            .foregroundStyle(.accent)
+                            .font(.caption)
+                        Text("The list is frequently updated over time. The copyrights for all materials are retained by the original holders.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                    .padding(.leading)
                 }
-                .padding(.leading)
                 featuredSection
                 tracksSection
             }
