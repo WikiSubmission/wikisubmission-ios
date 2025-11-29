@@ -71,7 +71,7 @@ struct ZikrNowPlayingBar: View {
                                     .background(Color.secondary.opacity(0.1))
                                     .cornerRadius(12)
                                 }
-                                
+
                                 Button(action: { audio.togglePlayPause() }) {
                                     Image(systemName: audio.isPlaying && audio.currentTrack?.id == track.id ? "pause.circle.fill" : "play.circle.fill")
                                         .font(.system(size: 28))
@@ -79,11 +79,23 @@ struct ZikrNowPlayingBar: View {
                                         .contentShape(Rectangle())
                                 }
                                 .buttonStyle(PlainButtonStyle())
+
+                                Button(action: {
+                                    audio.stop()
+                                    audio.currentTrack = nil
+                                    audio.currentTrack = nil
+                                }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 28))
+                                        .foregroundColor(.red)
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(PlainButtonStyle())
                             }
                         }
                         .padding(.horizontal)
                         .frame(height: 56)
-                        .id(track.id) // Force update on track change
+                        .id(track.id)
 
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
