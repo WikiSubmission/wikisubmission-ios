@@ -26,23 +26,13 @@ struct InternetRequiredContent: View {
                 .scaledToFit()
                 .frame(width: 64, height: 64)
             
-            Button {
-                Utilities.System.openPermissionSettings()
-            } label: {
-                Text("Open Settings")
-                    .font(.title2)
-                    .foregroundStyle(.accent)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 4)
-            }
-            .background(Color.accent.opacity(0.05))
-            .clipShape(RoundedRectangle(cornerRadius: 24))
-            
             Text(reason ?? "This feature requires an internet connection.")
                 .fontWeight(.light)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
+            
+            Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemBackground))

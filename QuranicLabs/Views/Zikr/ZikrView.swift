@@ -1,391 +1,313 @@
-import AVFoundation
 import SwiftUI
 import Defaults
+import UIKit
 
-extension Defaults.Keys {
-    static let zikr_cached_index = Key<[Artist]?>("zikr_cached_index", default: nil)
-    static let zikr_favorited_tracks = Key<[String]>("zikr_favorited_tracks", default: [])
-    static let zikr_cached_index_timestamp = Key<Date?>("zikr_cached_index_timestamp", default: nil)
+#Preview {
+    MainView()
 }
 
 struct ZikrView: View {
-    @StateObject private var vm = ZikrViewModel()
-    @ObservedObject private var audioManager = ZikrAudioManager.shared
+    @StateObject private var vm = ZikrDBViewModel()
+    @ObservedObject private var audio = ZikrAudioManager.shared
+    @Default(.zikr_favorited_tracks) private var favoritedTracks
 
-    private func handleTrackTap(artist: Artist, track: Artist.Track) {
-        // if the same track is playing, toggle pause
-        if audioManager.currentTrack == track.title {
-            if audioManager.isPlaying {
-                ZikrAudioManager.shared.togglePlayPause()
-            } else {
-                ZikrAudioManager.shared.playTrack(artist: artist.id, track: track.title)
-            }
-        } else {
-            // if a new track is tapped, stop current and start new one
-            ZikrAudioManager.shared.stop()
-            ZikrAudioManager.shared.playTrack(artist: artist.id, track: track.title)
-        }
-    }
-
-    private var headerInfo: some View {
-        HStack(alignment: .top, spacing: 4) {
-            Image(systemName: "info.circle")
-                .foregroundStyle(.accent)
-                .font(.caption)
-            Text("The list is frequently updated over time. The copyrights for all materials are retained by the original holders.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Spacer()
-        }
-    }
-
-    private var favoriteTracksSection: some View {
-        let favoriteTracks = vm.artists.flatMap { artist in
-            artist.tracks.filter { $0.favoritedAt != nil }
-        }
-        return Group {
-            if !favoriteTracks.isEmpty {
-                LazyVStack(alignment: .leading, spacing: 8) {
-                    Section(header:
-                        HStack {
-                            Image(systemName: "music.note")
-                                .font(.title3)
-                            Text("Favorites")
-                                .font(.title)
-                                .fontWeight(.semibold)
-                            Spacer()
-                        }
-                        .foregroundStyle(.accent)
-                    ) {
-                        VStack {
-                            ForEach(favoriteTracks) { track in
-                                if let artist = vm.artists.first(where: { $0.tracks.contains(where: { $0.id == track.id }) }) {
-                                    TrackItem(
-                                        artistObject: artist,
-                                        trackObject: track,
-                                        isPlaying: audioManager.currentTrack == track.title && audioManager.isPlaying,
-                                        action: { handleTrackTap(artist: artist, track: track) },
-                                        vm: vm,
-                                        showArtist: true
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private var artistLists: some View {
-        ForEach(vm.artists) { artist in
-            LazyVStack(alignment: .leading, spacing: 8, pinnedViews: .sectionHeaders) {
-                Section(header:
-                    Text("\(artist.id.capitalized)")
-                        .font(.title)
-                        .fontWeight(.light)
-                        .foregroundStyle(.secondary)
-                        .pushToLeft()
-                ) {
-                    VStack {
-                        ForEach(artist.tracks) { track in
-                            TrackItem(
-                                artistObject: artist,
-                                trackObject: track,
-                                isPlaying: audioManager.currentTrack == track.title && audioManager.isPlaying,
-                                action: { handleTrackTap(artist: artist, track: track) },
-                                vm: vm,
-                                showArtist: false
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-
+    @State private var queryText: String = ""
+    @State private var selectedArtist: UUID? = nil
+    @State private var selectedCategory: UUID? = nil
+    @State private var nowPlayingSheetTrack: UnifiedTrack? = nil
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                if vm.isLoading {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    ScrollViewReader { _ in
-                        ScrollView(.vertical, showsIndicators: false) {
-                            VStack(spacing: 24) {
-                                headerInfo
-                                favoriteTracksSection
-                                artistLists
-                            }
-                            .padding()
-                            .padding(.bottom, audioManager.currentTrack != nil ? 64 : 0)
-                        }
-                    }
+                content
+            }
+            .requiresInternet(reason: "An internet connection is required")
+            .toolbar {
+                NavigationLink {
+                    ZikrFavoritesView()
+                } label: {
+                    Image(systemName: favoritedTracks.isEmpty ? "heart" : "heart.fill")
+                        .foregroundColor(.red)
                 }
-//                ZikrNowPlayingBar(audioManager: audioManager)
+            }
+            .edgesIgnoringSafeArea(.bottom)
+            .task {
+                await vm.fetchFromDB()
+                audio.allTracks = vm.tracks
+                audio.favoriteTrackUrls = favoritedTracks
+            }
+            .onChange(of: vm.tracks) { _, newTracks in
+                audio.allTracks = newTracks
+            }
+            .onChange(of: favoritedTracks) { _, newFavorites in
+                audio.favoriteTrackUrls = newFavorites
+            }
+            .sheet(item: $nowPlayingSheetTrack) { track in
+                ZikrNowPlayingSheet(track: track, audio: audio)
+                    .presentationDetents([.medium])
             }
             .navigationTitle("Zikr")
-            .task { await vm.fetchMediaIndex() }
+        }
+    }
+
+    private var content: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 18) {
+                HStack(alignment: .top, spacing: 4) {
+                    Image(systemName: "info.circle")
+                        .foregroundStyle(.accent)
+                        .font(.caption)
+                    Text("The list is frequently updated over time. The copyrights for all materials are retained by the original holders.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                }
+                .padding(.leading)
+                featuredSection
+                tracksSection
+            }
+            .padding(.bottom, 200)
+        }
+    }
+
+    private var featuredSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if !vm.featured.isEmpty {
+                HStack {
+                    Text("Featured")
+                        .font(.title2.bold())
+                    Spacer()
+                }
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 14) {
+                        ForEach(vm.featuredTracksFiltered(query: queryText)) { t in
+                            ZikrFeaturedCard(track: t) {
+                                audio.playTrack(track: t, context: .category)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+                .frame(height: 160)
+            }
+        }
+        .padding(.horizontal)
+    }
+
+    private var tracksSection: some View {
+        VStack(spacing: 8) {
+            let filteredTracks = vm.tracks.filter { track in
+                (selectedArtist == nil || track.artist.id == selectedArtist) &&
+                (selectedCategory == nil || track.category.id == selectedCategory) &&
+                (queryText.isEmpty ||
+                 track.title.localizedCaseInsensitiveContains(queryText) ||
+                 track.artist.name.localizedCaseInsensitiveContains(queryText))
+            }
+
+            ForEach(vm.categoriesFiltered(query: queryText)) { category in
+                let tracksInCategory = filteredTracks.filter { $0.category.id == category.id }
+                if !tracksInCategory.isEmpty {
+                    HStack {
+                        Text(category.name).font(.title2.bold())
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+
+                    LazyVStack(spacing: 4) {
+                        ForEach(tracksInCategory) { track in
+                            ZikrTrackRow(
+                                track: track,
+                                isPlaying: audio.currentTrack?.id == track.id && audio.isPlaying
+                            ) {
+                                // Set context to category when playing from main view
+                                audio.playTrack(track: track, context: .category)
+                            }
+                            .padding(4)
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 6)
+                }
+            }
         }
     }
 }
 
-struct TrackItem: View {
-    let artistObject: Artist
-    let trackObject: Artist.Track
-    let isPlaying: Bool
+struct ZikrFeaturedCard: View {
+    let track: UnifiedTrack
     let action: () -> Void
-    @ObservedObject var vm: ZikrViewModel
-    var showArtist: Bool = false
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 16) {
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(colors: isPlaying ? [Color.accentColor.opacity(0.8), Color.accentColor.opacity(0.4)] : [Color.gray.opacity(0.3), Color.gray.opacity(0.15)]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 44, height: 44)
-                    Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                        .foregroundColor(isPlaying ? .secondary : .accentColor)
-                        .font(.system(size: 20, weight: .bold))
-                }
+            ZStack(alignment: .bottomLeading) {
+                RoundedRectangle(cornerRadius: 14).fill(GenerateColorTheme.colors(seed: track.artist.id).card)
                 VStack(alignment: .leading, spacing: 2) {
-                    HStack {
-                        Text(trackObject.title.split(separator: ".")[0])
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.leading)
-                            .truncationMode(.tail)
-                    }
-                    if showArtist {
-                        Text(artistObject.id.capitalized)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                    }
+                    Image(systemName: "music.quarternote.3")
+                        .padding(.bottom)
+                    Text(track.title).font(.headline).lineLimit(2)
+                    Text(track.artist.name)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
-                Spacer()
-                Button {
-                    vm.toggleFavorite(track: trackObject)
-                } label: {
-                    HStack {
-                        Image(systemName: trackObject.favoritedAt != nil ? "heart.fill" : "heart")
-                            .foregroundColor(trackObject.favoritedAt != nil ? .red : .gray)
-                            .font(.title3)
-                    }
-                }
-                .buttonStyle(.plain)
+                .padding()
             }
-            .padding(.vertical, 10)
-            .padding(.horizontal, 14)
-            .background(Color.accent.opacity(isPlaying ? 0.17 : 0.08).padding(-8))
-            .clipShape(RoundedRectangle(cornerRadius: 24))
+            .frame(width: 260, height: 150)
         }
-        .contextMenu {
-            Button {
-                vm.toggleFavorite(track: trackObject)
-            } label: {
-                Label("Favorite", systemImage: trackObject.favoritedAt != nil ? "heart.fill" : "heart")
-            }
-        }
+        .buttonStyle(.plain)
     }
 }
 
-struct Artist: Identifiable, Codable, Defaults.Serializable {
-    let id: String
-    var tracks: [Track]
+struct ZikrTrackRow: View {
+    let track: UnifiedTrack
+    let isPlaying: Bool
+    let action: () -> Void
     
-    struct Track: Identifiable, Codable, Defaults.Serializable {
-        var id: UUID = UUID()
-        let title: String
-        let url: String
-        var favoritedAt: Date?
-    }
-}
-
-class ZikrViewModel: ObservableObject {
-    @Published var artists: [Artist] = []
-    @Published var isLoading = false
+    @StateObject private var vm = ZikrDBViewModel()
+    @Default(.zikr_favorited_tracks) private var favoritedTracks
+    @Environment(\.openURL) private var openURL
     
-    init() {
-        Utilities.Quran.QuranAudioManager.shared.player.stop()
-        mergeFavorites()
+    private var isFavorite: Bool {
+        favoritedTracks.contains(track.url)
     }
     
-    private func buildTracks(for artistKey: String, trackList: [String]) -> [Artist.Track] {
-        var trackObjects: [Artist.Track] = []
-        
-        for trackName in trackList {
-            let trackURL = "\(Info.cdnEndpoint)/media/zikr/\(artistKey)/\(trackName)"
-            let isFavorited = Defaults[.zikr_favorited_tracks].contains(trackURL)
-            let favoritedAt = isFavorited ? Date() : nil
-            
-            let track = Artist.Track(title: trackName, url: trackURL, favoritedAt: favoritedAt)
-            trackObjects.append(track)
-        }
-        
-        return trackObjects.sorted(by: { $0.title < $1.title })
-    }
-    
-    @MainActor
-    func fetchMediaIndex() async {
-        isLoading = true
-        defer { isLoading = false }
-        
-        if let cached = Defaults[.zikr_cached_index],
-           let timestamp = Defaults[.zikr_cached_index_timestamp],
-           Date().timeIntervalSince(timestamp) < 60 {
-            self.artists = cached
-            mergeFavorites()
-            return
-        }
-        
-        guard let url = URL(string: "\(Info.cdnEndpoint)/index.json") else { return }
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let media = json["media"] as? [String: Any],
-                  let zikr = media["zikr"] as? [String: Any] else {
-                return
-            }
-            
-            var tempArtists: [Artist] = []
-            
-            for (artistKey, tracks) in zikr {
-                if artistKey.starts(with: ".") { continue }
-                
-                if let trackList = tracks as? [String] {
-                    let trackObjects = buildTracks(for: artistKey, trackList: trackList)
+    var body: some View {
+        HStack(spacing: 12) {
+            // Track tappable area
+            Button(action: action) {
+                HStack {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(GenerateColorTheme.colors(seed: track.artist.id).art)
+                            .frame(width: 56, height: 56)
+                        Image(systemName: isPlaying ? "pause.circle.fill" : "music.note")
+                            .font(.system(size: 24))
+                            .foregroundColor(isPlaying ? .accentColor : .secondary)
+                    }
                     
-                    let artist = Artist(id: artistKey, tracks: trackObjects)
-                    tempArtists.append(artist)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(track.title)
+                            .font(.body)
+                            .lineLimit(2)
+                        Text(track.artist.name)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
                 }
             }
+            .buttonStyle(.plain)
             
-            self.artists = tempArtists.sorted(by: { $0.id < $1.id })
-            Defaults[.zikr_cached_index] = self.artists
-            Defaults[.zikr_cached_index_timestamp] = Date()
-        } catch {
-            print("Zikr: failed to fetch or decode: \(error)")
-        }
-    }
-    
-    private func mergeFavorites() {
-        let favoriteTrackURLs = Defaults[.zikr_favorited_tracks]
-        for i in artists.indices {
-            for j in artists[i].tracks.indices {
-                let trackURL = artists[i].tracks[j].url
-                let isFavorited = favoriteTrackURLs.contains(trackURL)
-                artists[i].tracks[j].favoritedAt = isFavorited ? Date() : nil
+            // Favorite button
+            Button {
+                vm.toggleFavorite(track: track)
+            } label: {
+                Image(systemName: isFavorite ? "heart.fill" : "heart")
+                    .foregroundColor(isFavorite ? .red : .accentColor)
+                    .frame(width: 32, height: 32)
             }
+            .buttonStyle(.plain)
         }
-    }
-    
-    func toggleFavorite(track: Artist.Track) {
-        var favoriteTrackURLs = Defaults[.zikr_favorited_tracks]
-        if favoriteTrackURLs.contains(track.url) {
-            favoriteTrackURLs.removeAll(where: { $0 == track.url })
-        } else {
-            favoriteTrackURLs.append(track.url)
-        }
-        Defaults[.zikr_favorited_tracks] = favoriteTrackURLs
-        mergeFavorites()
+        .padding(4)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(isPlaying ? Color(.accent.opacity(0.1)) : Color(.gray.opacity(0.03))).padding(-4)
+        )
     }
 }
 
-class ZikrAudioManager: ObservableObject {
-    static let shared = ZikrAudioManager()
-    
-    @Published var isPlaying: Bool = false
-    @Published var currentTrack: String? = nil
-    @Published var currentArtist: String? = nil
-    @Published var isLooping: Bool = true
-    
-    private var player: AVPlayer?
-    private var timeObserverToken: Any?
-    
-    private init() {}
-    
-    func playTrack(artist: String, track: String) {
-        guard Utilities.System.NetworkMonitor.shared.hasInternet else {
-            Utilities.System.GlobalAlertManager.shared.showAlert(title: "No Internet Connection", subtitle: "An internet connection is required to play zikr audios.", systemImage: "wifi.slash", type: .error)
-            return
-        }
-        
-        if currentTrack == track && isPlaying {
-            togglePlayPause()
-            return
-        }
-        
-        guard let url = URL(string: "\(Info.cdnEndpoint)/media/zikr/\(artist)/\(track)") else { return }
-        
-        stop()
-        
-        player = AVPlayer(url: url)
-        player?.play()
-        currentArtist = artist
-        currentTrack = track
-        isPlaying = true
-        
-        addPeriodicTimeObserver()
-    }
-    
-    func togglePlayPause() {
-        guard let player = player else { return }
-        if isPlaying {
-            player.pause()
-            isPlaying = false
-        } else {
-            player.play()
-            isPlaying = true
-        }
-    }
-    
-    func stop() {
-        if let token = timeObserverToken {
-            player?.removeTimeObserver(token)
-            timeObserverToken = nil
-        }
-        player?.pause()
-        player = nil
-        isPlaying = false
-        currentTrack = nil
-        currentArtist = nil
-    }
-    
-    private func addPeriodicTimeObserver() {
-        if let token = timeObserverToken {
-            player?.removeTimeObserver(token)
-            timeObserverToken = nil
-        }
-        guard let player = player else { return }
-        let interval = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
-        timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
-            guard self != nil else { return }
-            guard let duration = player.currentItem?.duration.seconds, duration > 0 else {
-                return
-            }
-            let progress = time.seconds / duration
-            if progress >= 1.0 {
-                if self?.isLooping == true {
-                    player.seek(to: .zero)
-                    player.play()
-                }
-            }
-        }
-    }
-}
+struct GenerateColorTheme {
+    let card: LinearGradient   // gradient used for larger rounded cards
+    let art: LinearGradient    // gradient used for artwork / thumbnail backgrounds
+    let accent: Color          // accent color for highlights
 
-#Preview {
-    ZikrView()
+    static func colors(seed: UUID?) -> GenerateColorTheme {
+            // base hue from UUID (0..1)
+            let baseHue: Double
+            var seedVal: UInt64 = 0
+            if let seed = seed {
+                let hex = seed.uuidString.replacingOccurrences(of: "-", with: "")
+                let prefix = String(hex.prefix(16)) // grab more entropy
+                seedVal = UInt64(prefix, radix: 16) ?? 0
+                baseHue = Double(seedVal % 360) / 360.0
+            } else {
+                baseHue = 0.58
+                seedVal = 0xDEADBEEF
+            }
+
+            // Helper: produce a deterministic offset in [0,1) from seed bits + an index
+            func offset(_ idx: Int, spreadDegrees: Double) -> CGFloat {
+                // pull different slices of the seedVal for variance
+                let shift = UInt64(idx * 8)
+                let chunk = UInt32((seedVal >> shift) & 0xFF)
+                // map 0..255 -> -spread/2 .. +spread/2 degrees, then to fraction of circle
+                let deg = (Double(chunk) / 255.0 - 0.5) * spreadDegrees
+                let hue = fmod(baseHue + deg / 360.0 + 1.0, 1.0)
+                return CGFloat(hue)
+            }
+
+            // Helper: produce saturation/brightness tuned by seed bits
+            func sat(_ idx: Int, base: CGFloat, variance: CGFloat) -> CGFloat {
+                let chunk = UInt32((seedVal >> UInt64(idx * 7)) & 0x7F) // 0..127
+                let frac = CGFloat(chunk) / 127.0
+                return min(max(base + (frac - 0.5) * variance, 0.12), 0.98)
+            }
+            func bright(_ idx: Int, lightBase: CGFloat, darkBase: CGFloat, variance: CGFloat) -> (CGFloat, CGFloat) {
+                let chunk = UInt32((seedVal >> UInt64(idx * 9 + 3)) & 0x7F)
+                let frac = CGFloat(chunk) / 127.0
+                let light = min(max(lightBase + (frac - 0.5) * variance, 0.05), 0.99)
+                let dark  = min(max(darkBase  + (frac - 0.5) * variance, 0.05), 0.99)
+                return (light, dark)
+            }
+
+            // Create dynamic UIColor-backed Color for a hue index with light/dark brightness
+            func colorFor(h: CGFloat, s: CGFloat, brightLight: CGFloat, brightDark: CGFloat) -> Color {
+                return Color(UIColor { trait in
+                    let brightness = (trait.userInterfaceStyle == .dark) ? brightDark : brightLight
+                    return UIColor(hue: h, saturation: s, brightness: brightness, alpha: 1)
+                })
+            }
+
+            // Build multi-stop gradients with distinct stops
+            // Card: subtle, slightly desaturated triadic-ish gradient
+            let hCard1 = offset(0, spreadDegrees: 30)
+            let hCard2 = offset(1, spreadDegrees: 50)
+            let hCard3 = offset(2, spreadDegrees: 80)
+            let sCard1 = sat(0, base: 0.22, variance: 0.20)
+            let sCard2 = sat(1, base: 0.30, variance: 0.28)
+            let (cardLight, cardDark) = bright(0, lightBase: 0.97, darkBase: 0.12, variance: 0.12)
+            let cardC1 = colorFor(h: hCard1, s: sCard1, brightLight: cardLight, brightDark: cardDark)
+            let cardC2 = colorFor(h: hCard2, s: sCard2, brightLight: cardLight * 0.96, brightDark: cardDark * 1.06)
+            let cardC3 = colorFor(h: hCard3, s: max(sCard1, sCard2) * 0.85, brightLight: cardLight * 0.92, brightDark: cardDark * 1.12)
+            let cardGradient = LinearGradient(
+                gradient: Gradient(colors: [cardC1, cardC2, cardC3]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            // Art: richer, more saturated, higher contrast
+            let hArt1 = offset(3, spreadDegrees: 90)
+            let hArt2 = offset(4, spreadDegrees: 140)
+            let sArt1 = sat(2, base: 0.62, variance: 0.30)
+            let sArt2 = sat(3, base: 0.72, variance: 0.22)
+            let (artLight, artDark) = bright(1, lightBase: 0.92, darkBase: 0.22, variance: 0.18)
+            let artC1 = colorFor(h: hArt1, s: sArt1, brightLight: artLight, brightDark: artDark)
+            let artC2 = colorFor(h: hArt2, s: sArt2, brightLight: artLight * 0.96, brightDark: artDark * 1.08)
+            let artGradient = LinearGradient(
+                gradient: Gradient(colors: [artC1, artC2]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            // Accent: pick a vivid complementary / contrasting hue
+            let accentHue = CGFloat(fmod((Double(offset(5, spreadDegrees: 120)) + 0.5), 1.0)) // push ~180deg complementary
+            let accentSat = sat(4, base: 0.86, variance: 0.18)
+            let (accentLight, accentDark) = bright(2, lightBase: 0.72, darkBase: 0.88, variance: 0.10)
+            let accentColor = Color(UIColor { trait in
+                let brightness = (trait.userInterfaceStyle == .dark) ? accentDark : accentLight
+                return UIColor(hue: accentHue, saturation: accentSat, brightness: brightness, alpha: 1)
+            })
+
+            return GenerateColorTheme(card: cardGradient, art: artGradient, accent: accentColor)
+        }
 }

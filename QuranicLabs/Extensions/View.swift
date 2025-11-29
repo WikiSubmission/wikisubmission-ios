@@ -24,8 +24,8 @@ extension View {
         self.modifier(NoHorizontalScrollModifier())
     }
      
-    func requiresInternet() -> some View {
-        modifier(InternetRequired())
+    func requiresInternet(reason: String?) -> some View {
+        modifier(InternetRequired(reason: reason))
     }
 }
 
