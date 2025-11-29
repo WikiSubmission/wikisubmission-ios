@@ -11,7 +11,6 @@ struct ZikrView: View {
     @ObservedObject private var audio = ZikrAudioManager.shared
     @Default(.zikr_favorited_tracks) private var favoritedTracks
 
-    @State private var queryText: String = ""
     @State private var selectedArtist: UUID? = nil
     @State private var selectedCategory: UUID? = nil
     @State private var nowPlayingSheetTrack: UnifiedTrack? = nil
@@ -94,7 +93,7 @@ struct ZikrView: View {
                 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 14) {
-                        ForEach(vm.featuredTracksFiltered(query: queryText)) { t in
+                        ForEach(vm.featured.sorted { $0.releaseDate < $1.releaseDate }) { t in
                             ZikrFeaturedCard(track: t) {
                                 audio.playTrack(track: t, context: .category)
                             }
@@ -112,13 +111,10 @@ struct ZikrView: View {
         VStack(spacing: 8) {
             let filteredTracks = vm.tracks.filter { track in
                 (selectedArtist == nil || track.artist.id == selectedArtist) &&
-                (selectedCategory == nil || track.category.id == selectedCategory) &&
-                (queryText.isEmpty ||
-                 track.title.localizedCaseInsensitiveContains(queryText) ||
-                 track.artist.name.localizedCaseInsensitiveContains(queryText))
+                (selectedCategory == nil || track.category.id == selectedCategory)
             }
 
-            ForEach(vm.categoriesFiltered(query: queryText)) { category in
+            ForEach(vm.categories.sorted { $1.displayPriority < $0.displayPriority }, id: \.self) { category in
                 let tracksInCategory = filteredTracks.filter { $0.category.id == category.id }
                 if !tracksInCategory.isEmpty {
                     HStack {
@@ -128,7 +124,7 @@ struct ZikrView: View {
                     .padding(.horizontal)
 
                     LazyVStack(spacing: 4) {
-                        ForEach(tracksInCategory) { track in
+                        ForEach(tracksInCategory.sorted { $0.releaseDate > $1.releaseDate }) { track in
                             ZikrTrackRow(
                                 track: track,
                                 isPlaying: audio.currentTrack?.id == track.id && audio.isPlaying

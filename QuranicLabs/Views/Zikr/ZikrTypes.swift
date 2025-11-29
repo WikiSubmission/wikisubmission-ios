@@ -7,6 +7,7 @@ struct UnifiedTrack: Identifiable, Codable, Hashable {
     let url: String
     let artist: DBArtist
     let category: DBCategory
+    let releaseDate: Date
 }
 
 enum PlaybackContext: String, Codable, CaseIterable, Defaults.Serializable {
