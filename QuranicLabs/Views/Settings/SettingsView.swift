@@ -132,7 +132,7 @@ struct SettingsView: View {
                 }
             }
             
-            Section {
+            Section(header: Text("Support WikiSubmission"), footer: Text("We are a registered 501(c)(3) nonprofit. Your support helps us continue to develop open-source technology in the cause of God.")) {
                 Button {
                     if let scene = UIApplication.shared.connectedScenes
                         .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
@@ -148,6 +148,12 @@ struct SettingsView: View {
                     openURL(URL(string: Info.appStoreURL)!)
                 } label: {
                     Label("Open in App Store", systemImage: "globe.fill")
+                }
+                
+                Button {
+                    openURL(URL(string: "https://wikisubmission.org/donate")!)
+                } label: {
+                    Label("Donate", systemImage: "heart.fill")
                 }
             }
             
