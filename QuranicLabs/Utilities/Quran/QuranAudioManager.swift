@@ -11,6 +11,10 @@ extension Utilities.Quran {
     class QuranAudioManager: ObservableObject, AudioPlayerDelegate {
         static let shared = QuranAudioManager()
         
+        init() {
+            setupRemoteCommandCenter()
+        }
+        
         @Published var isQueueActive: Bool = false
         @Published var isPlaying: Bool = false
         
@@ -23,7 +27,9 @@ extension Utilities.Quran {
         
         private var cancellables: Set<AnyCancellable> = []
         private let playerStateChanged = PassthroughSubject<Void, Never>()
-                
+        
+        private var artworkCache: [String: MPMediaItemArtwork] = [:]
+        
         lazy var player: AudioPlayer = {
             let player = AudioPlayer()
             player.delegate = self
@@ -67,6 +73,7 @@ extension Utilities.Quran {
             UserDefaults.standard.set(verse.verse_id, forKey: Defaults.Keys.last_played_verse.name)
             isQueueActive = true
             self.player.play(url: url)
+            updateNowPlayingInfo()
         }
 
         /// Advances to the next verse in the queue and plays it.
@@ -91,11 +98,115 @@ extension Utilities.Quran {
             queue = []
             queueCurrentIndex = 0
             currentVerse = nil
+            updateNowPlayingInfo()
         }
         
         /// Pauses queue playback without clearing or resetting state.
         func pauseQueuePlayback() {
             player.pause()
+        }
+        
+        private func updateNowPlayingInfo() {
+            guard let verse = currentVerse else {
+                MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+                return
+            }
+            
+            var nowPlayingInfo = [String: Any]()
+            nowPlayingInfo[MPMediaItemPropertyTitle] = "Verse \(verse.chapter_number):\(verse.verse_number)"
+            nowPlayingInfo[MPMediaItemPropertyArtist] = verse.getChapterTitle(for: .english)
+            nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = "Quran Recitation"
+            
+            // Get duration if available from player
+            if player.duration > 0 {
+                nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = player.duration
+                if player.progress > 0 {
+                    nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.progress * player.duration
+                }
+            }
+            
+            nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
+            
+            // Queue info
+            nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackQueueCount] = queue.count
+            nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackQueueIndex] = queueCurrentIndex
+            
+            // Generate artwork
+            let verseKey = "\(verse.chapter_number):\(verse.verse_number)"
+            if let cachedArtwork = artworkCache[verseKey] {
+                nowPlayingInfo[MPMediaItemPropertyArtwork] = cachedArtwork
+            } else if let artwork = generateArtwork() {
+                artworkCache[verseKey] = artwork
+                nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
+            }
+            
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+        }
+
+        private func generateArtwork() -> MPMediaItemArtwork? {
+            let size = CGSize(width: 512, height: 512)
+            
+            return MPMediaItemArtwork(boundsSize: size) { _ in
+                // Try to get the app icon
+                if let appIcon = UIImage(named: "AppIcon") ?? UIApplication.shared.icon {
+                    return appIcon
+                }
+                
+                // Fallback: simple placeholder
+                let renderer = UIGraphicsImageRenderer(size: size)
+                return renderer.image { context in
+                    // Solid background
+                    UIColor.systemIndigo.setFill()
+                    context.fill(CGRect(origin: .zero, size: size))
+                    
+                    // Draw book icon
+                    let iconSize: CGFloat = 200
+                    let iconRect = CGRect(x: (size.width - iconSize) / 2,
+                                         y: (size.height - iconSize) / 2,
+                                         width: iconSize,
+                                         height: iconSize)
+                    
+                    let config = UIImage.SymbolConfiguration(pointSize: iconSize, weight: .light)
+                    if let bookIcon = UIImage(systemName: "book.closed", withConfiguration: config) {
+                        UIColor.white.withAlphaComponent(0.9).setFill()
+                        bookIcon.draw(in: iconRect, blendMode: .normal, alpha: 0.9)
+                    }
+                }
+            }
+        }
+        
+        private func setupRemoteCommandCenter() {
+            let commandCenter = MPRemoteCommandCenter.shared()
+            
+            commandCenter.playCommand.isEnabled = true
+            commandCenter.playCommand.addTarget { [weak self] _ in
+                self?.playCurrentInQueue()
+                return .success
+            }
+            
+            commandCenter.pauseCommand.isEnabled = true
+            commandCenter.pauseCommand.addTarget { [weak self] _ in
+                self?.pauseQueuePlayback()
+                return .success
+            }
+            
+            commandCenter.nextTrackCommand.isEnabled = true
+            commandCenter.nextTrackCommand.addTarget { [weak self] _ in
+                self?.nextInQueue()
+                return .success
+            }
+            
+            commandCenter.previousTrackCommand.isEnabled = true
+            commandCenter.previousTrackCommand.addTarget { [weak self] _ in
+                self?.previousInQueue()
+                return .success
+            }
+            
+            commandCenter.stopCommand.isEnabled = true
+            commandCenter.stopCommand.addTarget { [weak self] _ in
+                self?.stopQueue()
+                return .success
+            }
         }
     }
 }
@@ -113,6 +224,8 @@ extension Utilities.Quran.QuranAudioManager {
         } else {
             self.isPlaying = false
         }
+        
+        updateNowPlayingInfo()
         
         if !Utilities.System.NetworkMonitor.shared.hasInternet {
             Utilities.System.GlobalAlertManager.shared.showAlert(title: "No Internet Connection", subtitle: "An internet connection is required to play verse audios.", systemImage: "wifi.slash", type: .error, showSettingsButton: false)

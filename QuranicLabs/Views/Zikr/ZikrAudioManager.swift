@@ -1,6 +1,7 @@
 import SwiftUI
 import Foundation
 import AVFoundation
+import MediaPlayer
 import Defaults
 
 class ZikrAudioManager: ObservableObject {
@@ -24,11 +25,138 @@ class ZikrAudioManager: ObservableObject {
 
     var player: AVPlayer?
     private var timeObserverToken: Any?
+    private var artworkCache: [UUID: MPMediaItemArtwork] = [:]
 
     private init() {
         loopMode = Defaults[.zikr_loop_mode]
         playbackContext = Defaults[.zikr_playback_context]
+        setupRemoteCommandCenter()
     }
+    
+    private func setupRemoteCommandCenter() {
+            let commandCenter = MPRemoteCommandCenter.shared()
+            
+            // Play command
+            commandCenter.playCommand.isEnabled = true
+            commandCenter.playCommand.addTarget { [weak self] _ in
+                guard let self = self else { return .commandFailed }
+                if !self.isPlaying {
+                    self.togglePlayPause()
+                }
+                return .success
+            }
+            
+            // Pause command
+            commandCenter.pauseCommand.isEnabled = true
+            commandCenter.pauseCommand.addTarget { [weak self] _ in
+                guard let self = self else { return .commandFailed }
+                if self.isPlaying {
+                    self.togglePlayPause()
+                }
+                return .success
+            }
+            
+            // Next track command
+            commandCenter.nextTrackCommand.isEnabled = true
+            commandCenter.nextTrackCommand.addTarget { [weak self] _ in
+                self?.skipToNext()
+                return .success
+            }
+            
+            // Previous track command
+            commandCenter.previousTrackCommand.isEnabled = true
+            commandCenter.previousTrackCommand.addTarget { [weak self] _ in
+                self?.skipToPrevious()
+                return .success
+            }
+            
+            // Change playback position command
+            commandCenter.changePlaybackPositionCommand.isEnabled = true
+            commandCenter.changePlaybackPositionCommand.addTarget { [weak self] event in
+                guard let self = self,
+                      let event = event as? MPChangePlaybackPositionCommandEvent else {
+                    return .commandFailed
+                }
+                let time = CMTime(seconds: event.positionTime, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+                self.player?.seek(to: time)
+                self.updateNowPlayingInfo()
+                return .success
+            }
+        }
+        
+    private func updateNowPlayingInfo() {
+        guard let track = currentTrack else {
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+            print("🔇 Cleared now playing info")
+            return
+        }
+        
+        var nowPlayingInfo = [String: Any]()
+        nowPlayingInfo[MPMediaItemPropertyTitle] = track.title
+        nowPlayingInfo[MPMediaItemPropertyArtist] = track.artist.name
+        nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = track.category.name
+        
+        if let player = player, let currentItem = player.currentItem {
+            let duration = currentItem.duration.seconds
+            let currentTime = player.currentTime().seconds
+            
+            if duration.isFinite && duration > 0 {
+                nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = duration
+                nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
+            }
+        }
+        
+        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
+        
+        let queue = getCurrentQueue()
+        if let currentIndex = queue.firstIndex(where: { $0.id == track.id }) {
+            nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackQueueCount] = queue.count
+            nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackQueueIndex] = currentIndex
+        }
+        
+        if let cachedArtwork = artworkCache[track.artist.id] {
+            nowPlayingInfo[MPMediaItemPropertyArtwork] = cachedArtwork
+        } else if let artwork = generateArtwork(for: track) {
+            artworkCache[track.artist.id] = artwork
+            nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
+        }
+
+        // Set directly - do NOT clear first as it causes flashing
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+    }
+      
+      private func generateArtwork(for track: UnifiedTrack) -> MPMediaItemArtwork? {
+          let size = CGSize(width: 512, height: 512)
+          
+          return MPMediaItemArtwork(boundsSize: size) { _ in
+              let renderer = UIGraphicsImageRenderer(size: size)
+              return renderer.image { context in
+                  // Draw gradient background
+                  let colors = [UIColor.systemGray, UIColor.systemGray2]
+                  if let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                                              colors: colors.map { $0.cgColor } as CFArray,
+                                              locations: [0.0, 1.0]) {
+                      context.cgContext.drawLinearGradient(gradient,
+                                                          start: .zero,
+                                                          end: CGPoint(x: size.width, y: size.height),
+                                                          options: [])
+                  }
+                  
+                  // Draw music note icon
+                  let iconSize: CGFloat = 200
+                  let iconRect = CGRect(x: (size.width - iconSize) / 2,
+                                       y: (size.height - iconSize) / 2,
+                                       width: iconSize,
+                                       height: iconSize)
+                  
+                  let config = UIImage.SymbolConfiguration(pointSize: iconSize, weight: .light)
+                  if let musicNote = UIImage(systemName: "music.note", withConfiguration: config) {
+                      UIColor.white.withAlphaComponent(0.6).setFill()
+                      musicNote.draw(in: iconRect, blendMode: .normal, alpha: 0.6)
+                  }
+              }
+          }
+      }
     
     private func getCurrentQueue() -> [UnifiedTrack] {
         guard let current = currentTrack else { return [] }
@@ -44,32 +172,45 @@ class ZikrAudioManager: ObservableObject {
     }
 
     func playTrack(track: UnifiedTrack, context: PlaybackContext? = nil) {
-        if let context = context {
-            playbackContext = context
-        }
-        
-        if currentTrack?.id == track.id {
-            togglePlayPause()
-            return
-        }
+           if let context = context {
+               playbackContext = context
+           }
+           
+           if currentTrack?.id == track.id {
+               togglePlayPause()
+               return
+           }
 
-        guard let url = URL(string: track.url) else { return }
+           guard let url = URL(string: track.url) else { return }
 
-        // Don't call stop() - just clean up the old player
-        if let token = timeObserverToken {
-            player?.removeTimeObserver(token)
-            timeObserverToken = nil
-        }
-        player?.pause()
-        
-        player = AVPlayer(url: url)
-        player?.play()
+           // Don't call stop() - just clean up the old player
+           if let token = timeObserverToken {
+               player?.removeTimeObserver(token)
+               timeObserverToken = nil
+           }
+           player?.pause()
+           
+           // Create new player
+           let playerItem = AVPlayerItem(url: url)
+           player = AVPlayer(playerItem: playerItem)
+           
+           // Configure player for remote control
+           player?.automaticallyWaitsToMinimizeStalling = true
+           player?.allowsExternalPlayback = true
+           
+           currentTrack = track
+           isPlaying = true
 
-        currentTrack = track
-        isPlaying = true
-
-        addPeriodicTimeObserver()
-    }
+           // Set now playing info immediately
+           updateNowPlayingInfo()
+           
+           addPeriodicTimeObserver()
+           
+           // Start playback
+           player?.play()
+           
+           print("▶️ Playing: \(track.title) by \(track.artist.name)")
+       }
 
     func togglePlayPause() {
         guard let player = player else { return }
@@ -80,6 +221,7 @@ class ZikrAudioManager: ObservableObject {
             player.play()
             isPlaying = true
         }
+        updateNowPlayingInfo()
     }
 
     func stop() {
@@ -90,6 +232,7 @@ class ZikrAudioManager: ObservableObject {
         player?.pause()
         player = nil
         isPlaying = false
+        updateNowPlayingInfo()
         // Keep currentTrack for UI - don't clear it
         // currentTrack = nil
     }
@@ -111,6 +254,7 @@ class ZikrAudioManager: ObservableObject {
             if loopMode == .off && nextIndex == 0 {
                 player?.pause()
                 isPlaying = false
+                updateNowPlayingInfo()
                 return
             }
             
@@ -124,6 +268,7 @@ class ZikrAudioManager: ObservableObject {
             player?.seek(to: .zero)
             player?.play()
             isPlaying = true
+            updateNowPlayingInfo()
             return
         }
         
@@ -132,6 +277,7 @@ class ZikrAudioManager: ObservableObject {
             player?.seek(to: .zero)
             player?.play()
             isPlaying = true
+            updateNowPlayingInfo()
             return
         }
         
@@ -154,27 +300,28 @@ class ZikrAudioManager: ObservableObject {
             loopMode = .off
         }
     }
-
+    
     private func addPeriodicTimeObserver() {
         if let token = timeObserverToken {
             player?.removeTimeObserver(token)
             timeObserverToken = nil
         }
         guard let player = player else { return }
-        
+
+        // Only monitor for track end - iOS handles elapsed time display automatically
         let interval = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
             guard let self = self else { return }
             guard let duration = player.currentItem?.duration.seconds, duration > 0 else { return }
             let progress = time.seconds / duration
             
-            // When track ends
+            // When track ends - handle looping
             if progress >= 0.99 {
                 switch self.loopMode {
                 case .off:
-                    // Pause at end but keep track visible
                     player.pause()
                     self.isPlaying = false
+                    self.updateNowPlayingInfo()
                 case .context:
                     self.skipToNext()
                 case .repeatOne:
