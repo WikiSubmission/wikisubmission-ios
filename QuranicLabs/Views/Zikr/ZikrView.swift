@@ -11,10 +11,8 @@ struct ZikrView: View {
     @ObservedObject private var audio = ZikrAudioManager.shared
     @Default(.zikr_favorited_tracks) private var favoritedTracks
 
-    @State private var selectedArtist: UUID? = nil
-    @State private var selectedCategory: UUID? = nil
-    @State private var nowPlayingSheetTrack: UnifiedTrack? = nil
     @State private var isLoading: Bool = false
+    @State private var lastFetchTime: Date = .distantPast
 
     var body: some View {
         NavigationStack {
@@ -37,27 +35,35 @@ struct ZikrView: View {
                 }
             }
             .task {
-                isLoading = true
-                await vm.fetchFromDB()
-                // ensure audio gets the latest lists after fetch
-                audio.allTracks = vm.tracks
-                audio.favoriteTrackUrls = favoritedTracks
-                // small delay optional to ensure UI has time to settle before hiding loader
-                try? await Task.sleep(nanoseconds: 80_000_000)
-                isLoading = false
+                await fetchIfNeeded()
             }
-            .onChange(of: vm.tracks) { _, newTracks in
-                audio.allTracks = newTracks
+            .onAppear {
+                Task {
+                    await fetchIfNeeded()
+                }
             }
             .onChange(of: favoritedTracks) { _, newFavorites in
                 audio.favoriteTrackUrls = newFavorites
             }
-            .sheet(item: $nowPlayingSheetTrack) { track in
-                ZikrNowPlayingSheet(track: track, audio: audio)
-                    .presentationDetents([.medium])
-            }
             .navigationTitle("Zikr")
         }
+    }
+    
+    private func fetchIfNeeded() async {
+        let now = Date()
+        let timeSinceLastFetch = now.timeIntervalSince(lastFetchTime)
+        
+        // Only fetch if more than 15 seconds have passed or never fetched
+        guard timeSinceLastFetch > 15 || vm.tracks.isEmpty else {
+            return
+        }
+        
+        isLoading = true
+        await vm.fetchFromDB()
+        audio.allTracks = vm.tracks
+        audio.favoriteTrackUrls = favoritedTracks
+        lastFetchTime = now
+        isLoading = false
     }
 
     private var content: some View {
@@ -109,13 +115,8 @@ struct ZikrView: View {
 
     private var tracksSection: some View {
         VStack(spacing: 8) {
-            let filteredTracks = vm.tracks.filter { track in
-                (selectedArtist == nil || track.artist.id == selectedArtist) &&
-                (selectedCategory == nil || track.category.id == selectedCategory)
-            }
-
             ForEach(vm.categories.sorted { $1.displayPriority < $0.displayPriority }, id: \.self) { category in
-                let tracksInCategory = filteredTracks.filter { $0.category.id == category.id }
+                let tracksInCategory = vm.tracks.filter { $0.category.id == category.id }
                 if !tracksInCategory.isEmpty {
                     HStack {
                         Text(category.name).font(.title2.bold())
@@ -129,7 +130,6 @@ struct ZikrView: View {
                                 track: track,
                                 isPlaying: audio.currentTrack?.id == track.id && audio.isPlaying
                             ) {
-                                // Set context to category when playing from main view
                                 audio.playTrack(track: track, context: .category)
                             }
                             .padding(4)
@@ -172,9 +172,7 @@ struct ZikrTrackRow: View {
     let isPlaying: Bool
     let action: () -> Void
     
-    @StateObject private var vm = ZikrDBViewModel()
     @Default(.zikr_favorited_tracks) private var favoritedTracks
-    @Environment(\.openURL) private var openURL
     
     private var isFavorite: Bool {
         favoritedTracks.contains(track.url)
@@ -182,7 +180,7 @@ struct ZikrTrackRow: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            // Main tappable area (everything except the heart)
+            // Main tappable area
             Button(action: action) {
                 HStack {
                     ZStack {
@@ -208,9 +206,15 @@ struct ZikrTrackRow: View {
             .buttonStyle(.plain)
             .frame(maxWidth: .infinity, alignment: .leading)
             
-            // Favorite button (just the heart)
+            // Favorite button - directly toggle Defaults
             Button {
-                vm.toggleFavorite(track: track)
+                var fav = Defaults[.zikr_favorited_tracks]
+                if fav.contains(track.url) {
+                    fav.removeAll { $0 == track.url }
+                } else {
+                    fav.append(track.url)
+                }
+                Defaults[.zikr_favorited_tracks] = fav
             } label: {
                 Image(systemName: isFavorite ? "heart.fill" : "heart")
                     .foregroundColor(isFavorite ? .red : .accentColor)
@@ -221,7 +225,8 @@ struct ZikrTrackRow: View {
         .padding(4)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(isPlaying ? Color(.accent.opacity(0.1)) : Color(.gray.opacity(0.03))).padding(-4)
+                .fill(isPlaying ? Color(.accent.opacity(0.1)) : Color(.gray.opacity(0.03)))
+                .padding(-4)
         )
     }
 }
