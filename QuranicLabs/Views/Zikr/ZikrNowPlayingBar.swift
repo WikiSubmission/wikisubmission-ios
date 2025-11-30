@@ -3,7 +3,7 @@ import Defaults
 import SheetKit
 
 #Preview {
- MainView()
+    MainView()
 }
 
 struct ZikrNowPlayingBar: View {
@@ -12,125 +12,105 @@ struct ZikrNowPlayingBar: View {
     private let progressUpdateInterval: TimeInterval = 0.5
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            Button(action: {
-                guard let track = audio.currentTrack else { return }
-                SheetKit().presentWithEnvironment {
-                    NavigationStack {
-                        ZikrNowPlayingSheet(track: track, audio: audio)
+        if let track = audio.currentTrack {
+            VStack(spacing: 0) {
+                Spacer()
+                
+                Button(action: {
+                    SheetKit().presentWithEnvironment {
+                        NavigationStack {
+                            ZikrNowPlayingSheet(track: track, audio: audio)
+                        }
+                        .presentationDetents([.medium])
                     }
-                    .presentationDetents([.medium])
-                }
-            }) {
-                VStack(spacing: 0) {
-                    Capsule()
-                        .fill(Color.secondary.opacity(0.4))
-                        .frame(width: 36, height: 4)
-                        .padding(.top, 6)
-                        .padding(.bottom, 8)
-
-                    if let track = audio.currentTrack {
+                }) {
+                    VStack(spacing: 0) {
                         HStack(spacing: 12) {
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(GenerateColorTheme.colors(seed: track.artist.id).art)
-                                .frame(width: 48, height: 48)
-                                .overlay(
-                                    Image(systemName: "music.note")
-                                        .resizable()
-                                        .scaledToFit()
+                            // Track info
+                            HStack(spacing: 8) {
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(GenerateColorTheme.colors(seed: track.artist.id).art)
+                                    .frame(width: 32, height: 32)
+                                    .overlay(
+                                        Image(systemName: "music.note")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .foregroundColor(.secondary)
+                                            .padding(8)
+                                    )
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(track.title)
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundColor(.primary)
+                                        .lineLimit(1)
+                                    Text(track.artist.name)
+                                        .font(.caption)
                                         .foregroundColor(.secondary)
-                                        .padding(12)
-                                )
-                                .shadow(color: Color.black.opacity(0.15), radius: 4, x: 0, y: 1)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(track.title)
-                                    .font(.headline.weight(.semibold))
-                                    .foregroundColor(.primary)
-                                    .lineLimit(1)
-                                Text(track.artist.name)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                    .lineLimit(1)
+                                        .lineLimit(1)
+                                }
                             }
-
-                            Spacer()
+                            .frame(maxWidth: .infinity, alignment: .leading)
                             
-                            HStack(spacing: 4) {
+                            // Playback controls
+                            HStack(spacing: 12) {
                                 Button {
                                     audio.cycleLoopMode()
                                 } label: {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: audio.loopMode.icon)
-                                    }
-                                    .foregroundColor(.accentColor)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(Color.secondary.opacity(0.1))
-                                    .cornerRadius(12)
+                                    Image(systemName: audio.loopMode.icon)
+                                        .font(.title3)
                                 }
-
+                                
                                 Button(action: { audio.togglePlayPause() }) {
-                                    Image(systemName: audio.isPlaying && audio.currentTrack?.id == track.id ? "pause.circle.fill" : "play.circle.fill")
-                                        .font(.system(size: 28))
-                                        .foregroundColor(.accentColor)
-                                        .contentShape(Rectangle())
+                                    Image(systemName: audio.isPlaying && audio.currentTrack?.id == track.id ? "pause.fill" : "play.fill")
+                                        .font(.title2)
                                 }
-                                .buttonStyle(PlainButtonStyle())
-
+                                
                                 Button(action: {
                                     audio.stop()
                                     audio.currentTrack = nil
-                                    audio.currentTrack = nil
                                 }) {
                                     Image(systemName: "xmark.circle.fill")
-                                        .font(.system(size: 28))
+                                        .font(.title3)
                                         .foregroundColor(.red)
-                                        .contentShape(Rectangle())
                                 }
-                                .buttonStyle(PlainButtonStyle())
                             }
                         }
                         .padding(.horizontal)
-                        .frame(height: 56)
-                        .id(track.id)
-
+                        .padding(.vertical, 10)
+                        
+                        // Progress bar
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
                                 Rectangle()
                                     .fill(Color.secondary.opacity(0.2))
                                     .frame(height: 2)
-                                    .cornerRadius(1)
                                 Rectangle()
                                     .fill(Color.accentColor)
                                     .frame(width: geo.size.width * progress, height: 2)
-                                    .cornerRadius(1)
                                     .animation(.easeInOut(duration: 0.3), value: progress)
                             }
                         }
                         .frame(height: 2)
                         .padding(.horizontal)
-                        .padding(.top, 12)
-                        .padding(.bottom, 8)
                     }
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 18))
+                    .shadow(radius: 7, y: 3)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 60)
                 }
-                .background(
-                    VisualEffectBlur()
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: -1)
-                )
-                .padding(.horizontal, 12)
-                .padding(.bottom, 60)
+                .buttonStyle(.plain)
+                .id(track.id)
             }
-            .buttonStyle(PlainButtonStyle())
-        }
-        .onAppear {
-            updateProgress()
-        }
-        .onReceive(Timer.publish(every: progressUpdateInterval, on: .main, in: .common).autoconnect()) { _ in
-            updateProgress()
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+            .animation(.spring(), value: audio.currentTrack != nil)
+            .onAppear {
+                updateProgress()
+            }
+            .onReceive(Timer.publish(every: progressUpdateInterval, on: .main, in: .common).autoconnect()) { _ in
+                updateProgress()
+            }
         }
     }
 
@@ -150,6 +130,8 @@ struct ZikrNowPlayingBar: View {
 }
 
 struct VisualEffectBlur: UIViewRepresentable {
-    func makeUIView(context: Context) -> UIVisualEffectView { UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial)) }
+    func makeUIView(context: Context) -> UIVisualEffectView {
+        UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))
+    }
     func updateUIView(_ uiView: UIVisualEffectView, context: Context) {}
 }
