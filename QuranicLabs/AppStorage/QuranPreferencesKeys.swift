@@ -10,7 +10,7 @@ extension Defaults.Keys {
     static let primary_language = Key<Types.Quran.PrimaryLanguage>("primary_language", default: .english)
     static let secondary_language = Key<Types.Quran.SecondaryLanguage>("secondary_language", default: .none)
     
-    static let use_serif_font_design = Key<Bool>("use_serif_font_design", default: true)
+    static let use_serif_font_design = Key<Bool>("use_serif_font_design", default: false)
     static let font_size = Key<Double>("font_size", default: 19)
     
     static let sort_chapters_by_revelation_order = Key<Bool>("sort_chapters_by_revelation_order", default: false)
