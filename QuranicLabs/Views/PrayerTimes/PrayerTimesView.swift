@@ -67,9 +67,7 @@ struct PrayerTimesView: View {
                                 LazyVStack(spacing: 32) {
                                     PrayerTimesCard(prayerData: prayerData)
                                         .environmentObject(environment)
-                                    
-                                    Divider()
-                                    
+                                                                        
                                     FlexStack {
                                         if qibla {
                                             TinyCard(title: "Qibla", systemImage: "safari.fill") {

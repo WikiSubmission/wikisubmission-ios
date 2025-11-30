@@ -23,6 +23,7 @@ extension Utilities.Notifications {
                         asr: Defaults[.asr_notification],
                         mahgrib: Defaults[.maghrib_notification],
                         isha: Defaults[.isha_notification],
+                        sunrise: Defaults[.sunrise_notification],
                         use_midpoint_method_for_asr: Defaults[.use_midpoint_method_for_asr]
                     ),
                     daily_verse_notifications: Defaults[.daily_verse_notifications],

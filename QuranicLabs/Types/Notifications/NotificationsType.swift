@@ -15,6 +15,7 @@ extension Types.Notifications {
         let asr: Bool
         let mahgrib: Bool
         let isha: Bool
+        let sunrise: Bool
         let use_midpoint_method_for_asr: Bool
     }
 }

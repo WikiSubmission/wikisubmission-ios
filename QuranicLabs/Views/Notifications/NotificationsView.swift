@@ -16,7 +16,8 @@ struct NotificationsView: View {
     @Default(.asr_notification) var asrNotifications
     @Default(.maghrib_notification) var maghribNotifications
     @Default(.isha_notification) var ishaNotifications
-    
+    @Default(.sunrise_notification) var sunriseNotifications
+
     @Default(.daily_verse_notifications) var dailyVerseNotifications
     @Default(.daily_chapter_notifications) var dailyChapterNotifications
     
@@ -26,9 +27,29 @@ struct NotificationsView: View {
                 if let authorization = authorization {
                     if authorization == .authorized {
                         List {
-                            Section(header: Text("ENABLE NOTIFICATIONS"), footer: prayerTimeLocation?.count ?? 0 > 0 ? nil : Label("Add a city on the prayer time section so we can calculate your prayer times (and send reminders).", systemImage: "exclamationmark.triangle")) {
+                            Section(header: Text("PRAYER REMINDERS"), footer: prayerTimeLocation?.count ?? 0 > 0 ?
+                                    Label("Prayer reminders are sent 10 minutes before each enabled prayer.", systemImage: "info.circle") : Label("Add a city on the prayer time section so we can calculate your prayer times (and send reminders).", systemImage: "exclamationmark.triangle")
+                            ) {
                                 Toggle(isOn: $prayerNotifications) {
                                     Text("Prayer Times")
+                                }
+                                if prayerNotifications {
+                                    NavigationLink {
+                                        List {
+                                            PrayerNotificationsSection(
+                                                fajrNotifications: $fajrNotifications,
+                                                dhuhrNotifications: $dhuhrNotifications,
+                                                asrNotifications: $asrNotifications,
+                                                maghribNotifications: $maghribNotifications,
+                                                ishaNotifications: $ishaNotifications,
+                                                sunriseNotifications: $sunriseNotifications
+                                            )
+                                            .navigationTitle("Customize Notifications")
+                                            .navigationBarTitleDisplayMode(.inline)
+                                        }
+                                    } label: {
+                                        Text("Customize Prayer Notifications")
+                                    }
                                 }
                             }
                             .onChange(of: prayerNotifications) { _, newState in
@@ -40,38 +61,19 @@ struct NotificationsView: View {
                                 }
                             }
                             
-                            if prayerNotifications {
-                                PrayerNotificationsSection(
-                                    fajrNotifications: $fajrNotifications,
-                                    dhuhrNotifications: $dhuhrNotifications,
-                                    asrNotifications: $asrNotifications,
-                                    maghribNotifications: $maghribNotifications,
-                                    ishaNotifications: $ishaNotifications
-                                )
-                            }
-                            
                             QuranNotificationsSection(
                                 randomVerseNotifications: $dailyVerseNotifications,
                                 randomChapterNotifications: $dailyChapterNotifications
                             )
                             
-                            Button {
-                                guard let token = deviceToken, !token.isEmpty else { return }
-                                guard let url = URL(string: "https://push-notifications.wikisubmission.org/send-notification") else { return }
-                                var request = URLRequest(url: url)
-                                request.httpMethod = "POST"
-                                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                                let body: [String: String] = [
-                                    "device_token": token,
-                                    "platform": "ios",
-                                    "type": "random_verse",
-                                    "force": "true"
-                                ]
-                                request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-                                let task = URLSession.shared.dataTask(with: request) { _, _, _ in }
-                                task.resume()
-                            } label: {
-                                Text("Send Test Notification")
+                            if deviceToken != nil {
+                                Section(header: Text("TECHNICAL")) {
+                                    NavigationLink {
+                                        DeviceTokenView(token: deviceToken!)
+                                    } label: {
+                                        Label("Device Token", systemImage: "barcode")
+                                    }
+                                }
                             }
                         }
                         .clipShape(RoundedRectangle(cornerRadius: 24))
@@ -105,7 +107,7 @@ struct NotificationsView: View {
                 }
             }
             .navigationTitle("Notifications")
-            .toolbarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
@@ -149,9 +151,10 @@ private struct PrayerNotificationsSection: View {
     @Binding var asrNotifications: Bool
     @Binding var maghribNotifications: Bool
     @Binding var ishaNotifications: Bool
-    
+    @Binding var sunriseNotifications: Bool
+
     var body: some View {
-        Section(header: Text("PRAYER REMINDERS"), footer: Text("Prayer reminders are sent 10 minutes before each enabled prayer.")) {
+        Section {
             Toggle(isOn: $fajrNotifications) {
                 Text("Fajr")
             }
@@ -166,6 +169,9 @@ private struct PrayerNotificationsSection: View {
             }
             Toggle(isOn: $ishaNotifications) {
                 Text("Isha")
+            }
+            Toggle(isOn: $sunriseNotifications) {
+                Text("Sunrise")
             }
         }
         .onChange(of: fajrNotifications) { _, _ in
@@ -189,6 +195,11 @@ private struct PrayerNotificationsSection: View {
             }
         }
         .onChange(of: ishaNotifications) { _, _ in
+            Task {
+                try? await Utilities.Notifications.syncWithDatabase()
+            }
+        }
+        .onChange(of: sunriseNotifications) { _, _ in
             Task {
                 try? await Utilities.Notifications.syncWithDatabase()
             }
@@ -222,6 +233,46 @@ private struct QuranNotificationsSection: View {
     }
 }
 
+struct DeviceTokenView: View {
+    @State private var reveal = false
+    let token: String
+
+    private var masked: String {
+        let t = token
+        guard t.count > 12 else { return t }
+        return "\(t.prefix(6))...\(t.suffix(6))"
+    }
+
+    var body: some View {
+        Form {
+            Section(footer: Text("This token uniquely identifies your device for push notifications. Avoid sharing it publicly.")) {
+                HStack {
+                    Text(reveal ? token : masked)
+                        .font(.system(.footnote, design: .monospaced))
+                        .lineLimit(3)
+                        .truncationMode(.middle)
+
+                    Spacer()
+
+                    Button(reveal ? "Hide" : "Reveal") {
+                        reveal.toggle()
+                    }
+                    .buttonStyle(.bordered)
+                }
+
+                Button("Copy to Clipboard") {
+                    UIPasteboard.general.string = token
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            .textSelection(.enabled)
+        }
+        .navigationTitle("Device Token")
+    }
+}
+
 #Preview {
     NotificationsView()
+        .environmentObject(AppEnvironment.shared)
 }
+
