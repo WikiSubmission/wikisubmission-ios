@@ -182,7 +182,7 @@ struct ZikrTrackRow: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            // Track tappable area
+            // Main tappable area (everything except the heart)
             Button(action: action) {
                 HStack {
                     ZStack {
@@ -193,7 +193,6 @@ struct ZikrTrackRow: View {
                             .font(.system(size: 24))
                             .foregroundColor(isPlaying ? .accentColor : .secondary)
                     }
-                    
                     VStack(alignment: .leading, spacing: 2) {
                         Text(track.title)
                             .font(.body)
@@ -204,10 +203,12 @@ struct ZikrTrackRow: View {
                     }
                     Spacer()
                 }
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, alignment: .leading)
             
-            // Favorite button
+            // Favorite button (just the heart)
             Button {
                 vm.toggleFavorite(track: track)
             } label: {
