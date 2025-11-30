@@ -1,5 +1,6 @@
 import SwiftUI
 import Defaults
+import AVFoundation
 
 struct ZikrNowPlayingSheet: View {
     let track: UnifiedTrack
@@ -7,6 +8,8 @@ struct ZikrNowPlayingSheet: View {
     @Environment(\.dismiss) private var dismiss
     
     @State private var progress: CGFloat = 0.0
+    @State private var isDragging = false
+    @State private var dragProgress: CGFloat = 0.0
     @State private var showQueue = false
     private let progressUpdateInterval: TimeInterval = 0.5
     
@@ -20,6 +23,21 @@ struct ZikrNowPlayingSheet: View {
     @Default(.zikr_favorited_tracks) private var favoritedTracks
     private var isFavorite: Bool {
         favoritedTracks.contains(track.url)
+    }
+    
+    // Get current time and duration for display
+    private var currentTime: String {
+        guard let player = audio.player else { return "0:00" }
+        let time = player.currentTime().seconds
+        return formatTime(time)
+    }
+    
+    private var duration: String {
+        guard let player = audio.player,
+              let currentItem = player.currentItem else { return "0:00" }
+        let time = currentItem.duration.seconds
+        guard time.isFinite && time > 0 else { return "0:00" }
+        return formatTime(time)
     }
     
     var body: some View {
@@ -79,22 +97,59 @@ struct ZikrNowPlayingSheet: View {
                 }
                 .id(displayTrack.id)
                 
-                // Progress bar
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Rectangle()
-                            .fill(Color.secondary.opacity(0.2))
-                            .frame(height: 4)
-                            .cornerRadius(2)
-                        Rectangle()
-                            .fill(Color.accentColor)
-                            .frame(width: geo.size.width * progress, height: 4)
-                            .cornerRadius(2)
-                            .animation(.easeInOut(duration: 0.3), value: progress)
+                // Progress bar with time labels and drag gesture
+                VStack(spacing: 6) {
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Rectangle()
+                                .fill(Color.secondary.opacity(0.2))
+                                .frame(height: 4)
+                                .cornerRadius(2)
+                            Rectangle()
+                                .fill(Color.accentColor)
+                                .frame(width: geo.size.width * (isDragging ? dragProgress : progress), height: 4)
+                                .cornerRadius(2)
+                                .animation(isDragging ? nil : .easeInOut(duration: 0.3), value: progress)
+                            
+                            // Draggable thumb
+                            Circle()
+                                .fill(Color.accentColor)
+                                .frame(width: isDragging ? 12 : 0, height: isDragging ? 12 : 0)
+                                .offset(x: geo.size.width * (isDragging ? dragProgress : progress) - (isDragging ? 6 : 0))
+                                .animation(.easeInOut(duration: 0.15), value: isDragging)
+                        }
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { value in
+                                    isDragging = true
+                                    let newProgress = min(max(value.location.x / geo.size.width, 0), 1)
+                                    dragProgress = newProgress
+                                }
+                                .onEnded { value in
+                                    let finalProgress = min(max(value.location.x / geo.size.width, 0), 1)
+                                    seekToProgress(finalProgress)
+                                    isDragging = false
+                                }
+                        )
                     }
+                    .frame(height: 4)
+                    .padding(.horizontal, 40)
+                    
+                    // Time labels
+                    HStack {
+                        Text(currentTime)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .monospacedDigit()
+                        Spacer()
+                        Text(duration)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .monospacedDigit()
+                    }
+                    .padding(.horizontal, 40)
                 }
-                .frame(height: 4)
-                .padding(.horizontal, 40)
 
                 // Playback controls
                 HStack(spacing: 40) {
@@ -172,19 +227,46 @@ struct ZikrNowPlayingSheet: View {
                 }
             }
             .onReceive(Timer.publish(every: progressUpdateInterval, on: .main, in: .common).autoconnect()) { _ in
-                guard let player = audio.player, let currentItem = player.currentItem else {
-                    progress = 0
-                    return
-                }
-                let duration = currentItem.duration.seconds
-                guard duration.isFinite && duration > 0 else {
-                    progress = 0
-                    return
-                }
-                let currentTime = player.currentTime().seconds
-                progress = CGFloat(min(max(currentTime / duration, 0), 1))
+                guard !isDragging else { return }
+                updateProgress()
             }
         }
+    }
+    
+    private func updateProgress() {
+        guard let player = audio.player, let currentItem = player.currentItem else {
+            progress = 0
+            return
+        }
+        let duration = currentItem.duration.seconds
+        guard duration.isFinite && duration > 0 else {
+            progress = 0
+            return
+        }
+        let currentTime = player.currentTime().seconds
+        progress = CGFloat(min(max(currentTime / duration, 0), 1))
+    }
+    
+    private func seekToProgress(_ newProgress: CGFloat) {
+        guard let player = audio.player,
+              let currentItem = player.currentItem else { return }
+        
+        let duration = currentItem.duration.seconds
+        guard duration.isFinite && duration > 0 else { return }
+        
+        let targetTime = duration * Double(newProgress)
+        let cmTime = CMTime(seconds: targetTime, preferredTimescale: 600)
+        
+        player.seek(to: cmTime, toleranceBefore: .zero, toleranceAfter: .zero) { _ in
+            self.updateProgress()
+        }
+    }
+    
+    private func formatTime(_ timeInSeconds: Double) -> String {
+        guard timeInSeconds.isFinite && timeInSeconds >= 0 else { return "0:00" }
+        let minutes = Int(timeInSeconds) / 60
+        let seconds = Int(timeInSeconds) % 60
+        return String(format: "%d:%02d", minutes, seconds)
     }
 }
 
