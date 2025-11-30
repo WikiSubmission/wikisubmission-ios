@@ -3,8 +3,11 @@ import SwiftUI
 import UserNotifications
 import Defaults
 import SheetKit
+import Combine
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+    
+    private var pendingNotificationLaunch: ([AnyHashable: Any], String?)?
     
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
@@ -15,10 +18,15 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         if let notification = launchOptions?[.remoteNotification] as? [AnyHashable: Any] {
             let category = notification["category"] as? String
             // Store this to handle after app setup is complete
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) {
-                self.handleNotification(userInfo: notification, category: category)
-            }
+            self.pendingNotificationLaunch = (notification, category)
         }
+        // Add observer to process when app becomes active
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(processPendingNotificationIfNeeded),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
         
         return true
     }
@@ -41,74 +49,87 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         print("Failed to register for remote notifications:", error)
     }
     
+    // Handle notifications when app is in FOREGROUND
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         let userInfo = notification.request.content.userInfo
         let category = notification.request.content.categoryIdentifier
-        handleNotification(userInfo: userInfo, category: category)
+        
+        // Only update UserDefaults, don't trigger deep links when in foreground
+        updateUserDefaultsFromNotification(userInfo: userInfo, category: category)
+        
         completionHandler([.banner, .sound])
     }
     
+    // Handle notification TAPS (background or foreground)
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 didReceive response: UNNotificationResponse,
                                 withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         let userInfo = response.notification.request.content.userInfo
         let category = response.notification.request.content.categoryIdentifier
-        handleNotification(userInfo: userInfo, category: category)
+        
+        // Only trigger deep links when user actually taps the notification
+        handleNotificationTap(userInfo: userInfo, category: category)
+        
         completionHandler()
     }
     
-    private func handleNotification(userInfo: [AnyHashable: Any], category: String?) {
-        // Try to get category from parameter first, then from payload
+    // Update UserDefaults from notification payload
+    private func updateUserDefaultsFromNotification(userInfo: [AnyHashable: Any], category: String?) {
         let actualCategory = category ?? (userInfo["category"] as? String)
                 
         if let verseId = (userInfo["verse_id"] as? String) ?? (userInfo["verse_id"] as? Int).map({ "\($0)" }) {
             if actualCategory == "daily_verse" {
-                print("Setting daily verse to \(verseId)")
                 UserDefaults.standard.set(verseId, forKey: Defaults.Keys.daily_verse.name)
             }
         }
         
         if let chapterNumber = (userInfo["chapter_number"] as? Int) ?? (userInfo["chapter_number"] as? String).flatMap({ Int($0) }) {
             if actualCategory == "daily_chapter" {
-                print("Setting daily chapter to \(chapterNumber)")
                 UserDefaults.standard.set(chapterNumber, forKey: Defaults.Keys.daily_chapter.name)
             }
         }
-
-        if let deepLink = userInfo["deepLink"] as? String, let url = URL(string: deepLink) {
-            if deepLink == "wikisubmission://prayer-times" && Defaults[.active_tab] != .prayer {
-                Defaults[.active_tab] = .prayer
-            }
-            
-            guard url.scheme == "wikisubmission" else { return }
-            
-            if url.host == "verse" {
-                Defaults[.active_tab] = .home
-                let verseId = url.lastPathComponent
-                let chapter = Int(verseId.split(separator: ":")[0]) ?? 1
-                SheetKit().presentWithEnvironment {
-                    NavigationStack {
-                        QuranReaderView(
-                            chapter: chapter,
-                            scrollToVerseID: verseId
-                        )
-                    }
-                }
-            } else if url.host == "chapter" {
-                Defaults[.active_tab] = .home
-                let chapterNumber = Int(url.lastPathComponent) ?? 1
-                SheetKit().presentWithEnvironment {
-                    NavigationStack {
-                        QuranReaderView(
-                            chapter: chapterNumber
-                        )
-                    }
-                }
-            }
+    }
+    
+    // Handle deep links when notification is tapped
+    private func handleNotificationTap(userInfo: [AnyHashable: Any], category: String?) {
+        updateUserDefaultsFromNotification(userInfo: userInfo, category: category)
+        
+        // Handle deep link
+        guard let deepLink = userInfo["deepLink"] as? String,
+              let url = URL(string: deepLink),
+              url.scheme == "wikisubmission" else { return }
+        
+        // Post notification to trigger deep link after a delay to ensure UI is ready
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            NotificationCenter.default.post(
+                name: .deepLinkTriggered,
+                object: nil,
+                userInfo: ["url": url]
+            )
         }
     }
+    
+    @objc private func processPendingNotificationIfNeeded() {
+        guard let (userInfo, category) = pendingNotificationLaunch else { return }
+        
+        // Handle the notification tap that launched the app
+        handleNotificationTap(userInfo: userInfo, category: category)
+        
+        pendingNotificationLaunch = nil
+        
+        // Remove observer after processing
+        NotificationCenter.default.removeObserver(
+            self,
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
+    }
+}
+
+extension Notification.Name {
+    static let deepLinkTriggered = Notification.Name("deepLinkTriggered")
 }
