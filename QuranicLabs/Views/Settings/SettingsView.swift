@@ -7,7 +7,6 @@ struct SettingsView: View {
     @Default(.onboarded) private var onboarded
     @State private var showResetConfirmation = false
     @State private var showMailError = false
-    @State private var storeCountryCode: String? = nil
 
     @Environment(\.openURL) private var openURL
     
@@ -26,7 +25,6 @@ struct SettingsView: View {
                 appActionsSection
                 appInfoSection
             }
-            .onAppear(perform: fetchStorefrontCountry)
             .scrollIndicators(.hidden)
             .navigationTitle("Settings")
         }
@@ -152,22 +150,10 @@ struct SettingsView: View {
                     Label("Open in App Store", systemImage: "globe.fill")
                 }
 
-                // Show external Donate link for allowed storefronts only
-                let allowedStorefronts: Set<String> = ["US","CA","GB","AU","NZ","DE","FR","NL","SE"]
-
-                if let code = storeCountryCode, allowedStorefronts.contains(code) {
-                    Button {
-                        openURL(URL(string: "https://wikisubmission.org/donate")!)
-                    } label: {
-                        Label("Donate (external)", systemImage: "heart.fill")
-                    }
-                } else {
-                    // Optional: show a non-payment support info page for other stores
-                    Button {
-                        openURL(URL(string: "https://wikisubmission.org/support")!)
-                    } label: {
-                        Label("Support (learn more)", systemImage: "info.circle")
-                    }
+                Button {
+                    openURL(URL(string: "https://wikisubmission.org/donate")!)
+                } label: {
+                    Label("Donate (external)", systemImage: "heart.fill")
                 }
             }
             
@@ -237,18 +223,8 @@ struct SettingsView: View {
     
     private var supportFooterText: String {
         """
-        WikiSubmission is a registered 501(c)(3) nonprofit. Donations may be tax-deductible to the extent permitted by law. Donations do not purchase, unlock, or provide in-app features or content.
+        WikiSubmission is a registered 501(c)(3) nonprofit. Donations do not purchase, unlock, or provide in-app features or content.
         """
-    }
-
-    private func fetchStorefrontCountry() {
-        Task {
-            if let storefront = await SKPaymentQueue.default().storefront {
-                storeCountryCode = storefront.countryCode
-            } else {
-                storeCountryCode = Locale.current.regionCode
-            }
-        }
     }
 
     private func linkButton(title: String, url: String) -> some View {

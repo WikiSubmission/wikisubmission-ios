@@ -125,6 +125,18 @@ struct PrayerTimesView: View {
             }
             .navigationTitle("Prayer Times")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                Menu {
+                    NavigationLink {
+                        NotificationsView()
+                    } label: {
+                        Text("Configure Notifications")
+                    }
+                    AsrMethodToggle()
+                } label: {
+                    Label("Settings", systemImage: "ellipsis.circle")
+                }
+            }
             .scrollIndicators(.hidden)
             .onAppear(perform: setupRefreshTimer)
             .onDisappear(perform: cleanup)
