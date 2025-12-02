@@ -99,7 +99,7 @@ struct ZikrView: View {
                 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 14) {
-                        ForEach(vm.featured.sorted { $0.releaseDate < $1.releaseDate }) { t in
+                        ForEach(vm.featured.sorted { $0.releaseDate > $1.releaseDate }) { t in
                             ZikrFeaturedCard(track: t) {
                                 audio.playTrack(track: t, context: .category)
                             }
