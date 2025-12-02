@@ -29,6 +29,7 @@ struct ZikrFavoritesView: View {
                             .font(.caption)
                             .fontWeight(.light)
                             .foregroundStyle(.secondary)
+                            .pushToLeft()
                         ForEach(favoriteTracks) { track in
                             ZikrTrackRow(
                                 track: track,
