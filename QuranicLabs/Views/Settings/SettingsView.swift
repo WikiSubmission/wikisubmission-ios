@@ -152,15 +152,17 @@ struct SettingsView: View {
                     Label("Open in App Store", systemImage: "globe.fill")
                 }
 
-                // Show external Donate link ONLY for U.S. App Store users
-                if storeCountryCode == "US" {
+                // Show external Donate link for allowed storefronts only
+                let allowedStorefronts: Set<String> = ["US","CA","GB","AU","NZ","DE","FR","NL","SE"]
+
+                if let code = storeCountryCode, allowedStorefronts.contains(code) {
                     Button {
                         openURL(URL(string: "https://wikisubmission.org/donate")!)
                     } label: {
                         Label("Donate (external)", systemImage: "heart.fill")
                     }
                 } else {
-                    // Optional: show a non-payment support info page for non-US stores
+                    // Optional: show a non-payment support info page for other stores
                     Button {
                         openURL(URL(string: "https://wikisubmission.org/support")!)
                     } label: {
@@ -240,11 +242,12 @@ struct SettingsView: View {
     }
 
     private func fetchStorefrontCountry() {
-        // Attempt to read the App Store storefront country; fall back to device locale
-        if let code = SKPaymentQueue.default().storefront?.countryCode {
-            storeCountryCode = code
-        } else {
-            storeCountryCode = Locale.current.regionCode
+        Task {
+            if let storefront = await SKPaymentQueue.default().storefront {
+                storeCountryCode = storefront.countryCode
+            } else {
+                storeCountryCode = Locale.current.regionCode
+            }
         }
     }
 
