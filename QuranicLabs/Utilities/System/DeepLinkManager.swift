@@ -35,6 +35,7 @@ extension Utilities.System {
             
             switch action {
             case .openChapter(let chapter):
+                Defaults[.active_tab] = .home
                 SheetKit().presentWithEnvironment {
                     NavigationStack {
                         QuranReaderView(chapter: chapter)
@@ -42,6 +43,7 @@ extension Utilities.System {
                 }
                 
             case .openVerse(let chapter, let verseId):
+                Defaults[.active_tab] = .home
                 SheetKit().presentWithEnvironment {
                     NavigationStack {
                         QuranReaderView(chapter: chapter, scrollToVerseID: verseId)
