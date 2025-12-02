@@ -132,7 +132,6 @@ struct PrayerTimesView: View {
                     } label: {
                         Text("Configure Notifications")
                     }
-                    AsrMethodToggle()
                 } label: {
                     Label("Settings", systemImage: "ellipsis.circle")
                 }
