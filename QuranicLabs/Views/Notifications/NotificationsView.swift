@@ -28,7 +28,7 @@ struct NotificationsView: View {
                     if authorization == .authorized {
                         List {
                             Section(header: Text("PRAYER REMINDERS"), footer: prayerTimeLocation?.count ?? 0 > 0 ?
-                                    Label("Prayer reminders are sent 10 minutes before each enabled prayer.", systemImage: "info.circle") : Label("Add a city on the prayer time section so we can calculate your prayer times (and send reminders).", systemImage: "exclamationmark.triangle")
+                                    Label("Prayer reminders are sent generally 10-15 minutes before each enabled prayer.", systemImage: "info.circle") : Label("Add a city on the prayer time section so we can calculate your prayer times (and send reminders).", systemImage: "exclamationmark.triangle")
                             ) {
                                 Toggle(isOn: $prayerNotifications) {
                                     Text("Prayer Times")
@@ -212,7 +212,7 @@ private struct QuranNotificationsSection: View {
     @Binding var randomChapterNotifications: Bool
     
     var body: some View {
-        Section(header: Text("QURAN REMINDERS"), footer: Text("These are sent once a day.")) {
+        Section(header: Text("QURAN REMINDERS"), footer: Label("These are sent once a day.", systemImage: "info.circle")) {
             Toggle(isOn: $randomChapterNotifications) {
                 Text("Daily Chapter")
             }
