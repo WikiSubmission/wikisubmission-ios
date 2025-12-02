@@ -11,8 +11,7 @@ struct ZikrView: View {
     @ObservedObject private var audio = ZikrAudioManager.shared
     @Default(.zikr_favorited_tracks) private var favoritedTracks
 
-    @State private var isLoading: Bool = false
-    @State private var lastFetchTime: Date = .distantPast
+    @State private var isRefreshing: Bool = false
 
     var body: some View {
         NavigationStack {
@@ -30,46 +29,45 @@ struct ZikrView: View {
             }
             .edgesIgnoringSafeArea(.bottom)
             .overlay(alignment: .center) {
-                if isLoading {
+                if isRefreshing && vm.tracks.isEmpty {
                     ProgressView()
                 }
             }
             .task {
-                await fetchIfNeeded()
-            }
-            .onAppear {
-                Task {
-                    await fetchIfNeeded()
+                // Initial load
+                if vm.tracks.isEmpty {
+                    isRefreshing = true
+                    await vm.fetchFromDB()
+                    updateAudioManager()
+                    isRefreshing = false
                 }
             }
             .onChange(of: favoritedTracks) { _, newFavorites in
                 audio.favoriteTrackUrls = newFavorites
             }
+            .refreshable {
+                await performRefresh()
+            }
             .navigationTitle("Zikr")
         }
     }
     
-    private func fetchIfNeeded() async {
-        let now = Date()
-        let timeSinceLastFetch = now.timeIntervalSince(lastFetchTime)
-        
-        // Only fetch if more than 15 seconds have passed or never fetched
-        guard timeSinceLastFetch > 15 || vm.tracks.isEmpty else {
-            return
-        }
-        
-        isLoading = true
+    private func performRefresh() async {
+        isRefreshing = true
         await vm.fetchFromDB()
+        updateAudioManager()
+        isRefreshing = false
+    }
+    
+    private func updateAudioManager() {
         audio.allTracks = vm.tracks
         audio.favoriteTrackUrls = favoritedTracks
-        lastFetchTime = now
-        isLoading = false
     }
 
     private var content: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 18) {
-                if !isLoading {
+                if !vm.tracks.isEmpty {
                     HStack(alignment: .top, spacing: 4) {
                         Image(systemName: "info.circle")
                             .foregroundStyle(.accent)
@@ -81,8 +79,21 @@ struct ZikrView: View {
                     }
                     .padding(.leading)
                 }
-                featuredSection
-                tracksSection
+                
+                if vm.tracks.isEmpty && !isRefreshing {
+                    VStack(spacing: 12) {
+                        Image(systemName: "music.note")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary)
+                        Text("Pull to refresh")
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 100)
+                } else {
+                    featuredSection
+                    tracksSection
+                }
             }
             .padding(.bottom, 200)
         }

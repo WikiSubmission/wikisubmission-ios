@@ -12,12 +12,14 @@ class ZikrDBViewModel: ObservableObject {
     private var vmRows: [DBTrackRow] = []
 
     // Featured tracks based on the new boolean column
-    var featured: [UnifiedTrack] { tracks.filter { track in
-        if let row = vmRows.first(where: { $0.id == track.id }) {
-            return row.featured ?? false
+    var featured: [UnifiedTrack] {
+        tracks.filter { track in
+            if let row = vmRows.first(where: { $0.id == track.id }) {
+                return row.featured ?? false
+            }
+            return false
         }
-        return false
-    } }
+    }
 
     func refresh() { Task { await fetchFromDB() } }
 
@@ -29,43 +31,80 @@ class ZikrDBViewModel: ObservableObject {
 
     private func fetchCategories() async {
         do {
-            let categoriesResult: [DBCategory] = try await Utilities.Supabase.client.from("ws_music_categories").select().execute().value
-            categories = categoriesResult.sorted { ($0.displayPriority) > ($1.displayPriority) }
+            let categoriesResult: [DBCategory] = try await Utilities.Supabase.client
+                .from("ws_music_categories")
+                .select()
+                .execute()
+                .value
+            
+            // Update on main thread to trigger @Published
+            await MainActor.run {
+                self.categories = categoriesResult.sorted { ($0.displayPriority) > ($1.displayPriority) }
+            }
         } catch {
-            print("Failed to fetch categories: \(error)")
+            print("Failed to fetch categories: \(error.localizedDescription)")
         }
     }
 
     private func fetchArtists() async {
         do {
-            let artistsResult: [DBArtist] = try await Utilities.Supabase.client.from("ws_music_artists").select().execute().value
-            artists = artistsResult.sorted {
-                let p0 = $0.displayPriority ?? 0
-                let p1 = $1.displayPriority ?? 0
-                if p0 != p1 { return p0 > p1 }
-                return $0.name < $1.name
+            let artistsResult: [DBArtist] = try await Utilities.Supabase.client
+                .from("ws_music_artists")
+                .select()
+                .execute()
+                .value
+            
+            // Update on main thread to trigger @Published
+            await MainActor.run {
+                self.artists = artistsResult.sorted {
+                    let p0 = $0.displayPriority ?? 0
+                    let p1 = $1.displayPriority ?? 0
+                    if p0 != p1 { return p0 > p1 }
+                    return $0.name < $1.name
+                }
             }
         } catch {
-            print("Failed to fetch artists: \(error)")
+            print("Failed to fetch artists: \(error.localizedDescription)")
         }
     }
 
     private func fetchTracks() async {
         do {
             let selectStr = "*,artistObj:ws_music_artists(*),categoryObj:ws_music_categories(*)"
-            let tracksResult: [DBTrackRow] = try await Utilities.Supabase.client.from("ws_music_tracks").select(selectStr).execute().value
-            vmRows = tracksResult
-            tracks = tracksResult.compactMap { row in
-                guard let artist = row.artistObj, let category = row.categoryObj else { return nil }
-                let formatter = DateFormatter()
-                formatter.dateFormat = "yyyy-MM-dd"
-                formatter.timeZone = TimeZone(secondsFromGMT: 0)
-                guard let parsedDate = formatter.date(from: row.releaseDate ?? "2025-01-01") else { return nil }
-                return UnifiedTrack(id: row.id, title: row.name, url: row.url, artist: artist, category: category, releaseDate: parsedDate)
+            let tracksResult: [DBTrackRow] = try await Utilities.Supabase.client
+                .from("ws_music_tracks")
+                .select(selectStr)
+                .execute()
+                .value
+            
+            print("🎵 Received \(tracksResult.count) track rows from DB")
+            
+            // Update on main thread to trigger @Published
+            await MainActor.run {
+                self.vmRows = tracksResult
+                self.tracks = tracksResult.compactMap { row in
+                    guard let artist = row.artistObj, let category = row.categoryObj else {
+                        return nil
+                    }
+                    let formatter = DateFormatter()
+                    formatter.dateFormat = "yyyy-MM-dd"
+                    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+                    guard let parsedDate = formatter.date(from: row.releaseDate ?? "2025-01-01") else {
+                        return nil
+                    }
+                    return UnifiedTrack(
+                        id: row.id,
+                        title: row.name,
+                        url: row.url,
+                        artist: artist,
+                        category: category,
+                        releaseDate: parsedDate
+                    )
+                }
+                self.sortTracks()
             }
-            sortTracks()
         } catch {
-            print("Failed to fetch tracks: \(error)")
+            print("Failed to fetch tracks: \(error.localizedDescription)")
         }
     }
 
