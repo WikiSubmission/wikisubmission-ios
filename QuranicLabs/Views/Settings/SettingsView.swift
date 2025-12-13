@@ -149,6 +149,12 @@ struct SettingsView: View {
                 } label: {
                     Label("Open in App Store", systemImage: "globe.fill")
                 }
+                
+                Button {
+                    Utilities.System.shareText(Info.appStoreURL)
+                } label: {
+                    Label("Share App Link", systemImage: "square.and.arrow.up")
+                }
 
                 Button {
                     openURL(URL(string: "https://wikisubmission.org/donate")!)
