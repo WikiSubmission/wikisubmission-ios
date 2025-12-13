@@ -7,6 +7,8 @@ import Defaults
 class ZikrAudioManager: ObservableObject {
     static let shared = ZikrAudioManager()
 
+    private var staticNowPlayingInfo: [String: Any] = [:]
+
     @Published var isPlaying: Bool = false
     @Published var currentTrack: UnifiedTrack? = nil
     @Published var loopMode: LoopMode = Defaults[.zikr_loop_mode] {
@@ -87,42 +89,34 @@ class ZikrAudioManager: ObservableObject {
     private func updateNowPlayingInfo() {
         guard let track = currentTrack else {
             MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
-            print("🔇 Cleared now playing info")
+            staticNowPlayingInfo = [:]
             return
         }
-        
-        var nowPlayingInfo = [String: Any]()
-        nowPlayingInfo[MPMediaItemPropertyTitle] = track.title
-        nowPlayingInfo[MPMediaItemPropertyArtist] = track.artist.name
-        nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = track.category.name
-        
-        if let player = player, let currentItem = player.currentItem {
-            let duration = currentItem.duration.seconds
-            let currentTime = player.currentTime().seconds
-            
-            if duration.isFinite && duration > 0 {
-                nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = duration
-                nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
-            }
-        }
-        
-        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
-        
-        let queue = getCurrentQueue()
-        if let currentIndex = queue.firstIndex(where: { $0.id == track.id }) {
-            nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackQueueCount] = queue.count
-            nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackQueueIndex] = currentIndex
-        }
-        
-        if let cachedArtwork = artworkCache[track.artist.id] {
-            nowPlayingInfo[MPMediaItemPropertyArtwork] = cachedArtwork
-        } else if let artwork = generateArtwork(for: track) {
-            artworkCache[track.artist.id] = artwork
-            nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
+
+        var info = [String: Any]()
+        info[MPMediaItemPropertyTitle] = track.title
+        info[MPMediaItemPropertyArtist] = track.artist.name
+        info[MPMediaItemPropertyAlbumTitle] = track.category.name
+
+        if let player = player, let duration = player.currentItem?.duration.seconds, duration.isFinite {
+            info[MPMediaItemPropertyPlaybackDuration] = duration
         }
 
-        // Set directly - do NOT clear first as it causes flashing
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+        if let cachedArtwork = artworkCache[track.artist.id] {
+            info[MPMediaItemPropertyArtwork] = cachedArtwork
+        } else if let artwork = generateArtwork(for: track) {
+            artworkCache[track.artist.id] = artwork
+            info[MPMediaItemPropertyArtwork] = artwork
+        }
+
+        staticNowPlayingInfo = info
+
+        // Merge dynamic fields
+        var fullInfo = staticNowPlayingInfo
+        fullInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player?.currentTime().seconds ?? 0
+        fullInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
+
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = fullInfo
     }
       
       private func generateArtwork(for track: UnifiedTrack) -> MPMediaItemArtwork? {
@@ -208,6 +202,10 @@ class ZikrAudioManager: ObservableObject {
            
            // Start playback
            player?.play()
+           
+           DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+               self?.updateNowPlayingInfo()
+           }
            
            print("▶️ Playing: \(track.title) by \(track.artist.name)")
        }
@@ -308,20 +306,27 @@ class ZikrAudioManager: ObservableObject {
         }
         guard let player = player else { return }
 
-        // Only monitor for track end - iOS handles elapsed time display automatically
-        let interval = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
-        timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
-            guard let self = self else { return }
-            guard let duration = player.currentItem?.duration.seconds, duration > 0 else { return }
-            let progress = time.seconds / duration
-            
-            // When track ends - handle looping
-            if progress >= 0.99 {
+        // Update every 1 second to keep elapsed time and playback rate in sync
+        let interval = CMTime(seconds: 1.0, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        timeObserverToken = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] _ in
+            guard let self = self, let player = self.player else { return }
+
+            // Merge dynamic fields into staticNowPlayingInfo
+            var info = self.staticNowPlayingInfo
+            info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.currentTime().seconds
+            info[MPNowPlayingInfoPropertyPlaybackRate] = self.isPlaying ? 1.0 : 0.0
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+
+            // Track end handling
+            if let duration = player.currentItem?.duration.seconds, duration > 0,
+               player.currentTime().seconds / duration >= 0.99 {
                 switch self.loopMode {
                 case .off:
                     player.pause()
                     self.isPlaying = false
-                    self.updateNowPlayingInfo()
+                    var info = self.staticNowPlayingInfo
+                    info[MPNowPlayingInfoPropertyPlaybackRate] = 0.0
+                    MPNowPlayingInfoCenter.default().nowPlayingInfo = info
                 case .context:
                     self.skipToNext()
                 case .repeatOne:
