@@ -216,13 +216,14 @@ struct QuranVerseCard: View {
 
     @ViewBuilder private func primaryText(data: Types.Quran.Data) -> some View {
         let text = data.getPrimaryText(for: primaryLanguage)
-        HStack {
-            ConditionalHighlight(text: text, query: highlight)
-            Spacer()
-        }
-        .font(.system(size: CGFloat(primaryLanguage == .persian ? fontSize + 2 : fontSize)))
-        .multilineTextAlignment(.leading)
-        .environment(\.layoutDirection, primaryLanguage == .persian ? .rightToLeft : .leftToRight)
+        ConditionalHighlight(text: text, query: highlight)
+            .lineLimit(nil)
+            .fixedSize(horizontal: false, vertical: true)
+            .layoutPriority(1)
+            .font(.system(size: CGFloat(primaryLanguage == .persian ? fontSize + 2 : fontSize)))
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .environment(\.layoutDirection, primaryLanguage == .persian ? .rightToLeft : .leftToRight)
     }
 
     @ViewBuilder private func arabicText(data: Types.Quran.Data) -> some View {
@@ -247,26 +248,27 @@ struct QuranVerseCard: View {
                 }
             } else {
                 // Show the full Arabic text without highlighting
-                HStack {
-                    Spacer()
-                    Text(data.verse_text_arabic)
-                        .font(.system(size: CGFloat(fontSize + 3)))
-                        .multilineTextAlignment(.trailing)
-                }
+                Text(data.verse_text_arabic)
+                    .font(.system(size: CGFloat(fontSize + 3)))
+                    .multilineTextAlignment(.trailing)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
     }
 
     @ViewBuilder private func secondaryText(data: Types.Quran.Data) -> some View {
         if let secondaryText = data.getSecondaryText(for: secondaryLanguage) {
-            HStack {
-                ConditionalHighlight(text: secondaryText, query: highlight)
-                Spacer()
-            }
-            .font(.system(size: CGFloat(primaryLanguage == .persian ? fontSize + 2 : fontSize)))
-            .multilineTextAlignment(.leading)
-            .foregroundStyle(.primary.opacity(0.9))
-            .environment(\.layoutDirection, secondaryLanguage == .persian ? .rightToLeft : .leftToRight)
+            ConditionalHighlight(text: secondaryText, query: highlight)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .layoutPriority(1)
+                .font(.system(size: CGFloat(primaryLanguage == .persian ? fontSize + 2 : fontSize)))
+                .multilineTextAlignment(.leading)
+                .foregroundStyle(.primary.opacity(0.9))
+                .environment(\.layoutDirection, secondaryLanguage == .persian ? .rightToLeft : .leftToRight)
         }
     }
 
