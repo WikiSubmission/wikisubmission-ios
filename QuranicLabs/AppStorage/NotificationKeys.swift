@@ -16,4 +16,6 @@ extension Defaults.Keys {
     
     static let daily_chapter = Key<Int?>("daily_chapter", default: nil)
     static let daily_verse = Key<String?>("daily_verse", default: nil)
+    
+    static let announcement_notifications = Key<Bool>("announcement_notifications", default: true)
 }

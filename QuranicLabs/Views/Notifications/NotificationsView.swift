@@ -21,6 +21,8 @@ struct NotificationsView: View {
     @Default(.daily_verse_notifications) var dailyVerseNotifications
     @Default(.daily_chapter_notifications) var dailyChapterNotifications
     
+    @Default(.announcement_notifications) var announcementNotifications
+    
     var body: some View {
         NavigationStack {
             VStack {
@@ -28,7 +30,7 @@ struct NotificationsView: View {
                     if authorization == .authorized {
                         List {
                             Section(header: Text("PRAYER REMINDERS"), footer: prayerTimeLocation?.count ?? 0 > 0 ?
-                                    Label("Prayer reminders are sent 10-15 minutes before each enabled prayer.", systemImage: "info.circle") : Label("Add a city on the prayer time section so we can calculate your prayer times (and send reminders).", systemImage: "exclamationmark.triangle")
+                                    Label("Prayer reminders are sent 10 minutes before each enabled prayer.", systemImage: "info.circle") : Label("Add a city on the prayer time section so we can calculate your prayer times (and send reminders).", systemImage: "exclamationmark.triangle")
                             ) {
                                 Toggle(isOn: $prayerNotifications) {
                                     Text("Prayer Times")
@@ -64,6 +66,10 @@ struct NotificationsView: View {
                             QuranNotificationsSection(
                                 randomVerseNotifications: $dailyVerseNotifications,
                                 randomChapterNotifications: $dailyChapterNotifications
+                            )
+                            
+                            GeneralNotificationsView(
+                                announcementNotifications: $announcementNotifications
                             )
                             
                             if deviceToken != nil {
@@ -226,6 +232,23 @@ private struct QuranNotificationsSection: View {
             }
         }
         .onChange(of: randomChapterNotifications) { _, _ in
+            Task {
+                try? await Utilities.Notifications.syncWithDatabase()
+            }
+        }
+    }
+}
+
+private struct GeneralNotificationsView: View {
+    @Binding var announcementNotifications: Bool
+    
+    var body: some View {
+        Section(header: Text("GENERAL NOTIFICATIONS"), footer: Label("These are infrequent but may include important announcements.", systemImage: "info.circle")) {
+            Toggle(isOn: $announcementNotifications) {
+                Text("Announcements")
+            }
+        }
+        .onChange(of: announcementNotifications) { _, _ in
             Task {
                 try? await Utilities.Notifications.syncWithDatabase()
             }
