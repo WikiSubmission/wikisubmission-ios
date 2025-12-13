@@ -5,6 +5,7 @@ extension Types.Notifications {
         let prayer_times_notifications: Types.Notifications.PrayerTimesSettings
         let daily_verse_notifications: Bool
         let daily_chapter_notifications: Bool
+        let announcement_notifications: Bool
     }
     
     struct PrayerTimesSettings: Encodable, Decodable {

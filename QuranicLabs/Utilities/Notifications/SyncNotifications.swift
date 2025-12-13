@@ -27,7 +27,8 @@ extension Utilities.Notifications {
                         use_midpoint_method_for_asr: Defaults[.use_midpoint_method_for_asr]
                     ),
                     daily_verse_notifications: Defaults[.daily_verse_notifications],
-                    daily_chapter_notifications: Defaults[.daily_chapter_notifications]
+                    daily_chapter_notifications: Defaults[.daily_chapter_notifications],
+                    announcement_notifications: Defaults[.announcement_notifications]
                 ),
                         onConflict: "device_token"
                 )
