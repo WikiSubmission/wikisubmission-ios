@@ -12,6 +12,7 @@ struct ZikrView: View {
     @Default(.zikr_favorited_tracks) private var favoritedTracks
 
     @State private var isRefreshing: Bool = false
+    @State private var lastFetchDate: Date? = nil
 
     var body: some View {
         NavigationStack {
@@ -33,13 +34,13 @@ struct ZikrView: View {
                     ProgressView()
                 }
             }
-            .task {
-                // Initial load
-                if vm.tracks.isEmpty {
-                    isRefreshing = true
-                    await vm.fetchFromDB()
-                    updateAudioManager()
-                    isRefreshing = false
+            .onAppear {
+                if let last = lastFetchDate {
+                    if Date().timeIntervalSince(last) > 10 {
+                        Task { await performRefresh() }
+                    }
+                } else {
+                    Task { await performRefresh() }
                 }
             }
             .onChange(of: favoritedTracks) { _, newFavorites in
@@ -53,10 +54,13 @@ struct ZikrView: View {
     }
     
     private func performRefresh() async {
+        guard !isRefreshing else { return }
         isRefreshing = true
+        defer { isRefreshing = false }
+
         await vm.fetchFromDB()
         updateAudioManager()
-        isRefreshing = false
+        lastFetchDate = Date()
     }
     
     private func updateAudioManager() {
