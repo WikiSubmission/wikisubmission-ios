@@ -1,24 +1,6 @@
 {
-  "originHash" : "abdb5adb4081a8afb9fbc44b80dfeab07a3d351fa527d0843aec295cd3f6f9ba",
+  "originHash" : "2b30bfe71e052d3bc328767913ef6823cdef679b8a6b5699c36a721fcba80fdd",
   "pins" : [
-    {
-      "identity" : "alertkit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sparrowcode/AlertKit",
-      "state" : {
-        "revision" : "3b73be8db5a7e7efaf474c6ed919f5a437d843c9",
-        "version" : "5.1.9"
-      }
-    },
-    {
-      "identity" : "audiostreaming",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/dimitris-c/AudioStreaming",
-      "state" : {
-        "revision" : "4d9bb98aed4c4a3962fb31d4f7bb44c6696610de",
-        "version" : "1.2.8"
-      }
-    },
     {
       "identity" : "codablecsv",
       "kind" : "remoteSourceControl",
@@ -35,15 +17,6 @@
       "state" : {
         "revision" : "9a1675508a69eea31ec12f7902c004a6449e6dd1",
         "version" : "9.0.5"
-      }
-    },
-    {
-      "identity" : "sheetkit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/fatbobman/SheetKit",
-      "state" : {
-        "revision" : "daadabc0f142e2e96a210d19c436b8e2c4bdeb46",
-        "version" : "0.1.0"
       }
     },
     {

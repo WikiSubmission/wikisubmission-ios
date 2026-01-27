@@ -8,11 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		923F0BEC2E847C8B0092BA1B /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 923F0BEB2E847C8B0092BA1B /* README.md */; };
-		923F0BF52E847D5E0092BA1B /* AlertKit in Frameworks */ = {isa = PBXBuildFile; productRef = 923F0BF42E847D5E0092BA1B /* AlertKit */; };
-		923F0BF82E847D650092BA1B /* AudioStreaming in Frameworks */ = {isa = PBXBuildFile; productRef = 923F0BF72E847D650092BA1B /* AudioStreaming */; };
 		923F0BFB2E847D790092BA1B /* Defaults in Frameworks */ = {isa = PBXBuildFile; productRef = 923F0BFA2E847D790092BA1B /* Defaults */; };
 		923F0BFD2E847D790092BA1B /* DefaultsMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 923F0BFC2E847D790092BA1B /* DefaultsMacros */; };
-		923F0C032E847D930092BA1B /* SheetKit in Frameworks */ = {isa = PBXBuildFile; productRef = 923F0C022E847D930092BA1B /* SheetKit */; };
 		923F0C062E847DAD0092BA1B /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 923F0C052E847DAD0092BA1B /* Supabase */; };
 		923F0C082E8480DF0092BA1B /* .gitignore in Sources */ = {isa = PBXBuildFile; fileRef = 923F0C072E8480DC0092BA1B /* .gitignore */; };
 		924106512F19542500B95E0D /* CodableCSV in Frameworks */ = {isa = PBXBuildFile; productRef = 924106502F19542500B95E0D /* CodableCSV */; };
@@ -55,10 +52,7 @@
 				924106512F19542500B95E0D /* CodableCSV in Frameworks */,
 				923F0C062E847DAD0092BA1B /* Supabase in Frameworks */,
 				923F0BFB2E847D790092BA1B /* Defaults in Frameworks */,
-				923F0BF82E847D650092BA1B /* AudioStreaming in Frameworks */,
-				923F0BF52E847D5E0092BA1B /* AlertKit in Frameworks */,
 				923F0BFD2E847D790092BA1B /* DefaultsMacros in Frameworks */,
-				923F0C032E847D930092BA1B /* SheetKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -104,11 +98,8 @@
 			);
 			name = QuranicLabs;
 			packageProductDependencies = (
-				923F0BF42E847D5E0092BA1B /* AlertKit */,
-				923F0BF72E847D650092BA1B /* AudioStreaming */,
 				923F0BFA2E847D790092BA1B /* Defaults */,
 				923F0BFC2E847D790092BA1B /* DefaultsMacros */,
-				923F0C022E847D930092BA1B /* SheetKit */,
 				923F0C052E847DAD0092BA1B /* Supabase */,
 				924106502F19542500B95E0D /* CodableCSV */,
 			);
@@ -141,10 +132,7 @@
 			mainGroup = 923F0B0C2E847C440092BA1B;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				923F0BF32E847D5E0092BA1B /* XCRemoteSwiftPackageReference "AlertKit" */,
-				923F0BF62E847D650092BA1B /* XCRemoteSwiftPackageReference "AudioStreaming" */,
 				923F0BF92E847D790092BA1B /* XCRemoteSwiftPackageReference "Defaults" */,
-				923F0C012E847D930092BA1B /* XCRemoteSwiftPackageReference "SheetKit" */,
 				923F0C042E847DAD0092BA1B /* XCRemoteSwiftPackageReference "supabase-swift" */,
 				9241064F2F19542500B95E0D /* XCRemoteSwiftPackageReference "CodableCSV" */,
 			);
@@ -397,36 +385,12 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		923F0BF32E847D5E0092BA1B /* XCRemoteSwiftPackageReference "AlertKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sparrowcode/AlertKit";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 5.1.9;
-			};
-		};
-		923F0BF62E847D650092BA1B /* XCRemoteSwiftPackageReference "AudioStreaming" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/dimitris-c/AudioStreaming";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.2.8;
-			};
-		};
 		923F0BF92E847D790092BA1B /* XCRemoteSwiftPackageReference "Defaults" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sindresorhus/Defaults";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 9.0.5;
-			};
-		};
-		923F0C012E847D930092BA1B /* XCRemoteSwiftPackageReference "SheetKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/fatbobman/SheetKit";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.1.0;
 			};
 		};
 		923F0C042E847DAD0092BA1B /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
@@ -448,16 +412,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		923F0BF42E847D5E0092BA1B /* AlertKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 923F0BF32E847D5E0092BA1B /* XCRemoteSwiftPackageReference "AlertKit" */;
-			productName = AlertKit;
-		};
-		923F0BF72E847D650092BA1B /* AudioStreaming */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 923F0BF62E847D650092BA1B /* XCRemoteSwiftPackageReference "AudioStreaming" */;
-			productName = AudioStreaming;
-		};
 		923F0BFA2E847D790092BA1B /* Defaults */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 923F0BF92E847D790092BA1B /* XCRemoteSwiftPackageReference "Defaults" */;
@@ -467,11 +421,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 923F0BF92E847D790092BA1B /* XCRemoteSwiftPackageReference "Defaults" */;
 			productName = DefaultsMacros;
-		};
-		923F0C022E847D930092BA1B /* SheetKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 923F0C012E847D930092BA1B /* XCRemoteSwiftPackageReference "SheetKit" */;
-			productName = SheetKit;
 		};
 		923F0C052E847DAD0092BA1B /* Supabase */ = {
 			isa = XCSwiftPackageProductDependency;
