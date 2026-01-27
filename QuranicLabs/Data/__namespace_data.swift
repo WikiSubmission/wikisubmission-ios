@@ -1,3 +1,0 @@
-struct AppData {
-    struct Quran {}
-}

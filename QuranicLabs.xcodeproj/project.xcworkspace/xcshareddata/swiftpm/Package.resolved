@@ -1,5 +1,5 @@
 {
-  "originHash" : "929b6233ee97a031a37d9b49620112e3e8484f026502ff2cc69342c875983734",
+  "originHash" : "abdb5adb4081a8afb9fbc44b80dfeab07a3d351fa527d0843aec295cd3f6f9ba",
   "pins" : [
     {
       "identity" : "alertkit",
@@ -17,6 +17,15 @@
       "state" : {
         "revision" : "4d9bb98aed4c4a3962fb31d4f7bb44c6696610de",
         "version" : "1.2.8"
+      }
+    },
+    {
+      "identity" : "codablecsv",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/dehesa/CodableCSV",
+      "state" : {
+        "revision" : "99ace2cfdfbc19108b529c021005fb57a460e715",
+        "version" : "0.6.7"
       }
     },
     {

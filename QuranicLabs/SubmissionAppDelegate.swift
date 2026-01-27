@@ -38,10 +38,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         let token = tokenParts.joined()
         UserDefaults.standard.set(token, forKey: Defaults.Keys.device_token.name)
         print("Device Token: \(token)")
-        
-        Task {
-            try? await Utilities.Notifications.syncWithDatabase()
-        }
     }
     
     func application(_ application: UIApplication,
@@ -54,12 +50,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
                                 willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        let userInfo = notification.request.content.userInfo
-        let category = notification.request.content.categoryIdentifier
-        
-        // Only update UserDefaults, don't trigger deep links when in foreground
-        updateUserDefaultsFromNotification(userInfo: userInfo, category: category)
-        
         completionHandler([.banner, .sound])
     }
     
@@ -77,27 +67,8 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         completionHandler()
     }
     
-    // Update UserDefaults from notification payload
-    private func updateUserDefaultsFromNotification(userInfo: [AnyHashable: Any], category: String?) {
-        let actualCategory = category ?? (userInfo["category"] as? String)
-                
-        if let verseId = (userInfo["verse_id"] as? String) ?? (userInfo["verse_id"] as? Int).map({ "\($0)" }) {
-            if actualCategory == "daily_verse" {
-                UserDefaults.standard.set(verseId, forKey: Defaults.Keys.daily_verse.name)
-            }
-        }
-        
-        if let chapterNumber = (userInfo["chapter_number"] as? Int) ?? (userInfo["chapter_number"] as? String).flatMap({ Int($0) }) {
-            if actualCategory == "daily_chapter" {
-                UserDefaults.standard.set(chapterNumber, forKey: Defaults.Keys.daily_chapter.name)
-            }
-        }
-    }
-    
     // Handle deep links when notification is tapped
     private func handleNotificationTap(userInfo: [AnyHashable: Any], category: String?) {
-        updateUserDefaultsFromNotification(userInfo: userInfo, category: category)
-        
         // Handle deep link
         guard let deepLink = userInfo["deepLink"] as? String,
               let url = URL(string: deepLink),

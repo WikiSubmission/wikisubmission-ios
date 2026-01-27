@@ -15,11 +15,15 @@
 	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
 		<key>NSExceptionDomains</key>
 		<dict>
 			<key>cdn.wikisubmission.org</key>
 			<string></string>
 			<key>practices.wikisubmission.org</key>
+			<string></string>
+			<key>push-notifications.wikisubmission.org</key>
 			<string></string>
 			<key>wikisubmission.org</key>
 			<string></string>

@@ -15,6 +15,7 @@
 		923F0C032E847D930092BA1B /* SheetKit in Frameworks */ = {isa = PBXBuildFile; productRef = 923F0C022E847D930092BA1B /* SheetKit */; };
 		923F0C062E847DAD0092BA1B /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 923F0C052E847DAD0092BA1B /* Supabase */; };
 		923F0C082E8480DF0092BA1B /* .gitignore in Sources */ = {isa = PBXBuildFile; fileRef = 923F0C072E8480DC0092BA1B /* .gitignore */; };
+		924106512F19542500B95E0D /* CodableCSV in Frameworks */ = {isa = PBXBuildFile; productRef = 924106502F19542500B95E0D /* CodableCSV */; };
 		9290D94A2E84ADF2009E3F45 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 9290D9492E84ADEF009E3F45 /* LICENSE */; };
 /* End PBXBuildFile section */
 
@@ -51,6 +52,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				924106512F19542500B95E0D /* CodableCSV in Frameworks */,
 				923F0C062E847DAD0092BA1B /* Supabase in Frameworks */,
 				923F0BFB2E847D790092BA1B /* Defaults in Frameworks */,
 				923F0BF82E847D650092BA1B /* AudioStreaming in Frameworks */,
@@ -108,6 +110,7 @@
 				923F0BFC2E847D790092BA1B /* DefaultsMacros */,
 				923F0C022E847D930092BA1B /* SheetKit */,
 				923F0C052E847DAD0092BA1B /* Supabase */,
+				924106502F19542500B95E0D /* CodableCSV */,
 			);
 			productName = QuranicLabs;
 			productReference = 923F0B152E847C440092BA1B /* QuranicLabs.app */;
@@ -143,6 +146,7 @@
 				923F0BF92E847D790092BA1B /* XCRemoteSwiftPackageReference "Defaults" */,
 				923F0C012E847D930092BA1B /* XCRemoteSwiftPackageReference "SheetKit" */,
 				923F0C042E847DAD0092BA1B /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				9241064F2F19542500B95E0D /* XCRemoteSwiftPackageReference "CodableCSV" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 923F0B162E847C440092BA1B /* Products */;
@@ -326,7 +330,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.11;
+				MARKETING_VERSION = 3.12;
 				PRODUCT_BUNDLE_IDENTIFIER = com.motoread.QuranicLabs;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -360,7 +364,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.11;
+				MARKETING_VERSION = 3.12;
 				PRODUCT_BUNDLE_IDENTIFIER = com.motoread.QuranicLabs;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -433,6 +437,14 @@
 				minimumVersion = 2.5.1;
 			};
 		};
+		9241064F2F19542500B95E0D /* XCRemoteSwiftPackageReference "CodableCSV" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/dehesa/CodableCSV";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.6.7;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -465,6 +477,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 923F0C042E847DAD0092BA1B /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		924106502F19542500B95E0D /* CodableCSV */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9241064F2F19542500B95E0D /* XCRemoteSwiftPackageReference "CodableCSV" */;
+			productName = CodableCSV;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -1,0 +1,115 @@
+chapter_number,chapter_verses,revelation_order,title_english,title_arabic,title_transliterated,title_turkish,title_french,title_german,title_bahasa,title_persian,title_tamil,title_swedish,title_russian,title_bengali,title_urdu,title_spanish
+1,7,5,The Key,الفاتحة,Al-Fãtehah,Anahtar,La Clef,The Key,Kunci,کليد,The Key,Nyckeln,Ключ,চাবি,چابی,La clave
+2,286,87,The Heifer,البقرة,Al-Baqarah,Düve,La Génisse,The Heifer,Sapi Betina,ماده گاو,The Heifer,Kvigan,Тёлка,অপক্ব-গাভী,نوجوان مادی,La vaquilla
+3,200,89,The Amramites,آل عمران,Ãli-'Imrãn,İmran Ailesi,Les Amramites,The Amramites,Keluarga Imran,عمرانيان,The Amramites,Amramiterna,Семейство Амрама,ইমরানের বংশধর,عمرانی,Los amramitas
+4,176,92,The Women,النساء,Al-Nesa',Kadınlar,Les Femmes,The Women,Perempuan,زنان,The Women,Kvinnor,Женщины,নারী,خواتین,Las mujeres
+5,120,112,The Feast,المائدة,Al-Ma'edah,Ziyafet,Le Festin,The Feast,Hidangan,ضيافت,The Feast,Festen,Пир,খাদ্য-উৎসব,داؤٔت,La fiesta
+6,165,55,The Livestock,الأنعام,Al-An'am,Çiftlik Hayvanları,Les Bestiaux,The Livestock,Binatang Ternakan,چارپايان,The Livestock,Boskap,Скот,পালিত পশু,مویشی,El ganado
+7,206,39,The Purgatory,الأعراف,Al-A'araf,Araf,Le Purgatoire,The Purgatory,Tempat Penungguan,برزخ,The Purgatory,Skärselden,Чистилище,মধ্যাবস্থান,برزخ,El purgatorio
+8,75,88,The Spoils of War,الأنفال,Al-Anfal,Savaş Ganimetleri,"Les Butins de Guerre ",The Spoils of War,Harta Peperangan,غنايم جنگی,The Spoils of War,Krigets Byten,Военные трофеи,গনিমতের মাল,جنگی مال غنیمت,El botín de guerra
+9,127,113,Ultimatum,براءة,Bara'ah,Ültimatom,Ultimatum,Ultimatum,Memberikan Kata Putus,اتمام حجت,Ultimatum,Ultimatum,Ультиматум,চরমপত্র,آخری انتباہ,Ultimátum
+10,109,51,Jonah,يونس,Younus,Yunus,Jonas,Jonah,Yunus,يونس,Jonah,Jonas,Иона,ইউনুস,یونس,Jonás
+11,123,52,Hood,هود,Hud,Hûd,Houd,Hood,Hud,هود,Hood,Hüd,Худ,হুদ,ہُڈ,Capó
+12,111,53,Joseph,يوسف,Yousuf,Yusuf,Joseph,Joseph,Yusuf,يوسف,Joseph,Josef,Иосиф,ইউসুফ,یوسف,Joseph
+13,43,96,The Thunder,الرعد,Al-Ra'ad,Gök Gürlemesi,Le Tonnerre,The Thunder,Guruh,رعد,The Thunder,Åska,Гром,বজ্রপাত,گرج,El Trueno
+14,52,72,Abraham,إبراهيم,Ibrahîm,İbrahim,Abraham,Abraham,Ibrahim,ابراهيم,Abraham,Abraham,Авраам,ইব্রাহিম,ابراہیم,Abraham
+15,99,54,The Hijr Valley,الحجر,Al-Hijr,Hicr Vadisi,La Vallée d’Al-Hijr,The Hijr Valley,Lembah,وادی حجر,The Hijr Valley,Al-Hijr Dalen,Долина Хиджр,হিজর উপত্যকা,حجر وادی,Valle del Hijr
+16,128,70,The Bee,النّحل,Al-Nahl,Arı,L’Abeille,The Bee,Lebah,زنبور,The Bee,Biet,Пчела,মৌমাছি,مکھّی,La Abeja
+17,111,50,The Children of Israel,بني إسرءيل,Banî Israel,İsrailoğulları,Les Enfants d’Israël,The Children of Israel,Keturunan Israil,فرزندان اسرایيل,The Children of Israel,Israels Barn,Дети Израиля,বনি-ঈস্রাইল,بنی اسرائیل,Los hijos de Israel
+18,110,69,The Cave,الكهف,Al-Kahf,Mağara,La Grotte,The Cave,Gua,غار,The Cave,Grottan,Пещера,গুহা,غار,La Cueva
+19,98,44,Mary,مريم,Maryam,Meryem,Marie,Mary,Maryam,مريم,Mary,Maria,Мария,মরিয়ম,مریم,Mary
+20,135,45,T-H,طه,TãHã,T.H.,T. H.,T-H,Tha Ha,طا ها,T-H,T.H.,Т. Х.,তঁ-হা,ٹی-ایچ,T-H
+21,112,73,The Prophets,الأنبياء,Al-Anbyã’,Peygamberler,Les Prophètes,The Prophets,Para Nabi,پيامبران,The Prophets,Profeterna,Пророки,নবীগণ,پیغمبر,Los profetas
+22,78,103,The Pilgrimage,الحج,Al-Hajj,Kutsal Yolculuk,Le Pèlerinage,The Pilgrimage,Menunaikan Haji,حج,The Pilgrimage,Vallfärd,Паломничество,হজ্ব,حج,La peregrinación
+23,118,74,The Believers,المؤمنون,Al-Mu’minûn,İmanlılar,Les Croyants,The Believers,Orang Orang Yang Percaya,مؤمنان,The Believers,De Troende,Верующие,বিশ্বাসীগন,مومن,Los creyentes
+24,64,102,The Light,النّور,Al-Noor,Işık,La Lumière,The Light,Cahaya,نور,The Light,Ljus,Свет,আলো,روشنی,La luz
+25,77,42,The Statute Book,الفرقان,Al-Furqãn,Yasa Kitabı,Le Code des Lois,The Statute Book,Buku Perundangan,کتاب قانون,The Statute Book,Lagboken,Свод Законов,সংবিধান,قانونی کتاب,El Libro de Estatutos
+26,227,47,The Poets,الشعراء,Al-Shu‘arã’,Şairler,Les Poètes,The Poets,Penyair Penyair,شاعران,The Poets,Poeterna,Поэты,কবিগণ,شعراء,Los poetas
+27,93,48,The Ant,النّمل,Al-Naml,Karınca,La Fourmi,The Ant,Semut,مورچه,The Ant,Myran,Муравей,পিঁপড়া,چونٹی,La hormiga
+28,88,49,The History,القصص,Al-Qasas,Tarih,L’Histoire,The History,Sejarah,تاريخ,The History,Historia,История,ইতিহাস,تاریخ,Historia
+29,69,85,The Spider,العنكبوت,Al-‘Ankaboot,Örümcek,L’Araignée,The Spider,Laba Laba,عنکبوت,The Spider,Spindeln,Паук,মাকড়শা,مکڑی,La araña
+30,60,84,The Romans,الروم,Al-Room,Romalılar,Les Romains,The Romans,Orang Orang Rom,روميان,The Romans,Romare,Римляне,রোমান,رومی,Los romanos
+31,34,57,Luqmaan,لقمان,Luqmãn,Lokman,Luqman,Luqmaan,Luqman,لقمان,Luqmaan,Luqman,Лукман,লোকমান,زبان,Luqmaan
+32,30,75,Prostration,السجدة,Al-Sajdah,Secde,La Prosternation,Prostration,Sujud,سجده,Prostration,Prostrering,Земной поклон,প্রণতি,سجدہ,Postración
+33,73,90,The Parties,الأحزاب,Al-Ahzãb,Taraflar,Les Coalisés,The Parties,Parti Parti,گروه ها,The Parties,Parterna,Отряды,দলগুলো,فریقین,Las Partes
+34,54,58,Sheba,سبإ,Saba’,Saba,Saba,Sheba,Sheba,سبا,Sheba,Saba,Сава,সাবা,دیکھو,Sheba
+35,45,43,Initiator,فاطر,Fãter,Başlatan,L’Initiateur,Initiator,Yang Meinsiasikan Ciptaan,آغازکننده,Initiator,Initierare,Творец,সূচনাকারী,شروع کرنے والا,Iniciador
+36,83,41,Y-S,يس,YãSîn,Y. S.,Y.S.,Y-S,Ya Sin,ی.س,Y-S,Y.S.,Й. С.,ইয়াসিন,وائی-ایس,Y-S
+37,182,56,The Arrangers,الصّافات,Al-Sãffãt,Düzenleyenler,Les Arrangeurs,The Arrangers,Penyusun Penyusun,تنظيم کنندگان,The Arrangers,De Som Arrangerar,Организаторы,সুবিন্যাসকারী,انتظام کرنے والے,Arreglistas
+38,88,38,S,ص,Saad,S,S,S,Saad,ص,S,S,С.,স'দ,ایس,S
+39,75,59,The Throngs,الزُّمر,Al-Zumar,Yığınlar,Les Foules,The Throngs,Kumpulan Orang Ramai,فوج فوج,The Throngs,Massorna,Толпы,লোক সমাগম,ہجوم,La multitud
+40,85,60,Forgiver,غافر,Ghãfer,Bağışlayıcı,Le Pardonneur,Forgiver,Pengampun,عفوکننده,Forgiver,Förlåtare,Прощающий,ক্ষমাশীল,معاف کریں,Editorial
+41,54,61,Detailed,فصلت,Fussilat,Detaylandırılmış,Détaillé,Detailed,Perincian,جزئيات کامل,Detailed,Detaljerad,Подробный,সবিস্তারিত,تفصیلی,Detallado
+42,53,62,Consultation,الشورى,Al-Shoorã,İstişare,La Consultation,Consultation,Perundingan,مشورت,Consultation,Konsultation,Совещание,পরামর্শ,مشورہ,Consulta
+43,89,63,The Ornaments,الزخرف,Al-Zukhruf,Süsler,Les Ornements,The Ornaments,Barang Barang Perhiasan,تزيینات,The Ornaments,Ornament,Украшения,অলঙ্কার,آرائشی اشیاء,Los adornos
+44,59,64,The Smoke,الدّخان,Al-Dukhãn,Duman,La Fumée,The Smoke,Asap,دود,The Smoke,Rök,Дым,ধোঁয়া,دھواں,El humo
+45,37,65,The Kneeling,الجاثية,Al-Jãtheyah,Diz Çöküş,L’Agenouillement,The Kneeling,Berlutut,زانوزدن,The Kneeling,Att Falla Ned På Knä,Коленопреклонение,নতজানু,گھٹنوں کے بل جھکنا,Arrodillarse
+46,35,66,The Dunes,الأحقاف,Al-Ahqãf,Kum Tepeleri,Les Dunes,The Dunes,Bukit Pasir,تپه های شنی,The Dunes,Dyningarna,Дюны,বালিয়াড়ি,ریگ زار,Las Dunas
+47,38,95,Muhammed,محمد,Muḥammad,Muhammed,Mohammed,Muhammed,Muhammad,محمد,Muhammed,Muhammed,Мухаммед,মোহাম্মাদ,محمد,Muhammad
+48,29,111,Victory,الفتح,Al-Fatt-h,Galibiyet,La Victoire,Victory,Kemenangan,پيروزی,Victory,Seger,Победа,বিজয়,فتح,Victoria
+49,18,106,The Walls,الحجرات,Al-Hujurãt,Duvarlar,Les Murs,The Walls,Dinding Dinding,ديوارها,The Walls,Murarna,Стены,দেয়াল,دیواریں,Los muros
+50,45,34,Q,ق,Qãf,Q,Q,Q,Qaf,ق,Q,Q,К.,ক'ফ,سوال,Q
+51,60,67,Driver of the Winds,الذاريات,Al-Dhãreyãt,Rüzgârları Sürükleyenler,Les Conducteurs Des Vents,Driver of the Winds,Penggerak Penggerak Angin,حرکت دهندگان بادها,Driver of the Winds,Drivare av Vindarna,Погонщики ветров,বাতাস পরিচালনাকারী,ہوائوں کا ڈرائیور,Conductor de los vientos
+52,49,76,Mount Sinai,الطور,Al-Toor,Sina Dağı,Le Mont Sinaï,Mount Sinai,Bukit Sinai,کوه سينا,Mount Sinai,Berget Sinai,Гора Синай,সিনাই পর্বত,ماؤنٹ سینا,Monte Sinaí
+53,62,23,The Stars,النّجم,Al-Najm,Yıldızlar,Les Étoiles,The Stars,Bintang Bintang,ستارگان,The Stars,Stjärnorna,Звёзды,তারকারাজি,تاریک رات کی چادر پر چمکتے ہوئے ستارے,Las estrellas
+54,55,37,The Moon,القمر,Al-Qamar,Ay,La Lune,The Moon,Bulan,ماه,The Moon,Månen,Луна,চাঁদ,چاند,La Luna
+55,78,97,The Gracious,الرحمن,Al-Rahmaan,En Lütufkâr Olan,Le Tout Miséricordieux,The Gracious,Yang Maha Pengasih,بخشنده ترين,The Gracious,Den Nådigaste,Самый Милостивый,পরম দয়ালু,بے حد مہربان,La Graciosa
+56,96,46,The Inevitable,الواقعة,Al-Waaqe‘ah,Kaçınılmaz Olan,L’Inévitable,The Inevitable,Yang Tidak Boleh Di-Elakkan Lagi,اجتناب ناپذير,The Inevitable,Det Oundvikliga,Неизбежное,অনিবার্য ঘটনা,لازمی,Lo inevitable
+57,29,94,Iron,الحديد,Al-Hadeed,Demir,Le Fer,Iron,Besi,آهن,Iron,Järn,Железо,লোহা,لوہا,Hierro
+58,22,105,The Debate,المجادلة,Al-Mujaadalah,Tartışma,La Discussion,The Debate,Perdebatan,مناظره,The Debate,Debatten,Спор,বিতর্ক,بحث,El debate
+59,24,101,The Exodus,الحشر,Al-Hashr,Çıkış,L’Exode,The Exodus,Pengusiran beramai Ramai,خروج دسته جمعی,The Exodus,Utvandring,Исход,প্রস্থান,خروج,El Éxodo
+60,13,91,The Test,الممتحنة,Al-Mumtahanah,Test,Le Test,The Test,Ujian,آزمايش,The Test,Testet,Испытание,পরীক্ষা,آزمائش,La prueba
+61,14,109,The Column,الصف,Al-Suff,Sütun,La Colonne,The Column,Barisan,صف,The Column,Kolumnen,Колонна,স্তম্ব,کالم,La columna
+62,11,110,Friday,الجمعة,Al-Jumu‘ah,Cuma,Le Vendredi,Friday,Juma'at,جمعه,Friday,Fredag,Пятница,শুক্রবার,جمعہ,Viernes
+63,11,104,The Hypocrites,المنافقون,Al-Munaafeqoon,İkiyüzlüler,Les Hypocrites,The Hypocrites,Orang Orang Hypokrit,منافقان,The Hypocrites,Hycklarna,Лицемеры,ভণ্ড ব্যক্তিগণ,ریاکار,Los hipócritas
+64,18,108,Mutual Blaming,التغابن,Al-Taghaabun,Karşılıklı Suçlama,Le Reproche Mutuel,Mutual Blaming,Saling Menuduh,سرزنش دوجانبه,Mutual Blaming,Ömsesidigt Klander,Взаимное обвинение,পারস্পারিক দোষারোপ,باہمی الزام تراشی,Culpabilización mutua
+65,12,99,Divorce,الطلاق,Al-Talaaq,Boşanma,Le Divorce,Divorce,Perceraian,طلاق,Divorce,Skilsmässa,Развод,বিবাহ-বিচ্ছেদ,طلاق,Divorcio
+66,12,107,Prohibition,التحريم,Al-Tahreem,Haram Kılmak,L’Interdiction,Prohibition,Larangan,تحريم,Prohibition,Förbud,Запрещение,নিষেধাজ্ঞা,ممنوعیت,Prohibición
+67,30,77,Kingship,الملك,Al-Mulk,Saltanat,La Royauté,Kingship,Yang Menguasai Kerajaan Kerajaan,سلطنت,Kingship,Kungaskap,Царствование,রাজত্ব,بادشاہی,Realeza
+68,52,2,The Pen,القلم,Al-Qalam,Kalem,La Plume,The Pen,Pena,قلم,The Pen,Pennan,Перо,কলম,قلم,La pluma
+69,52,78,Incontestable,الحاقة,Al-Haaqqah,Tartışmasız,L’Incontestable,Incontestable,Tidak dapat Di-Pertikaikan,غیر قابل بحث,Incontestable,Obestridlig,Неоспоримое,অবিসংবাদিত,ناقابلِ انکار,Incontestable
+70,44,79,The Heights,المعارج,Al-Ma‘aarej,Zirveler,Les Hauteurs,The Heights,Ketinggian,عرش اعلا,The Heights,Höjderna,Высоты,উচ্চতা,دی ہائٹس,Las alturas
+71,28,71,Noah,نوح,Nuh,Nuh,Noé,Noah,Nuh,نوح,Noah,Noak,Ной,নূহ,نوح,Noah
+72,28,40,Jinns,الجن,Al-Jinn,Cinler,Les Djinns,Jinns,Jin,جنيان,Jinns,Jinns,Джинны,জীন,جنّ,Jinns
+73,20,3,Cloaked,المزمل,Al-Muzzammil,Örtülmüş,Enveloppé,Cloaked,Yang Berselubung,جامه به خود پيچيده,Cloaked,Dold,Закутавшийся,চাদর আবৃত,پوشیدہ,Capa
+74,56,4,The Hidden Secret,المدثر,Al-Muddath-thir,Gizlenmiş Sır,Le Secret Caché,The Hidden Secret,Rahsia Yang Tersembunyi,راز نهفته,The Hidden Secret,Den Dolda Hemligheten,Cкрытая тайна,লুকায়িত রহস্য,پوشیدہ راز,El secreto oculto
+75,40,31,Resurrection,القيامة,Al-Qeyaamah,Diriliş,La Résurrection,Resurrection,Hari Kebangkitan,قيامت,Resurrection,Återuppståndelse,Воскресение,পুরুত্থান,قیامت,Resurrección
+76,31,98,The Human,الانسان,Al-Insaan,İnsan,L’Humain,The Human,Manusia,انسان,The Human,Människan,Человек,মানুষ,انسان,El ser humano
+77,50,33,Dispatched,المرسلات,Al-Mursalaat,Sevk Edilen,Les Dépêchés,Dispatched,Penghantaran,فرستاده شدگان,Dispatched,Skickade,Отправленные,প্রেরিত," بھیجا گیا",Enviado
+78,40,80,The Event,النبأ,Al-Naba’,Olay,L’Évènement,The Event,Peristiwa,رويداد,The Event,Händelsen,Cобытие,ঘটনা,واقعہ,El acontecimiento
+79,46,81,The Snatchers,النازعات,Al-Naaze‘aat,Koparanlar,Les Arracheurs,The Snatchers,Peragut,ربايندگان,The Snatchers,De Som Rycker Åt Sig,Вырывающие,যারা টেনে বের করে,سنیچرز,Los Arrebatadores
+80,42,24,He Frowned,عبس,Abasa,Surat Astı,Il A Froncé Les Sourcils,He Frowned,Berkerut Dahi,چهره درهم کشيد,He Frowned,Han Rynkade På Pannan,Он нахмурился,সে ভ্রুকুটি করল,اس نے بھنویں چڑھائیں۔,Frunció el ceño
+81,29,7,The Rolling,التكوير,Al-Takweer,Yuvarlanma,L’Enroulement,The Rolling,Menggulung,غلتان,The Rolling,Välvandet,Свёртывание,আবর্তন,رولنگ,El rodillo
+82,19,82,The Shattering,الانفطار,Al-Infitaar,Parçalara Ayrılma,Le Fracas,The Shattering,Menghancurkan,متلاشی شدن,The Shattering,Splittrandet,Разрушение,চূর্ণ-বিচূর্ণ,شگاف,La destrucción
+83,36,86,The Cheaters,المطففين,Al-Mutaffifeen,Hile Yapanlar,Les Tricheurs,The Cheaters,Para Penipu,متقلبان,The Cheaters,Bedragarna,Мошенники,প্রতারক,دھوکہ باز,Los tramposos
+84,25,83,The Rupture,الانشقاق,Al-Inshiqaaq,Yarılma,La Rupture,The Rupture,Perpecahan,گسيختن,The Rupture,Brytningen,Разрыв,ফাটল,درز,La ruptura
+85,22,27,The Galaxies,البروج,Al-Burooj,Galaksiler,Les Galaxies,The Galaxies,Bimasakti Bimasakti,کهکشان ها,The Galaxies,Galaxerna,Галактики,ছায়াপথ,گلیکسیز,Las galaxias
+86,17,36,The Bright Star,الطارق,Al-Taareq,Parlak Yıldız,L’Étoile Brillante,The Bright Star,Bintang Yang Terang,ستارهٔ درخشان,The Bright Star,Den Ljusa Stjärnan,Яркая звезда,উজ্জ্বল তারা,چمکتی ہوئی ستارہ,La estrella brillante
+87,19,8,The Most High,الأعلى,Al-A‘alaa,Yüceler Yücesi,Le Plus Haut,The Most High,Yang Maha Tinggi,بلندمرتبه ترين,The Most High,Den Högste,Всевышний,সু-উচ্চ,سب سے بلند,El Altísimo
+88,26,68,Overwhelming,الغاشية,Al-Ghaasheyah,Bunaltıcı,L’Accablant,Overwhelming,Peristiwa Yang Amat Sangat,در برگيرنده,Overwhelming,Överväldigande,Ошеломляющее,অভিভূতকারি,بےحد زبردست,Abrumador
+89,30,10,Dawn,الفجر,Al-Fajr,Şafak,L’Aube,Dawn,Subuh,فجر,Dawn,Gryning,Утренняя заря,ভোর,یہ,Amanecer
+90,20,35,The Town,البلد,Al-Balad,Kent,La Cité,The Town,Bandar,شهر,The Town,Staden,Город,শহর,شہر,La ciudad
+91,15,26,The Sun,الشمس,Al-Shams,Güneş,Le Soleil,The Sun,Matahari,خورشيد,The Sun,Solen,Cолнце,সূর্য,سورج,El Sol
+92,21,9,The Night,الليل,Al-Layl,Gece,La Nuit,The Night,Malam,شب,The Night,Natten,Ночь,রাত,رات,La Noche
+93,11,11,The Forenoon,الضحى,Al-Duhaa,Kuşluk Vakti,La Matinée,The Forenoon,Pagi,پيش از ظهر,The Forenoon,Förmiddagen,Утро,পূর্বাহ্ন,صبح کا وقت,Por la mañana
+94,8,12,Cooling the Temper,الشرح,Al-Sharrhh,Öfkeyi Yatıştırmak,Calmer le tempérament,Cooling the Temper,Mengawal Perasaan Marah,خونسردی,Cooling the Temper,Lugna Humöret,Охлаждение вспыльчивости,মেজাজ প্রশমন,غصہ ٹھنڈا کرنا,Enfriar la temperatura
+95,8,28,The Fig,التين,Al-Teen,İncir,La Figue,The Fig,Buah Tin,انجير,The Fig,Fikonet,Инжир,ডুমুর,انجیر,El higo
+96,19,1,The Embryo,العلق,Al-‘Alaq,Embriyo,L’Embryon,The Embryo,Embrio,رویان معلق,The Embryo,Embryot,Зародыш,ভ্রুণ,جنین,El embrión
+97,5,25,The Destiny,القدر,Al-Qadr,Kader,La Destinée,The Destiny,Destini,سرنوشت,The Destiny,Öde,Судьба,নিয়তির রজনী,تقدیر,El destino
+98,8,100,The Proof,البينة,Al-Bayyinah,Kanıt,La Preuve,The Proof,Bukti,مدرک,The Proof,Bevis,Доказательство,প্রমাণ,ثبوت,La prueba
+99,8,93,The Quake,الزلزلة,Al-Zalzalah,Sarsıntı,Le Tremblement,The Quake,Gempa,زلزله,The Quake,Skalvet,Землетрясение,কম্পন,زلزلہ,El terremoto
+100,11,14,The Gallopers,العاديات,Al-‘Aadeyaat,Dört Nala Koşanlar,Les Galopeurs,The Gallopers,Berlari Kencang,تاخت کنندگان,The Gallopers,De Som Galopperar,Скачущие,ধাবনকারী,گیلپرز,Los Gallopers
+101,11,30,The Shocker,القارعة,Al-Qaare‘ah,Şok Edici,Le Choquant,The Shocker,Memeranjatkan,تکان دهنده,The Shocker,Chockvågen,Ужасающее,চরম বিপর্যয়,صدمہ,La conmoción
+102,8,16,Hoarding,التكاثر,Al-Takaathur,İstiflemek,L’Accumulation,Hoarding,Mengumpulkan,مال اندوزی,Hoarding,Att Samla På Hög,Накопление,জমা করা,جمع کرنے کا جنون,Acaparamiento
+103,3,13,The Afternoon,العصر,Al-‘Asr,İkindi,L’Après-midi,The Afternoon,Petang Hari,بعد از ظهر,The Afternoon,Eftermiddagen,Послеобеденное время,অপরাহ্ন,دوپہر,La tarde
+104,9,32,The Backbiter,الهمزة,Al-Humazah,Dedikoducu,Le Médisant,The Backbiter,Pengumpat,غيبت کننده,The Backbiter,Baktalaren,Злословящий,পরনিন্দাকারী,پیٹھ میں چھرا گھونپنے والا,El mordedor
+105,5,19,The Elephant,الفيل,Al-Feel,Fil,L’Éléphant,The Elephant,Gajah,فيل,The Elephant,Elefanten,Cлон,হাতী,ہاتھی,El elefante
+106,4,29,Quraish Tribe,قريش,The Quraish Tribe,Kureyş Kabilesi,Quraish,Quraish Tribe,Kaum Quraish,قبیلهٔ قريش,Quraish Tribe,Quraish,Курайш,কোরাইশ,قبیلہ قریش,Tribu Quraish
+107,7,17,Charity,الماعون,Al-Maa‘oon,Hayır İşi,La Charité,Charity,Derma,انفاق,Charity,Välgörenhet,Благотворительность,দান,خیرات,Caridad
+108,3,15,Bounty,الكوثر,Al-Kawthar,Cömertçe Verilmiş Nimet,Le Bienfait,Bounty,Kemewahan,نعمات,Bounty,Gåva,Щедроты,অনুগ্রহ,انعام,Bounty
+109,6,18,The Disbelievers,الكافرون,Al-Kaaferoon,İnkârcılar,Les Mécréants,The Disbelievers,Pengingkar Pengingkar,کافران,The Disbelievers,De Som Inte Tror,Неверующие,অবিশ্বাসীরা,کافر,Los incrédulos
+110,3,114,Triumph,النّصر,Al-Nassr,Zafer,Le Triomphe,Triumph,Kemenangan,پيروزی,Triumph,Triumf,Триумф,সাফল্য,فتح,Triumph
+111,5,6,Thorns,المسد,Al-Masad,Dikenler,Les Épines,Thorns,Duri Duri,خارها,Thorns,Taggar,Шипы,কণ্টক,کانٹے,Espinas
+112,4,22,Absoluteness,الإخلاص,Al-Ikhlaas,Mutlaklık,L’Absoluité,Absoluteness,Dengan Segala Kebenaran,مطلق,Absoluteness,Fullständighet,Абсолютность,পরিপূর্ণতা,مطلقیت,Totalidad
+113,5,20,Daybreak,الفلق,Al-Falaq,Tan Vakti,Le Point Du Jour,Daybreak,Matahari Terbit,سپیده دم,Daybreak,Gryning,Рассвет,আসন্ন উশা,صبح کا پھٹنا,Amanecer
+114,6,21,People,الناس,Al-Naas,İnsanlar,Les Gens,People,Manusia,مردم,People,Människor,Люди,মানুষ,لوگ,Personas
