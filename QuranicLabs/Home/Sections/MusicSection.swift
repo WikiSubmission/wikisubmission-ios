@@ -38,7 +38,6 @@ struct Home_MusicSection: View {
                     .tracking(2)
                 Card(title: "Browse Music", options: .action(
                     systemImage: "music.note",
-                    imageAlignment: .top,
                     showChevron: true
                 ) {
                     router.selectTab(.music)
