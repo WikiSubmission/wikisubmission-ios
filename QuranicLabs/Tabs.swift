@@ -1,6 +1,5 @@
 import SwiftUI
 import Defaults
-import SheetKit
 
 // [Tab selection and corresponding views]
 struct Tabs: View {

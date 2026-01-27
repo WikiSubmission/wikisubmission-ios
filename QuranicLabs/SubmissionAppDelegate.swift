@@ -2,7 +2,6 @@ import UIKit
 import SwiftUI
 import UserNotifications
 import Defaults
-import SheetKit
 import Combine
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {

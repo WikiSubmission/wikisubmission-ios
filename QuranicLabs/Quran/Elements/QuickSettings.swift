@@ -1,5 +1,4 @@
 import SwiftUI
-import SheetKit
 import Defaults
 
 struct Quran_Element_QuickSettings: View {    

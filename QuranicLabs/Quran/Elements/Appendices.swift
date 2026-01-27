@@ -1,5 +1,4 @@
 import SwiftUI
-import SheetKit
 
 struct Appendices: View {
     var body: some View {
