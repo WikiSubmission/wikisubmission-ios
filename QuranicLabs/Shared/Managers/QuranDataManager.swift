@@ -48,10 +48,8 @@ enum QuranDataFiles: String, CaseIterable {
 
     var initializationDisplayText: String {
         switch self {
-        case .ws_quran_chapters, .ws_quran_index, .ws_quran_text, .ws_quran_subtitles, .ws_quran_footnotes:
+        case .ws_quran_chapters, .ws_quran_index, .ws_quran_text, .ws_quran_subtitles, .ws_quran_footnotes, .ws_quran_word_by_word:
             return "Loading data. This may take a moment..."
-        case .ws_quran_word_by_word:
-            return "Almost done..."
         }
     }
 }
