@@ -37,6 +37,10 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         let token = tokenParts.joined()
         UserDefaults.standard.set(token, forKey: Defaults.Keys.device_token.name)
         print("Device Token: \(token)")
+
+        Task {
+            try? await NotificationManager.shared.sync()
+        }
     }
     
     func application(_ application: UIApplication,
