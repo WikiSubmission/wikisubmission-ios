@@ -53,10 +53,6 @@ struct Prayer: View {
                             // 30 Day Schedule
                             if !data.schedule.isEmpty {
                                 Prayer_Element_PrayerSchedule(schedule: data.schedule)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .fill(Color.secondary.opacity(0.02))
-                                    )
                             }
                             
                             // Ramadan
