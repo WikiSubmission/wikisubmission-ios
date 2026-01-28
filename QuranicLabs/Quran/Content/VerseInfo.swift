@@ -44,7 +44,7 @@ struct Quran_Content_VerseInfo: View {
                 Quran_Element_ChapterInfo(verse: data)
             }
         }
-        .navigationTitle("Verse Info")
+        .navigationTitle(data.index.verse_id)
         .navigationBarTitleDisplayMode(.inline)
         .textSelection(.enabled)
         .toolbar {
