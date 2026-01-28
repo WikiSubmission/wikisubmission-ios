@@ -4,7 +4,7 @@ struct Quran_Content_ToolbarRow: View {
     @State private var showBookmarks = false
 
     var body: some View {
-        HStack(spacing: 0) {
+        HStack {
             Button {
                 showBookmarks = true
             } label: {
