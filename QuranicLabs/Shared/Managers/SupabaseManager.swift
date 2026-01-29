@@ -126,6 +126,7 @@ struct PushNotificationsRegistryPrayerTimes: Encodable {
     let afternoon: Bool
     let sunset: Bool
     let night: Bool
+    let sunrise: Bool
 }
 
 struct PushNotificationsRegistryDailyVerse: Encodable {
