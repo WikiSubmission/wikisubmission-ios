@@ -35,56 +35,71 @@ class NotificationManager: ObservableObject {
             print("No device token – skipping sync")
             return
         }
-        
-        let session = try await SupabaseManager.client.auth.session
+
+        let session = try await SupabaseManager.shared.requireSession()
         let user = session.user
-        
-        try await withThrowingTaskGroup(of: Void.self) { group in
-            group.addTask {
-                try await self.syncPushNotificationUser(
-                    deviceToken: deviceToken,
-                    userId: user.id,
-                    table: .user
-                )
-            }
+
+        // Sync user table first (registry tables have foreign key on device_token)
+        try await syncPushNotificationUser(
+            deviceToken: deviceToken,
+            userId: user.id,
+            table: .user
+        )
+
+        // Then sync registry tables in parallel
+        await withTaskGroup(of: Void.self) { group in
             if tables == nil || (tables?.contains(.prayerTimes) == true) {
                 group.addTask {
-                    try await self.syncPushNotificationsRegistryPrayerTimes(
-                        deviceToken: deviceToken,
-                        userId: user.id,
-                        table: .prayerTimes
-                    )
+                    do {
+                        try await self.syncPushNotificationsRegistryPrayerTimes(
+                            deviceToken: deviceToken,
+                            userId: user.id,
+                            table: .prayerTimes
+                        )
+                    } catch {
+                        print("Notification sync error (prayerTimes): \(error)")
+                    }
                 }
             }
             if tables == nil || (tables?.contains(.dailyVerse) == true) {
                 group.addTask {
-                    try await self.syncPushNotificationsRegistryDailyVerse(
-                        deviceToken: deviceToken,
-                        userId: user.id,
-                        table: .dailyVerse
-                    )
+                    do {
+                        try await self.syncPushNotificationsRegistryDailyVerse(
+                            deviceToken: deviceToken,
+                            userId: user.id,
+                            table: .dailyVerse
+                        )
+                    } catch {
+                        print("Notification sync error (dailyVerse): \(error)")
+                    }
                 }
             }
             if tables == nil || (tables?.contains(.randomVerse) == true) {
                 group.addTask {
-                    try await self.syncPushNotificationsRegistryRandomVerse(
-                        deviceToken: deviceToken,
-                        userId: user.id,
-                        table: .randomVerse
-                    )
+                    do {
+                        try await self.syncPushNotificationsRegistryRandomVerse(
+                            deviceToken: deviceToken,
+                            userId: user.id,
+                            table: .randomVerse
+                        )
+                    } catch {
+                        print("Notification sync error (randomVerse): \(error)")
+                    }
                 }
             }
             if tables == nil || (tables?.contains(.announcements) == true) {
                 group.addTask {
-                    try await self.syncPushNotificationsRegistryAnnouncements(
-                        deviceToken: deviceToken,
-                        userId: user.id,
-                        table: .announcements
-                    )
+                    do {
+                        try await self.syncPushNotificationsRegistryAnnouncements(
+                            deviceToken: deviceToken,
+                            userId: user.id,
+                            table: .announcements
+                        )
+                    } catch {
+                        print("Notification sync error (announcements): \(error)")
+                    }
                 }
             }
-            
-            for try await _ in group { }
         }
     }
     
@@ -150,7 +165,8 @@ class NotificationManager: ObservableObject {
             noon: Defaults[.dhuhr_notification],
             afternoon: Defaults[.asr_notification],
             sunset: Defaults[.maghrib_notification],
-            night: Defaults[.isha_notification]
+            night: Defaults[.isha_notification],
+            sunrise: Defaults[.sunrise_notification]
         )
         
         try await SupabaseManager.client
