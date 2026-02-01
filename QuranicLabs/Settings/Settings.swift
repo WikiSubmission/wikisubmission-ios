@@ -45,7 +45,11 @@ struct Settings: View {
             QuranSettings_FootnotesToggle()
             QuranSettings_TransliterationToggle()
         }
-        
+
+        Section {
+            QuranSettings_ArabicFontPicker()
+        }
+
         Section {
             QuranSettings_ReciterPicker()
         }

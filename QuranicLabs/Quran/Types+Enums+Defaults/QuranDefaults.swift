@@ -19,6 +19,7 @@ extension Defaults.Keys {
     static let quran_search_history = Key<[String]>("quran_search_history", default: [])
     static let quran_reader_style = Key<QuranReadingStyle>("quran_reading_style", default: .book)
     static let word_by_word = Key<Bool>("word_by_word", default: false)
+    static let quran_arabic_font = Key<QuranArabicFont>("quran_arabic_font", default: .amiriQuran)
 }
 
 extension Defaults {
@@ -34,5 +35,6 @@ extension Defaults {
         Defaults.Keys.quran_search_history.reset()
         Defaults.Keys.quran_reader_style.reset()
         Defaults.Keys.word_by_word.reset()
+        Defaults.Keys.quran_arabic_font.reset()
     }
 }

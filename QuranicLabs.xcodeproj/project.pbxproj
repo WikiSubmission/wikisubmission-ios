@@ -14,6 +14,7 @@
 		923F0C082E8480DF0092BA1B /* .gitignore in Sources */ = {isa = PBXBuildFile; fileRef = 923F0C072E8480DC0092BA1B /* .gitignore */; };
 		924106512F19542500B95E0D /* CodableCSV in Frameworks */ = {isa = PBXBuildFile; productRef = 924106502F19542500B95E0D /* CodableCSV */; };
 		9290D94A2E84ADF2009E3F45 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 9290D9492E84ADEF009E3F45 /* LICENSE */; };
+		92E13EA62F2FCD4C00473C49 /* AlertKit in Frameworks */ = {isa = PBXBuildFile; productRef = 92E13EA52F2FCD4C00473C49 /* AlertKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -51,6 +52,7 @@
 			files = (
 				924106512F19542500B95E0D /* CodableCSV in Frameworks */,
 				923F0C062E847DAD0092BA1B /* Supabase in Frameworks */,
+				92E13EA62F2FCD4C00473C49 /* AlertKit in Frameworks */,
 				923F0BFB2E847D790092BA1B /* Defaults in Frameworks */,
 				923F0BFD2E847D790092BA1B /* DefaultsMacros in Frameworks */,
 			);
@@ -102,6 +104,7 @@
 				923F0BFC2E847D790092BA1B /* DefaultsMacros */,
 				923F0C052E847DAD0092BA1B /* Supabase */,
 				924106502F19542500B95E0D /* CodableCSV */,
+				92E13EA52F2FCD4C00473C49 /* AlertKit */,
 			);
 			productName = QuranicLabs;
 			productReference = 923F0B152E847C440092BA1B /* QuranicLabs.app */;
@@ -135,6 +138,7 @@
 				923F0BF92E847D790092BA1B /* XCRemoteSwiftPackageReference "Defaults" */,
 				923F0C042E847DAD0092BA1B /* XCRemoteSwiftPackageReference "supabase-swift" */,
 				9241064F2F19542500B95E0D /* XCRemoteSwiftPackageReference "CodableCSV" */,
+				92E13EA42F2FCD4C00473C49 /* XCRemoteSwiftPackageReference "AlertKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 923F0B162E847C440092BA1B /* Products */;
@@ -409,6 +413,14 @@
 				minimumVersion = 0.6.7;
 			};
 		};
+		92E13EA42F2FCD4C00473C49 /* XCRemoteSwiftPackageReference "AlertKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparrowcode/AlertKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.1.9;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -431,6 +443,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 9241064F2F19542500B95E0D /* XCRemoteSwiftPackageReference "CodableCSV" */;
 			productName = CodableCSV;
+		};
+		92E13EA52F2FCD4C00473C49 /* AlertKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 92E13EA42F2FCD4C00473C49 /* XCRemoteSwiftPackageReference "AlertKit" */;
+			productName = AlertKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

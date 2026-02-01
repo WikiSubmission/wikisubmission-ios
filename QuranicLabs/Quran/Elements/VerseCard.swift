@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import Defaults
+import AlertKit
 
 // [Custom parameters for verse card]
 struct Quran_Element_VerseCard_Options {
@@ -109,6 +110,7 @@ struct Quran_Element_VerseCard: View {
     @Default(.last_read_verse_id) var lastReadVerse
     @Default(.quran_reader_style) var quranReaderStyle
     @Default(.word_by_word) var wordByWord
+    @Default(.quran_arabic_font) var arabicFont
 
     // [Private/internal state variables]
     @State private var showHighlight = false
@@ -314,8 +316,8 @@ struct Quran_Element_VerseCard: View {
             } else {
                 // Compact flowing text with optional highlighting
                 arabicCompactView
-                    .font(.system(size: CGFloat(fontSize + 4)))
-                    .lineSpacing(12)
+                    .font(arabicFont.font(size: CGFloat(fontSize + 4)))
+                    .lineSpacing(arabicFont.lineSpacing)
                     .multilineTextAlignment(.trailing)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .trailing)
@@ -429,7 +431,7 @@ struct Quran_Element_VerseCard: View {
         VStack(spacing: 6) {
             // Arabic word
             Text(word.arabic)
-                .font(.system(size: CGFloat(fontSize + 2)))
+                .font(arabicFont.font(size: CGFloat(fontSize + 2)))
                 .foregroundStyle(isHighlighted ? Color.accentColor : .primary)
 
             // Transliteration and English
@@ -550,6 +552,17 @@ struct Quran_Element_VerseCard: View {
                 shareText(data.formatToText())
             } label: {
                 Label("Share", systemImage: "square.and.arrow.up")
+            }
+            Button {
+                UIPasteboard.general.string = data.formatToText()
+                AlertKitAPI.present(
+                    title: "\(data.index.verse_id) Copied",
+                    icon: .done,
+                    style: .iOS17AppleMusic,
+                    haptic: .success
+                )
+            } label: {
+                Label("Copy", systemImage: "clipboard")
             }
             if !options.disableInteractiveElements, let selectMode = options.selectMode {
                 Button {
