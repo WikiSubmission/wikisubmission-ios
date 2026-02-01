@@ -561,7 +561,7 @@ struct Quran_Element_VerseCard: View {
                     haptic: .success
                 )
             } label: {
-                Label("Copy", systemImage: "clipboard")
+                Label("Copy", systemImage: "document.on.document")
             }
             if !options.disableInteractiveElements, let selectMode = options.selectMode {
                 Button {

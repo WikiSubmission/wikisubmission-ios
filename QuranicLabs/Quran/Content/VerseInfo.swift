@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import AlertKit
 
 struct Quran_Content_VerseInfo: View {
     @Environment(\.modelContext) private var modelContext
@@ -50,6 +51,18 @@ struct Quran_Content_VerseInfo: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: 0) {
+                    Button {
+                        UIPasteboard.general.string = data.formatToText()
+                        AlertKitAPI.present(
+                            title: "\(data.index.verse_id) Copied",
+                            icon: .done,
+                            style: .iOS17AppleMusic,
+                            haptic: .success
+                        )
+                    } label: {
+                        Label("Copy", systemImage: "document.on.document")
+                    }
+                    
                     Button {
                         shareText(data.formatToText())
                     } label: {
