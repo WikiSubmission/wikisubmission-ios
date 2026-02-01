@@ -23,6 +23,8 @@ struct Quran_Element_VerseCard_Options {
     var linkShouldNotReroute = false
     // [Disables navigation in word-by-word mode (for previews)]
     var disableInteractiveElements = false
+    // [Hides bookmark status]
+    var hideBookmarkStatus = false
 }
 
 // [View]
@@ -146,6 +148,12 @@ struct Quran_Element_VerseCard: View {
 
             // [Main content]
             VStack(alignment: .leading, spacing: quranReaderStyle == .book ? 8 : 4) {
+                if options.hideBookmarkStatus != true && bookmarkManager.isVerseBookmarked(chapter: data.index.chapter_number, verse: data.index.verse_number) {
+                    Image(systemName: "star.fill")
+                        .foregroundStyle(.orange)
+                        .pushToRight()
+                }
+                
                 // [Verse header]
                 verseHeader
 

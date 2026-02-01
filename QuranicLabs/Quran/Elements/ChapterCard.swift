@@ -3,7 +3,8 @@ import Defaults
 
 struct Quran_Element_ChapterCard: View {
     let chapter: QuranChapters
-    var highlightPhrase: String = ""
+    var highlightPhrase = ""
+    var hideBookmarkStatus = false
 
     @Default(.quran_primary_language) private var primaryLanguage
     
@@ -31,7 +32,7 @@ struct Quran_Element_ChapterCard: View {
                             .font(.title3)
                             .fontWeight(.semibold)
                             .fontDesign(.serif)
-                        if bookmarkManager.isChapterBookmarked(chapter.chapter_number) {
+                        if hideBookmarkStatus != true && bookmarkManager.isChapterBookmarked(chapter.chapter_number) {
                             Image(systemName: "star.fill")
                                 .foregroundStyle(.orange)
                         }

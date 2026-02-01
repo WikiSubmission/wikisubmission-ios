@@ -167,7 +167,10 @@ struct Quran_Content_Bookmarks: View {
             case .chapter:
                 if let chapterNumber = bookmark.chapterNumber,
                    let chapter = QuranChapters.fetch(chapterNumber: chapterNumber, context: modelContext) {
-                    Quran_Element_ChapterCard(chapter: chapter)
+                    Quran_Element_ChapterCard(
+                        chapter: chapter,
+                        hideBookmarkStatus: true
+                    )
                 }
             case .verse:
                 if let unified = QuranUnified.fetchVerse(
@@ -178,7 +181,8 @@ struct Quran_Content_Bookmarks: View {
                     Quran_Element_VerseCard(
                         unified: unified,
                         options: .init(
-                            linkToChapterContext: true
+                            linkToChapterContext: true,
+                            hideBookmarkStatus: true
                         )
                     )
                 }
