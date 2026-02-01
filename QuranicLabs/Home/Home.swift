@@ -27,7 +27,7 @@ struct Home: View {
                         titleSection
                     }
                     .padding(.horizontal)
-                    
+
                     Group {
                         Home_QuranSection()
                     }

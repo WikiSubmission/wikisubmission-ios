@@ -7,29 +7,20 @@ struct Home_QuranSection: View {
 
     var body: some View {
         VStack {
-            Text("QURAN: THE FINAL TESTAMENT")
+            Text("THE FINAL TESTAMENT")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .tracking(2)
-            
+
+            QuranSearchBar()
+                .padding(.top, 4)
+
             Card(title: "Browse", options: .action (
                 systemImage: "book.closed",
-                showChevron: true,
-                style: .accent
+                showChevron: true
             ) {
                 router.selectTab(.quran)
                 router.popToRoot(for: .quran)
-            })
-            
-            Card(title: "Search", options: .action(
-                systemImage: "magnifyingglass",
-                showChevron: true
-            ){
-                router.selectTab(.quran)
-                router.popToRoot(for: .quran)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    router.openQuranSearchBar = true
-                }
             })
             
             Card(title: "Random Verse", options: .action(

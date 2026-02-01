@@ -53,7 +53,11 @@ struct Quran: View {
                         searchQuery.reset()
                         selectMode.reset()
                         router.popToRoot(for: .quran)
-                        searchBarIsPresented = true
+                        // Dismiss first then re-present to ensure focus
+                        searchBarIsPresented = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            searchBarIsPresented = true
+                        }
                         router.openQuranSearchBar = false
                     }
                 }
@@ -67,12 +71,12 @@ struct Quran: View {
                 VStack(spacing: 4) {
                     // [Space right below search bar]
                     Group {
-                        if searchBarIsPresented {
+                        if searchBarIsPresented && searchQuery.query.isEmpty {
                             // [Search history]
                             Quran_Element_SearchHistory(
                                 searchQuery: $searchQuery
                             )
-                        } else {
+                        } else if !searchBarIsPresented {
                             // [Button options]
                             Quran_Content_OptionsRow(
                                 searchQuery: $searchQuery
