@@ -325,7 +325,6 @@ struct Quran_Element_VerseCard: View {
         }
         .tracking(1.6)
         .padding(.leading, quranReaderStyle == .book ? bookTextLeadingPadding : 0)
-        .padding(.top)
     }
 
     /// Compact Arabic text view - flowing text with proper RTL and highlighting support
