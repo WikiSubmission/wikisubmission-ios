@@ -60,6 +60,7 @@ struct Home_QuranSection: View {
                     showChevron: true,
                     style: .secondary
                 ) {
+                    router.popToRoot(for: .quran)
                     router.navigate(to: .chapter(chapterNumber: Int(lastReadVerseId.split(separator: ":")[0])!, scrollToVerseNumber: Int(lastReadVerseId.split(separator: ":")[1])!))
                 })
             }
