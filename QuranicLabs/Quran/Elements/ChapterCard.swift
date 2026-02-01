@@ -26,11 +26,15 @@ struct Quran_Element_ChapterCard: View {
         } label: {
             HStack {
                 VStack(alignment: .leading) {
-                    HStack {
+                    HStack(alignment: .center) {
                         Text("Chapter \(chapter.chapter_number)")
                             .font(.title3)
                             .fontWeight(.semibold)
                             .fontDesign(.serif)
+                        if bookmarkManager.isChapterBookmarked(chapter.chapter_number) {
+                            Image(systemName: "star.fill")
+                                .foregroundStyle(.orange)
+                        }
                         Spacer()
                         Text("\(chapter.chapter_verses)")
                             .foregroundStyle(.accent)
