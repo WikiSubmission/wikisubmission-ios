@@ -314,10 +314,16 @@ struct Quran_Element_VerseCard: View {
             } else {
                 // Compact flowing text with optional highlighting
                 arabicCompactView
+                    .font(.system(size: CGFloat(fontSize + 4)))
+                    .lineSpacing(12)
+                    .multilineTextAlignment(.trailing)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
         .tracking(1.6)
         .padding(.leading, quranReaderStyle == .book ? bookTextLeadingPadding : 0)
+        .padding(.top)
     }
 
     /// Compact Arabic text view - flowing text with proper RTL and highlighting support
@@ -331,11 +337,6 @@ struct Quran_Element_VerseCard: View {
                 Text(data.text.arabic)
             }
         }
-        .font(.custom("AmiriQuran-Regular", size: CGFloat(fontSize + 4)))
-        .lineSpacing(12)
-        .multilineTextAlignment(.trailing)
-        .fixedSize(horizontal: false, vertical: true)
-        .frame(maxWidth: .infinity, alignment: .trailing)
     }
 
     /// Whether any Arabic words need highlighting
@@ -347,7 +348,7 @@ struct Quran_Element_VerseCard: View {
     private var arabicAttributedString: AttributedString {
         var result = AttributedString()
         // Build in reverse order for proper RTL display
-        let words = data.wordByWord.sorted { $0.word_index > $1.word_index }
+        let words = data.wordByWord.sorted { $0.word_index > $1.word_index }.reversed()
 
         for (index, word) in words.enumerated() {
             var wordAttr = AttributedString(word.arabic)
@@ -425,10 +426,10 @@ struct Quran_Element_VerseCard: View {
 
     /// Content for word-by-word card (separated for reuse)
     private func wordByWordCardContent(word: QuranWordByWordSD, isHighlighted: Bool) -> some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 6) {
             // Arabic word
             Text(word.arabic)
-                .font(.custom("AmiriQuran-Regular", size: CGFloat(fontSize + 2)))
+                .font(.system(size: CGFloat(fontSize + 2)))
                 .foregroundStyle(isHighlighted ? Color.accentColor : .primary)
 
             // Transliteration and English
@@ -438,6 +439,7 @@ struct Quran_Element_VerseCard: View {
                     .foregroundStyle(Color.accentColor.opacity(0.9))
 
                 Text(word.english)
+                    .tracking(1)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
