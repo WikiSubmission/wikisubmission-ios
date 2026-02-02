@@ -112,10 +112,11 @@ struct Quran_Content_ChapterReader: View {
                     )
                     .id(i.index.verse_index)
                 }
+                chapterNavigation
             }
         }
     }
-    
+
     var bookReader: some View {
         ScrollView(.vertical, showsIndicators: false) {
             LazyVStack {
@@ -133,8 +134,48 @@ struct Quran_Content_ChapterReader: View {
                     )
                     .id(i.index.verse_index)
                 }
+                chapterNavigation
             }
         }
+    }
+
+    @ObservedObject private var router = Router.shared
+
+    private var chapterNavigation: some View {
+        HStack {
+            if chapterNumber > 1 {
+                Button {
+                    router.pop(from: .quran)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        router.push(.chapter(chapterNumber: chapterNumber - 1))
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "chevron.left")
+                        Text("Sura \(chapterNumber - 1)")
+                    }
+                }
+                .buttonStyle(.bordered)
+            }
+
+            Spacer()
+
+            if chapterNumber < 114 {
+                Button {
+                    router.pop(from: .quran)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        router.push(.chapter(chapterNumber: chapterNumber + 1))
+                    }
+                } label: {
+                    HStack {
+                        Text("Sura \(chapterNumber + 1)")
+                        Image(systemName: "chevron.right")
+                    }
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .padding(.vertical, 24)
     }
     
     var scrollToVerseIndex: Int? {
