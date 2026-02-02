@@ -51,7 +51,7 @@ enum TabItem: String, CaseIterable, Equatable, Defaults.Serializable {
         switch self {
         case .home: return "house.fill"
         case .quran: return "book.closed.fill"
-        case .prayer: return "bolt.heart.fill"
+        case .prayer: return "heart.badge.bolt.fill"
         case .music: return "music.note"
         case .settings: return "gearshape.fill"
         }
