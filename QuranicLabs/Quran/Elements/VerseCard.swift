@@ -120,6 +120,7 @@ struct Quran_Element_VerseCard: View {
     @State private var visibilityCommitTask: Task<Void, Never>?
     @State private var wordByWordData: [QuranWordByWordSD]? = nil
     @State private var presentBookmarkSheet = false
+    @State private var presentTextSelectorSheet = false
 
     // [Environment]
     @Environment(\.colorScheme) var theme
@@ -175,6 +176,9 @@ struct Quran_Element_VerseCard: View {
         .sheet(isPresented: $presentBookmarkSheet, content: {
             Quran_Content_Bookmarks()
         })
+        .sheet(isPresented: $presentTextSelectorSheet) {
+            Quran_Element_TextSelector(verse: data)
+        }
         .contextMenu { verseContextMenu }
         .onAppear(perform: handleOnAppear)
         .background(visibilityTracker)
@@ -570,6 +574,11 @@ struct Quran_Element_VerseCard: View {
                 )
             } label: {
                 Label("Copy", systemImage: "document.on.document")
+            }
+            Button {
+                presentTextSelectorSheet = true
+            } label: {
+                Label("Text Selector", systemImage: "text.cursor")
             }
             if !options.disableInteractiveElements, let selectMode = options.selectMode {
                 Button {
