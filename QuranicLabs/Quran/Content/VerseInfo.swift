@@ -8,6 +8,8 @@ struct Quran_Content_VerseInfo: View {
     var data: QuranUnified
     
     @State private var versesWithSameRoot: [QuranWordByWordSD]? = nil
+    @State private var presentBookmarkSheet = false
+    @ObservedObject private var bookmarkManager = BookmarkManager.shared
     
     init(data: QuranUnified) {
         self.data = data
@@ -21,17 +23,68 @@ struct Quran_Content_VerseInfo: View {
         }
     }
     
+    var isBookmarked: Bool {
+        return bookmarkManager.isVerseBookmarked(chapter: data.index.chapter_number, verse: data.index.verse_number)
+    }
+    
     var body: some View {
         List {
-            Quran_Element_VerseCard(
-                unified: data,
-                options: .init(
-                    unformatted: true,
-                    linkToChapterContext: true,
-                    disableInteractiveElements: true
+            Section {
+                Quran_Element_VerseCard(
+                    unified: data,
+                    options: .init(
+                        unformatted: true,
+                        linkToChapterContext: true,
+                        disableInteractiveElements: true
+                    )
                 )
-            )
+            }
             .id(UUID())
+            .removeParentListStyle()
+            
+            Section {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack {
+                        Button {
+                            withAnimation {
+                                if isBookmarked {
+                                    bookmarkManager.removeByKey(data.index.verse_id)
+                                } else {
+                                    bookmarkManager.addVerse(data.index.verse_id)
+                                    presentBookmarkSheet = true
+                                }
+                            }
+                        } label: {
+                            Label(isBookmarked ? "Remove bookmark" : "Bookmark", systemImage: isBookmarked ? "bookmark.slash" : "bookmark")
+                                .foregroundStyle(isBookmarked ? .red : .orange)
+                        }
+                        Button {
+                            UIPasteboard.general.string = data.formatToText()
+                            AlertKitAPI.present(
+                                title: "\(data.index.verse_id) Copied",
+                                icon: .done,
+                                style: .iOS17AppleMusic,
+                                haptic: .success
+                            )
+                        } label: {
+                            Label("Copy", systemImage: "document.on.document")
+                                .foregroundStyle(.brown)
+                        }
+                        Button {
+                            shareText(data.formatToText())
+                        } label: {
+                            Label("Share", systemImage: "square.and.arrow.up")
+                        }
+                    }
+                }
+                .removeParentListStyle()
+            }
+            .buttonStyle(SignatureButtonStyle())
+            .font(.caption)
+            .sheet(isPresented: $presentBookmarkSheet, content: {
+                Quran_Content_Bookmarks()
+            })
+
             
             Section(header: HStack {
                 Text("\(data.wordByWord.count) words")

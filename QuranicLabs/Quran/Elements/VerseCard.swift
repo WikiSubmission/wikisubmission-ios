@@ -153,6 +153,7 @@ struct Quran_Element_VerseCard: View {
                     Image(systemName: "star.fill")
                         .foregroundStyle(.orange)
                         .pushToRight()
+                        .padding(.trailing, 6)
                 }
                 
                 // [Verse header]
@@ -519,10 +520,11 @@ struct Quran_Element_VerseCard: View {
                 Color.secondary
                     .opacity(cardBackgroundOpacity)
                     .padding(options.unformatted ? 0 : -4)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .clipShape(RoundedRectangle(cornerRadius: options.unformatted ? 0 : 12))
             case .book:
                 Color.secondary
                     .opacity(bookBackgroundOpacity)
+                    .clipShape(RoundedRectangle(cornerRadius: options.unformatted ? 0 : 12))
             }
         }
     }
