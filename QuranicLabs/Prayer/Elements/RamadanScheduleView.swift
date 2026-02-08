@@ -8,22 +8,10 @@ struct Prayer_Element_RamadanScheduleView: View {
         Group {
             if let data = cachedData {
                 ScrollView {
-                    VStack(spacing: 16) {
-                        // Current day info
-                        if data.current_day > 0 {
-                            Card(title: "Day \(data.current_day)", options: .init(
-                                subtitle: data.status_string,
-                                systemImage: "moon.stars",
-                                style: .accent
-                            ))
-                        }
-
-                        // Schedule table
-                        Prayer_Element_RamadanScheduleTable(
-                            schedule: data.schedule,
-                            currentDay: data.current_day
-                        )
-                    }
+                    Prayer_Element_RamadanScheduleTable(
+                        schedule: data.schedule,
+                        currentDay: data.current_day
+                    )
                     .padding()
                 }
             } else {

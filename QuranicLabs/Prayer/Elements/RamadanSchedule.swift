@@ -97,19 +97,11 @@ struct Prayer_Element_Ramadan2026: View {
                                 )
                             }
 
-                            // Schedule section
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("FULL SCHEDULE")
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
-                                    .foregroundStyle(.secondary)
-                                    .tracking(1)
-
-                                Prayer_Element_RamadanScheduleTable(
-                                    schedule: ramadanData.schedule,
-                                    currentDay: ramadanData.current_day
-                                )
-                            }
+                            // Full schedule
+                            Prayer_Element_RamadanScheduleTable(
+                                schedule: ramadanData.schedule,
+                                currentDay: ramadanData.current_day
+                            )
                         }
 
                     case .failed(let errorMessage):

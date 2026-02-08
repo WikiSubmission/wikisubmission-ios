@@ -1,64 +1,27 @@
 import SwiftUI
-import Defaults
 
 struct Prayer_Element_RamadanScheduleTable: View {
     let schedule: [RamadanDay]
     let currentDay: Int
 
-    @Default(.prayer_times_location) var location
     @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
-        VStack(spacing: 0) {
-            headerRow
+        LazyVStack(spacing: 8) {
             ForEach(schedule) { day in
-                RamadanDayRow(
+                RamadanDayCard(
                     day: day,
                     currentDay: currentDay,
-                    isLastRow: day.day_number == schedule.count,
                     colorScheme: colorScheme
                 )
             }
         }
-        .background(Color(UIColor.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
-        )
-    }
-
-    private var headerRow: some View {
-        HStack(spacing: 0) {
-            Text("Day")
-                .frame(width: 44)
-            Text("Date")
-                .frame(maxWidth: .infinity, alignment: .leading)
-            HStack(spacing: 4) {
-                Image(systemName: "sunrise.fill")
-                    .font(.caption2)
-                Text("Dawn")
-            }
-            .frame(width: 80)
-            HStack(spacing: 4) {
-                Image(systemName: "sunset.fill")
-                    .font(.caption2)
-                Text("Sunset")
-            }
-            .frame(width: 72)
-        }
-        .font(.caption)
-        .fontWeight(.medium)
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(Color.secondary.opacity(colorScheme == .dark ? 0.15 : 0.08))
     }
 }
 
-private struct RamadanDayRow: View {
+private struct RamadanDayCard: View {
     let day: RamadanDay
     let currentDay: Int
-    let isLastRow: Bool
     let colorScheme: ColorScheme
 
     private var isCurrentDay: Bool { day.day_number == currentDay }
@@ -66,80 +29,138 @@ private struct RamadanDayRow: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            rowContent
-            if !isLastRow {
-                Divider()
-                    .padding(.leading, isCurrentDay ? 0 : 56)
+            // Header row with day number and date
+            headerRow
+
+            // Times grid
+            timesGrid
+        }
+        .background(cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isCurrentDay ? Color.accentColor : Color.secondary.opacity(0.2), lineWidth: isCurrentDay ? 2 : 1)
+        )
+        .opacity(isPast ? 0.6 : 1)
+    }
+
+    private var cardBackground: some View {
+        Group {
+            if isCurrentDay {
+                Color.accentColor.opacity(colorScheme == .dark ? 0.15 : 0.08)
+            } else {
+                Color(UIColor.secondarySystemBackground)
             }
         }
     }
 
-    private var rowContent: some View {
-        HStack(spacing: 0) {
-            dayNumberView
-            dateView
-            dawnView
-            sunsetView
+    private var headerRow: some View {
+        HStack(spacing: 12) {
+            // Day number badge
+            ZStack {
+                Circle()
+                    .fill(isCurrentDay ? Color.accentColor : Color.secondary.opacity(0.2))
+                    .frame(width: 36, height: 36)
+                Text("\(day.day_number)")
+                    .font(.subheadline)
+                    .fontWeight(.bold)
+                    .foregroundColor(isCurrentDay ? .white : .primary)
+            }
+
+            // Date info
+            VStack(alignment: .leading, spacing: 2) {
+                Text(formatFullDate(day.day))
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
+
+            Spacer()
+
+            // Fasting duration indicator
+            if !isPast {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(fastingDuration)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.secondary)
+                    Text("fasting")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
-        .background(isCurrentDay ? Color.accentColor.opacity(colorScheme == .dark ? 0.2 : 0.1) : Color.clear)
     }
 
-    private var dayNumberView: some View {
-        ZStack {
-            if isCurrentDay {
-                Circle()
-                    .fill(Color.accentColor)
-                    .frame(width: 28, height: 28)
-            }
-            Text("\(day.day_number)")
-                .font(.subheadline)
-                .fontWeight(isCurrentDay ? .bold : .regular)
-                .foregroundColor(isCurrentDay ? .white : (isPast ? .secondary : .primary))
+    private var timesGrid: some View {
+        HStack(spacing: 0) {
+            timeCell(label: "Dawn", time: day.dawn, icon: "moon.stars.fill", color: .indigo)
+            divider
+            timeCell(label: "Sunrise", time: day.sunrise, icon: "sunrise.fill", color: .orange)
+            divider
+            timeCell(label: "Noon", time: day.noon, icon: "sun.max.fill", color: .yellow)
+            divider
+            timeCell(label: "Afternoon", time: day.afternoon, icon: "sun.haze.fill", color: .orange)
+            divider
+            timeCell(label: "Sunset", time: day.sunset, icon: "sunset.fill", color: .red)
         }
-        .frame(width: 44)
+        .padding(.vertical, 10)
+        .background(Color.secondary.opacity(colorScheme == .dark ? 0.1 : 0.04))
     }
 
-    private var dateView: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(formatWeekday(day.day))
-                .font(.subheadline)
-                .fontWeight(isCurrentDay ? .semibold : .regular)
-                .foregroundColor(isPast ? .secondary : .primary)
+    private var divider: some View {
+        Rectangle()
+            .fill(Color.secondary.opacity(0.2))
+            .frame(width: 1)
+            .padding(.vertical, 4)
+    }
+
+    private func timeCell(label: String, time: String, icon: String, color: Color) -> some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.caption)
+                .foregroundStyle(isPast ? .secondary : color)
+            Text(time)
+                .font(.caption2)
+                .fontWeight(.medium)
+                .monospacedDigit()
+            Text(label)
+                .font(.system(size: 9))
+                .foregroundStyle(.secondary)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity)
     }
 
-    private var dawnView: some View {
-        Text(day.dawn)
-            .font(.subheadline.monospacedDigit())
-            .fontWeight(isCurrentDay ? .semibold : .regular)
-            .foregroundColor(isPast ? .secondary : .primary)
-            .frame(width: 80)
+    private var fastingDuration: String {
+        // Calculate approximate fasting duration from dawn to sunset
+        guard let dawnTime = parseTime(day.dawn),
+              let sunsetTime = parseTime(day.sunset) else {
+            return ""
+        }
+
+        let minutes = Int(sunsetTime.timeIntervalSince(dawnTime) / 60)
+        let hours = minutes / 60
+        let mins = minutes % 60
+        return "\(hours)h \(mins)m"
     }
 
-    private var sunsetView: some View {
-        Text(day.sunset)
-            .font(.subheadline.monospacedDigit())
-            .fontWeight(isCurrentDay ? .semibold : .regular)
-            .foregroundColor(isPast ? .secondary : (isCurrentDay ? .accentColor : .primary))
-            .frame(width: 72)
+    private func parseTime(_ timeString: String) -> Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        return formatter.date(from: timeString)
     }
 
-    private func formatWeekday(_ dateString: String) -> String {
-        let components = dateString.components(separatedBy: ", ")
-        return components.first ?? dateString
-    }
-
-    private func formatDate(_ dateString: String) -> String {
+    private func formatFullDate(_ dateString: String) -> String {
+        // "Saturday, March 1, 2026" -> "Saturday, Mar 1"
         let components = dateString.components(separatedBy: ", ")
         if components.count >= 2 {
+            let weekday = components[0]
             let monthDay = components[1]
             let parts = monthDay.components(separatedBy: " ")
             if parts.count >= 2 {
                 let month = String(parts[0].prefix(3))
-                return "\(month) \(parts[1])"
+                return "\(weekday), \(month) \(parts[1])"
             }
         }
         return dateString
