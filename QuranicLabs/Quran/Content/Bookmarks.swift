@@ -156,7 +156,6 @@ struct Quran_Content_Bookmarks: View {
                         .font(.caption2)
                     Text(notes)
                         .font(.caption)
-                        .lineLimit(2)
                 }
                 .foregroundStyle(.accent)
                 .fontWeight(.medium)
