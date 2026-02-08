@@ -86,6 +86,21 @@ class QuranDataManager: ObservableObject {
         }
     }
 
+    /// Verify that Quran data is actually present and fetchable
+    private func verifyDataIntegrity(modelContext: ModelContext) async -> Bool {
+        do {
+            // Try to fetch known verse
+            let descriptor = FetchDescriptor<QuranTextSD>(
+                predicate: #Predicate { $0.verse_id == "1:1" }
+            )
+            let results = try modelContext.fetch(descriptor)
+            return !results.isEmpty
+        } catch {
+            print("Data integrity check failed: \(error)")
+            return false
+        }
+    }
+
     @Published var isReady = false
     @Published var progress: QuranDataManagerProgress = .init()
     @Published var updatesAvailable = false
@@ -102,9 +117,16 @@ class QuranDataManager: ObservableObject {
     }
         
     func initializeFromBundle(modelContext: ModelContext) async {
-        guard !Defaults[.quran_data_initialized] else {
-            print("Quran data already initialized; skipping import.")
-            return
+        // Check if data is marked as initialized
+        if Defaults[.quran_data_initialized] {
+            // Verify data integrity with a simple fetch
+            if await verifyDataIntegrity(modelContext: modelContext) {
+                print("Quran data already initialized and verified; skipping import.")
+                return
+            } else {
+                print("Quran data marked as initialized but verification failed; reinitializing...")
+                Defaults[.quran_data_initialized] = false
+            }
         }
 
         for file in QuranDataFiles.allCases {

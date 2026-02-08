@@ -3,6 +3,7 @@ import SwiftUI
 struct QuranSettings_PreviewVerse: View {
     @State private var isExpanded = true
     @Environment(\.modelContext) var modelContext
+    @ObservedObject private var quranDataManager = QuranDataManager.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -20,12 +21,14 @@ struct QuranSettings_PreviewVerse: View {
             }
             .buttonStyle(.plain)
 
-            if isExpanded, let verse = QuranUnified.fetchVerse(byId: "2:20", context: modelContext) {
+            if isExpanded && quranDataManager.isReady,
+               let verse = QuranUnified.fetchVerse(byId: "2:20", context: modelContext) {
                 Quran_Element_VerseCard(
                     unified: verse,
                     options: .init(
                         unformatted: true,
-                        disableInteractiveElements: true
+                        disableInteractiveElements: true,
+                        hideBookmarkStatus: true
                     )
                 )
                 .padding(.top, 12)
