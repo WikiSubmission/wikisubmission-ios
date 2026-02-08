@@ -15,9 +15,6 @@ struct NowPlayingBar: View {
                 Spacer()
 
                 VStack(spacing: 0) {
-                    // Progress bar at top of card
-                    scrubber
-
                     // Main content row
                     HStack(spacing: 12) {
                         // Artwork + Track info (tappable)
@@ -90,11 +87,6 @@ struct NowPlayingBar: View {
                 .foregroundColor(.primary)
                 .lineLimit(1)
             HStack(spacing: 4) {
-                Text(track.subtitle)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-                Text("·")
-                    .foregroundColor(.secondary.opacity(0.6))
                 Text(timeString)
                     .foregroundColor(.secondary.opacity(0.8))
             }

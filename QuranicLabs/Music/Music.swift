@@ -223,10 +223,11 @@ struct Music: View {
 
     private var listModePicker: some View {
         HStack(spacing: 10) {
-            musicPickerButton(.categories, label: "Categories", icon: "square.grid.2x2")
-            musicPickerButton(.newReleases, label: recentReleaseCount > 0 ? "New (\(recentReleaseCount))" : "New Releases", icon: recentReleaseCount > 1 ? "sparkles" : "clock")
+            musicPickerButton(.categories, label: "All Genres", icon: "square.grid.2x2")
+            musicPickerButton(.newReleases, label: recentReleaseCount > 0 ? "New (\(recentReleaseCount))" : "New", icon: recentReleaseCount > 1 ? "sparkles" : "clock")
         }
         .padding(.horizontal)
+        .pushToLeft()
     }
 
     private func musicPickerButton(_ mode: MusicListMode, label: String, icon: String) -> some View {
@@ -243,16 +244,9 @@ struct Music: View {
                 Text(label)
                     .font(.subheadline.weight(.medium))
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .frame(maxWidth: .infinity)
-            .background(
-                Capsule()
-                    .fill(isSelected ? Color.accentColor : Color(.systemGray5))
-            )
-            .foregroundStyle(isSelected ? .white : .primary)
+            .fontWeight(isSelected ? .bold : .light)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SignatureButtonStyle())
     }
 
     // MARK: - New Releases Section

@@ -47,7 +47,6 @@ struct Quran_Content_OptionsRow: View {
             }
             .font(.caption)
         }
-        
         .sheet(isPresented: $showBookmarks) {
             Quran_Content_Bookmarks()
         }

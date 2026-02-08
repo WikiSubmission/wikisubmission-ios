@@ -58,14 +58,15 @@ struct Home_QuranSection: View {
             })
             
             if lastReadVerseId != "1:1" {
-                Card(title: lastReadVerseId, options: .action (
-                    systemImage: "arrow.counterclockwise",
-                    showChevron: true,
-                    style: .secondary
-                ) {
+                Button {
                     router.popToRoot(for: .quran)
                     router.navigate(to: .chapter(chapterNumber: Int(lastReadVerseId.split(separator: ":")[0])!, scrollToVerseNumber: Int(lastReadVerseId.split(separator: ":")[1])!))
-                })
+                } label: {
+                    Label("\(lastReadVerseId) →", systemImage: "arrow.counterclockwise")
+                }
+                .font(.caption)
+                .buttonStyle(SignatureButtonStyle())
+                .pushToRight()
             }
         }
         .removeParentListStyle()

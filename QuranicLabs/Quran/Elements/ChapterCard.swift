@@ -44,14 +44,12 @@ struct Quran_Element_ChapterCard: View {
                     HStack {
                         if highlightPhrase.isEmpty {
                             Text("\(chapter.getTitleInUserLanguage(primaryLanguage))")
-                                .background(Color.secondary.opacity(0.09).padding(-4))
                                 .clipShape(RoundedRectangle(cornerRadius: 4))
                         } else {
                             ConditionalHighlight(
                                 text: chapter.getTitleInUserLanguage(primaryLanguage),
                                 query: highlightPhrase
                             )
-                            .background(Color.secondary.opacity(0.09).padding(-4))
                             .clipShape(RoundedRectangle(cornerRadius: 4))
                         }
                         Spacer()
@@ -64,8 +62,9 @@ struct Quran_Element_ChapterCard: View {
                 Image(systemName: "chevron.right")
                     .foregroundStyle(.secondary.opacity(0.5))
             }
-            .padding()
-            .background(Color.secondary.opacity(0.07).clipShape(RoundedRectangle(cornerRadius: 8)))
+            .padding(.vertical, 6)
+            .padding(.horizontal, 12)
+            .background(Color.secondary.opacity(0.07).clipShape(RoundedRectangle(cornerRadius: 16)))
         }
         .buttonStyle(.plain)
         .contextMenu {

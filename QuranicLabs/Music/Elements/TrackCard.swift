@@ -41,7 +41,7 @@ struct Music_TrackCard: View {
         .padding(8)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(isPlaying ? Color.accentColor.opacity(0.14) : Color.gray.opacity(0.05))
+                .fill(isPlaying ? Color.accentColor.opacity(0.16) : Color.gray.opacity(0.05))
         )
     }
 

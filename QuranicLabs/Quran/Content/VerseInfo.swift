@@ -129,25 +129,3 @@ struct Quran_Content_VerseInfo: View {
     }
 }
 
-#Preview {
-    let container = try! ModelContainer(
-        for:
-            QuranFootnotesSD.self,
-            QuranIndexSD.self,
-            QuranSubtitlesSD.self,
-            QuranTextSD.self,
-            QuranWordByWordSD.self,
-        configurations: ModelConfiguration()
-    )
-    
-    let context = container.mainContext
-    
-    let verse = QuranUnified.fetchVerse(byId: "2:20", context: context)
-        ?? QuranUnified.fetchVerse(byId: "1:1", context: context)!
-    
-     NavigationStack {
-        Quran_Content_VerseInfo(data: verse)
-    }
-    .modelContainer(container)
-}
-
