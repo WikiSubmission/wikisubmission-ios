@@ -9,7 +9,9 @@ struct Quran_Content_VerseInfo: View {
     
     @State private var versesWithSameRoot: [QuranWordByWordSD]? = nil
     @State private var presentBookmarkSheet = false
+    @State private var presentTextSelectorSheet = false
     @ObservedObject private var bookmarkManager = BookmarkManager.shared
+    @ObservedObject private var audioManager = AudioManager.shared
     
     init(data: QuranUnified) {
         self.data = data
@@ -55,9 +57,13 @@ struct Quran_Content_VerseInfo: View {
                                 }
                             }
                         } label: {
-                            Label(isBookmarked ? "Remove bookmark" : "Bookmark", systemImage: isBookmarked ? "bookmark.slash" : "bookmark")
-                                .foregroundStyle(isBookmarked ? .red : .orange)
+                            HStack {
+                                Image(systemName: isBookmarked ? "bookmark.slash" : "bookmark")
+                                Text(isBookmarked ? "Remove bookmark" : "Bookmark")
+                            }
                         }
+                        .buttonStyle(SignatureButtonStyle(tint: .orange))
+                        
                         Button {
                             UIPasteboard.general.string = data.formatToText()
                             AlertKitAPI.present(
@@ -67,24 +73,53 @@ struct Quran_Content_VerseInfo: View {
                                 haptic: .success
                             )
                         } label: {
-                            Label("Copy", systemImage: "document.on.document")
-                                .foregroundStyle(.brown)
+                            HStack {
+                                Image(systemName: "document.on.document")
+                                Text("Copy")
+                            }
                         }
+                        .buttonStyle(SignatureButtonStyle(tint: .cyan))
+                        
                         Button {
                             shareText(data.formatToText())
                         } label: {
-                            Label("Share", systemImage: "square.and.arrow.up")
+                            HStack {
+                                Image(systemName: "square.and.arrow.up")
+                                Text("Share")
+                            }
                         }
+                        .buttonStyle(SignatureButtonStyle(tint: .accent))
+                        
+                        Button {
+                            presentTextSelectorSheet = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "pencil")
+                                Text("Select")
+                            }
+                        }
+                        .buttonStyle(SignatureButtonStyle(tint: .green))
+                        
+                        Button {
+                            audioManager.play(data, modelContext: modelContext)
+                        } label: {
+                            HStack {
+                                Image(systemName: audioManager.isPlaying ? "stop" : "play")
+                                Text(audioManager.isPlaying ? "Stop" : "Play")
+                            }
+                        }
+                        .buttonStyle(SignatureButtonStyle(tint: .pink))
                     }
                 }
                 .removeParentListStyle()
             }
-            .buttonStyle(SignatureButtonStyle())
             .font(.caption)
             .sheet(isPresented: $presentBookmarkSheet, content: {
                 Quran_Content_Bookmarks()
             })
-
+            .sheet(isPresented: $presentTextSelectorSheet, content: {
+                Quran_Element_TextSelector(verse: data)
+            })
             
             Section(header: HStack {
                 Text("\(data.wordByWord.count) words")
