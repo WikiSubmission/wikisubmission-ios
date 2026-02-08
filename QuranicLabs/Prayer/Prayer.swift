@@ -55,13 +55,6 @@ struct Prayer: View {
                                 Prayer_Element_PrayerSchedule(schedule: data.schedule)
                             }
                             
-                            // Ramadan
-                            Card(title: "Ramadan 2026", options: .destination(
-                                systemImage: "moon.stars"
-                            ){
-                                Prayer_Element_Ramadan2026()
-                            })
-                            
                             // Qibla (if applicable)
                             if data.isInNorthAmerica {
                                 Card(title: "Qibla", options: .destination(
@@ -70,6 +63,13 @@ struct Prayer: View {
                                     Prayer_Element_Qibla()
                                 })
                             }
+                            
+                            // Ramadan
+                            Card(title: "Ramadan", options: .destination(
+                                systemImage: "moon.stars"
+                            ){
+                                Prayer_Element_Ramadan2026()
+                            })
                             
                             // Prayer guide
                             Card(title: "Prayer Guide", options: .destination(
@@ -81,7 +81,8 @@ struct Prayer: View {
                             // Location update
                             Card(title: "Update Location", options: .action(
                                 systemImage: "location",
-                                showChevron: true
+                                showChevron: true,
+                                style: .secondary
                             ){
                                 showLocationSearch = true
                             })

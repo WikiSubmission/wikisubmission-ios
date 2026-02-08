@@ -8,7 +8,7 @@ struct Home_PrayerSection: View {
     
     var body: some View {
         VStack {
-            Text("PRAYER TIMES")
+            Text("PRAYER")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .tracking(2)
@@ -25,6 +25,8 @@ struct Home_PrayerSection: View {
                     }
                     .pushToRight()
                     .buttonStyle(SignatureButtonStyle())
+
+                    Prayer_Element_RamadanPreview()
                 }
             } else {
                 Card(title: "Set up now", options: .action(

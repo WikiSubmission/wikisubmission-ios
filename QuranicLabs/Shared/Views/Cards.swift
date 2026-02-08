@@ -64,6 +64,7 @@ struct Card: View {
                     // Optional child content below subtitle
                     if let extraContent = options?.content {
                         extraContent
+                            .padding(.top, 4)
                     }
                 }
 
