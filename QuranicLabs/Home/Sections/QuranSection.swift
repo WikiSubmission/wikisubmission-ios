@@ -3,6 +3,7 @@ import Defaults
 
 struct Home_QuranSection: View {
     @ObservedObject var router = Router.shared
+    @ObservedObject var audioManager = AudioManager.shared
     @Default(.last_read_verse_id) private var lastReadVerseId
 
     var body: some View {
@@ -11,6 +12,17 @@ struct Home_QuranSection: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .tracking(2)
+            
+            if audioManager.category == .quran, audioManager.isPlaying, let track = audioManager.currentTrack {
+                Button {
+                    router.selectTab(.quran)
+                    router.navigate(to: .chapter(chapterNumber: Int(track.title.split(separator: ":")[0]) ?? 1, scrollToVerseNumber: Int(track.title.split(separator: ":")[1]) ?? 1))
+                } label: {
+                    Label("Playing: \(track.title) →", systemImage: "waveform")
+                }
+                .font(.caption)
+                .buttonStyle(SignatureButtonStyle())
+            }
 
             QuranSearchBar()
                 .padding(.top, 4)
