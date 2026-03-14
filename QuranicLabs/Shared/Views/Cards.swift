@@ -15,18 +15,22 @@ struct Card: View {
                 .scaledToFit()
                 .frame(width: size, height: size)
                 .foregroundStyle(color)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
         } else if let systemImage = options?.systemImage {
             if systemImage == "progressview" {
                 ProgressView()
                     .frame(width: size, height: size)
             } else {
-                Image(systemName: systemImage)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: size, height: size)
-                    .foregroundStyle(color)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                ZStack {
+                    RoundedRectangle(cornerRadius: DS.Radius.md)
+                        .fill(color.opacity(0.12))
+                        .frame(width: size, height: size)
+                    Image(systemName: systemImage)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: size * 0.52, height: size * 0.52)
+                        .foregroundStyle(color)
+                }
             }
         }
     }
@@ -37,7 +41,7 @@ struct Card: View {
         let content = ZStack {
             Rectangle()
                 .fill(style.background)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
 
             HStack(alignment: options?.imageAlignment ?? .center, spacing: 20) {
                 Group {
