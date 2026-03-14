@@ -49,6 +49,22 @@ struct Prayer_Element_TimeCard: View {
         })
     }
 
+    // MARK: - Time Formatting
+
+    /// Parses the API's time string (always 12h: "5:23 AM") and re-formats
+    /// using the device locale, so 24h-preference users see "13:45" etc.
+    private func formattedTime(_ raw: String) -> String {
+        let parser = DateFormatter()
+        parser.locale = Locale(identifier: "en_US_POSIX")
+        parser.dateFormat = "h:mm a"
+        guard let date = parser.date(from: raw) else { return raw }
+        let display = DateFormatter()
+        display.locale = Locale.current
+        display.dateStyle = .none
+        display.timeStyle = .short
+        return display.string(from: date)
+    }
+
     // MARK: - Times Section
 
     private var timesSection: some View {
@@ -57,7 +73,7 @@ struct Prayer_Element_TimeCard: View {
             ForEach(PrayerName.primaryPrayers, id: \.self) { prayer in
                 Prayer_Element_TimeRow(
                     prayer: prayer,
-                    time: data.times[prayer],
+                    time: formattedTime(data.times[prayer]),
                     isCurrent: prayer == data.current_prayer,
                     isUpcoming: prayer == data.upcoming_prayer,
                     elapsed: data.current_prayer_time_elapsed,
@@ -72,7 +88,7 @@ struct Prayer_Element_TimeCard: View {
 
             Prayer_Element_TimeRow(
                 prayer: .sunrise,
-                time: data.times.sunrise,
+                time: formattedTime(data.times.sunrise),
                 isCurrent: data.current_prayer == .sunrise,
                 isUpcoming: data.upcoming_prayer == .sunrise,
                 elapsed: data.current_prayer_time_elapsed,
@@ -108,7 +124,7 @@ struct Prayer_Element_TimeCard: View {
                 .frame(maxWidth: .infinity, alignment: .trailing)
 
             // Last updated
-            Text("Last updated: \(data.local_time)")
+            Text("Last updated: \(formattedTime(data.local_time))")
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .trailing)
 

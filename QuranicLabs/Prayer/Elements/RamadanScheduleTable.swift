@@ -95,15 +95,15 @@ private struct RamadanDayCard: View {
 
     private var timesGrid: some View {
         HStack(spacing: 0) {
-            timeCell(label: "Dawn", time: day.dawn, icon: "moon.stars.fill", color: .indigo)
+            timeCell(label: "Dawn", time: formattedTime(day.dawn), icon: "moon.stars.fill", color: .indigo)
             divider
-            timeCell(label: "Sunrise", time: day.sunrise, icon: "sunrise.fill", color: .orange)
+            timeCell(label: "Sunrise", time: formattedTime(day.sunrise), icon: "sunrise.fill", color: .orange)
             divider
-            timeCell(label: "Noon", time: day.noon, icon: "sun.max.fill", color: .yellow)
+            timeCell(label: "Noon", time: formattedTime(day.noon), icon: "sun.max.fill", color: .yellow)
             divider
-            timeCell(label: "Afternoon", time: day.afternoon, icon: "sun.haze.fill", color: .orange)
+            timeCell(label: "Afternoon", time: formattedTime(day.afternoon), icon: "sun.haze.fill", color: .orange)
             divider
-            timeCell(label: "Sunset", time: day.sunset, icon: "sunset.fill", color: .red)
+            timeCell(label: "Sunset", time: formattedTime(day.sunset), icon: "sunset.fill", color: .red)
         }
         .padding(.vertical, 10)
         .background(Color.secondary.opacity(colorScheme == .dark ? 0.1 : 0.04))
@@ -147,8 +147,18 @@ private struct RamadanDayCard: View {
 
     private func parseTime(_ timeString: String) -> Date? {
         let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "h:mm a"
         return formatter.date(from: timeString)
+    }
+
+    private func formattedTime(_ raw: String) -> String {
+        guard let date = parseTime(raw) else { return raw }
+        let display = DateFormatter()
+        display.locale = Locale.current
+        display.dateStyle = .none
+        display.timeStyle = .short
+        return display.string(from: date)
     }
 
     private func formatFullDate(_ dateString: String) -> String {
