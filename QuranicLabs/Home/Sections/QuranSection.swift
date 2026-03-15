@@ -34,14 +34,6 @@ struct Home_QuranSection: View {
                 router.popToRoot(for: .quran)
             })
 
-            Card(title: "Random Verse", options: .action(
-                systemImage: "sparkles",
-                showChevron: true
-            ) {
-                router.popToRoot(for: .quran)
-                router.navigate(to: .randomVerse)
-            })
-
             Card(title: "Bookmarks", options: .destination(
                 systemImage: "bookmark",
                 showChevron: true
@@ -56,7 +48,8 @@ struct Home_QuranSection: View {
                 Appendices()
             })
 
-            if lastReadVerseId != "1:1" {
+            HStack {
+                Spacer()
                 Button {
                     router.popToRoot(for: .quran)
                     router.navigate(to: .chapter(
@@ -64,12 +57,22 @@ struct Home_QuranSection: View {
                         scrollToVerseNumber: Int(lastReadVerseId.split(separator: ":")[1])!
                     ))
                 } label: {
-                    Label("\(lastReadVerseId) →", systemImage: "arrow.counterclockwise")
+                    Label("Random", systemImage: "sparkles")
                 }
-                .font(.caption)
-                .buttonStyle(SignatureButtonStyle())
-                .pushToRight()
+                if lastReadVerseId != "1:1" {
+                    Button {
+                        router.popToRoot(for: .quran)
+                        router.navigate(to: .chapter(
+                            chapterNumber: Int(lastReadVerseId.split(separator: ":")[0])!,
+                            scrollToVerseNumber: Int(lastReadVerseId.split(separator: ":")[1])!
+                        ))
+                    } label: {
+                        Label("\(lastReadVerseId) →", systemImage: "arrow.counterclockwise")
+                    }
+                }
             }
+            .font(.caption)
+            .buttonStyle(SignatureButtonStyle())
         }
         .removeParentListStyle()
     }

@@ -7,10 +7,11 @@ struct Quran_Content_OptionsRow: View {
     @State private var showBookmarks = false
 
     @Default(.sort_chapters_by_revelation_order) private var sortByRevelationOrder
-    
+    @Default(.last_read_verse_id) private var lastReadVerseId
+
     @ObservedObject var audioManager = AudioManager.shared
     @ObservedObject var router = Router.shared
-
+    
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack {
@@ -44,6 +45,21 @@ struct Quran_Content_OptionsRow: View {
                     Label("Bookmarks", systemImage: "bookmark")
                 }
                 .buttonStyle(SignatureButtonStyle())
+                
+                if lastReadVerseId != "1:1" {
+                    Button {
+                        router.popToRoot(for: .quran)
+                        router.navigate(to: .chapter(
+                            chapterNumber: Int(lastReadVerseId.split(separator: ":")[0])!,
+                            scrollToVerseNumber: Int(lastReadVerseId.split(separator: ":")[1])!
+                        ))
+                    } label: {
+                        Label("\(lastReadVerseId) →", systemImage: "arrow.counterclockwise")
+                    }
+                    .font(.caption)
+                    .buttonStyle(SignatureButtonStyle())
+                    .pushToRight()
+                }
             }
             .font(.caption)
         }

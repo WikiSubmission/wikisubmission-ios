@@ -113,6 +113,7 @@ struct Quran_Element_VerseCard: View {
     @Default(.quran_reader_style) var quranReaderStyle
     @Default(.word_by_word) var wordByWord
     @Default(.quran_arabic_font) var arabicFont
+    @Default(.arabic_font_size) var arabicFontSize
 
     // [Private/internal state variables]
     @State private var showHighlight = false
@@ -329,7 +330,7 @@ struct Quran_Element_VerseCard: View {
             } else {
                 // Compact flowing text with optional highlighting
                 arabicCompactView
-                    .font(arabicFont.font(size: CGFloat(fontSize + 4)))
+                    .font(arabicFont.font(size: CGFloat(arabicFontSize)))
                     .lineSpacing(arabicFont.lineSpacing)
                     .multilineTextAlignment(.trailing)
                     .fixedSize(horizontal: false, vertical: true)
@@ -443,7 +444,7 @@ struct Quran_Element_VerseCard: View {
         VStack(spacing: 6) {
             // Arabic word
             Text(word.arabic)
-                .font(arabicFont.font(size: CGFloat(fontSize + 2)))
+                .font(arabicFont.font(size: CGFloat(arabicFontSize)))
                 .foregroundStyle(isHighlighted ? Color.accentColor : .primary)
 
             // Transliteration and English

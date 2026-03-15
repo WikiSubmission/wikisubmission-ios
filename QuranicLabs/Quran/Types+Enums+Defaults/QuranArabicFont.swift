@@ -30,7 +30,7 @@ enum QuranArabicFont: String, CaseIterable, Defaults.Serializable {
         case .system:
             return 20
         case .amiriQuran:
-            return 4
+            return 20
         }
     }
 

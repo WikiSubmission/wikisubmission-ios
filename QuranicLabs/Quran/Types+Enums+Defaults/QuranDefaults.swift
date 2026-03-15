@@ -10,6 +10,7 @@ extension Defaults.Keys {
     static let quran_secondary_language = Key<QuranSelectableSecondaryLanguage>("quran_secondary_language", default: .none)
     
     static let font_size = Key<Double>("font_size", default: 19)
+    static let arabic_font_size = Key<Double>("arabic_font_size", default: 23)
     
     static let sort_chapters_by_revelation_order = Key<Bool>("sort_chapters_by_revelation_order", default: false)
     
@@ -29,6 +30,7 @@ extension Defaults {
         Defaults.Keys.footnotes.reset()
         Defaults.Keys.transliteration.reset()
         Defaults.Keys.font_size.reset()
+        Defaults.Keys.arabic_font_size.reset()
         Defaults.Keys.sort_chapters_by_revelation_order.reset()
         Defaults.Keys.quran_reciter.reset()
         Defaults.Keys.last_read_verse_id.reset()

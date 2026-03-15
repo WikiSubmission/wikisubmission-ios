@@ -26,57 +26,66 @@ struct Quran_Content_ChapterReader: View {
     var body: some View {
         ZStack {
             ScrollViewReader { proxy in
-                VStack {
-                    if data.isEmpty {
-                        ProgressView()
-                    } else {
-                        switch quranReaderStyle {
-                        case .cards: cardReader
-                        case .book: bookReader
-                        }
-                        if AudioManager.shared.currentTrack != nil {
-                            Color.clear.frame(height: 56)
-                                .removeParentListStyle()
+                ZStack(alignment: .trailing) {
+                    VStack {
+                        if data.isEmpty {
+                            ProgressView()
+                        } else {
+                            switch quranReaderStyle {
+                            case .cards: cardReader
+                            case .book: bookReader
+                            }
+                            if AudioManager.shared.currentTrack != nil {
+                                Color.clear.frame(height: 56)
+                                    .removeParentListStyle()
+                            }
                         }
                     }
-                }
-                .padding(.horizontal)
-                .task {
-                    selectMode.canSelect = true
-                    data = QuranUnified.fetchChapter(chapterNumber, context: modelContext)
-                    scrollIfNeeded(proxy: proxy)
-                }
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        HStack {
-                            if selectMode.canSelect && selectMode.selection.count > 0 {
-                                Quran_Element_SelectVersesActions(selectMode: selectMode, toolbarMode: true)
-                            }
-
-                            Quran_Element_SelectVersesTrigger(selectMode: selectMode, toolbarContext: true)
-                            
-                            Button {
-                                if !audio.isPlaying {
-                                    let chapter = QuranUnified.fetchChapter(chapterNumber, context: modelContext)
-                                    
-                                    audio.play((scrollToVerseIndex != nil
-                                                ? chapter.first { $0.index.verse_index == scrollToVerseIndex }
-                                                : chapter[0])!,
-                                               modelContext: modelContext
-                                    )
-                                } else {
-                                    audio.stop()
+                    .padding(.horizontal)
+                    .task {
+                        selectMode.canSelect = true
+                        data = QuranUnified.fetchChapter(chapterNumber, context: modelContext)
+                        scrollIfNeeded(proxy: proxy)
+                    }
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            HStack {
+                                if selectMode.canSelect && selectMode.selection.count > 0 {
+                                    Quran_Element_SelectVersesActions(selectMode: selectMode, toolbarMode: true)
                                 }
-                            } label: {
-                                Image(systemName: audio.isPlaying ? "stop.fill" : "play.fill")
-                            }
 
-                            Quran_Element_QuickSettings()
+                                Quran_Element_SelectVersesTrigger(selectMode: selectMode, toolbarContext: true)
+
+                                Button {
+                                    if !audio.isPlaying {
+                                        let chapter = QuranUnified.fetchChapter(chapterNumber, context: modelContext)
+
+                                        audio.play((scrollToVerseIndex != nil
+                                                    ? chapter.first { $0.index.verse_index == scrollToVerseIndex }
+                                                    : chapter[0])!,
+                                                   modelContext: modelContext
+                                        )
+                                    } else {
+                                        audio.stop()
+                                    }
+                                } label: {
+                                    Image(systemName: audio.isPlaying ? "stop.fill" : "play.fill")
+                                }
+
+                                Quran_Element_QuickSettings()
+                            }
                         }
                     }
-                }
-                .onChange(of: audio.currentTrack?.id) { _, _ in
-                    scrollToCurrentTrack(proxy: proxy)
+                    .onChange(of: audio.currentTrack?.id) { _, _ in
+                        scrollToCurrentTrack(proxy: proxy)
+                    }
+
+                    // Verse scrubber — only shown for chapters with enough verses to warrant it
+                    if data.count > 20 {
+                        ChapterScrubber(verses: data, chapterNumber: chapterNumber) { verseIndex in
+                            proxy.scrollTo(verseIndex, anchor: .top)
+                        }
+                    }
                 }
             }
         }
@@ -95,9 +104,27 @@ struct Quran_Content_ChapterReader: View {
         }
     }
     
+    @ViewBuilder
+    private var chapterHeader: some View {
+        if let chapter = data.first?.chapter {
+            VStack(spacing: 6) {
+                Text("\(chapter.getTitleInUserLanguage(quranPrimaryLanguage))")
+                    .font(.system(size: 36))
+                    .fontWeight(.ultraLight)
+
+                Text("\(chapter.title_transliterated) • \(chapter.chapter_verses) verses")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 24)
+        }
+    }
+
     var cardReader: some View {
         ScrollView(.vertical, showsIndicators: false) {
             LazyVStack {
+                chapterHeader
                 ForEach(data, id: \.self) { i in
                     Quran_Element_VerseCard(
                         unified: i,
@@ -120,6 +147,7 @@ struct Quran_Content_ChapterReader: View {
     var bookReader: some View {
         ScrollView(.vertical, showsIndicators: false) {
             LazyVStack {
+                chapterHeader
                 ForEach(data, id: \.self) { i in
                     Quran_Element_VerseCard(
                         unified: i,
@@ -199,6 +227,83 @@ struct Quran_Content_ChapterReader: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Chapter Scrubber
+
+private struct ChapterScrubber: View {
+    let verses: [QuranUnified]
+    let chapterNumber: Int
+    let onScroll: (Int) -> Void
+
+    @State private var isDragging = false
+    @State private var thumbFraction: CGFloat = 0
+    @State private var activeIndex: Int = 0
+
+    private let trackW: CGFloat = 3
+    private let thumbH: CGFloat = 36
+    private let edgePad: CGFloat = 52
+    private let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+
+    var body: some View {
+        GeometryReader { geo in
+            let trackH = max(1, geo.size.height - edgePad * 2)
+            let thumbOffset = thumbFraction * max(0, trackH - thumbH)
+
+            ZStack(alignment: .topTrailing) {
+                // Tooltip badge
+                if isDragging {
+                    Text("\(chapterNumber):\(verses[activeIndex].index.verse_number)")
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                        .monospacedDigit()
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(.ultraThinMaterial))
+                        .fixedSize()
+                        .offset(x: -18, y: edgePad + thumbOffset + thumbH / 2 - 13)
+                        .transition(.opacity)
+                }
+
+                // Track
+                Capsule()
+                    .fill(Color.secondary.opacity(isDragging ? 0.35 : 0.2))
+                    .frame(width: trackW, height: trackH)
+                    .offset(y: edgePad)
+
+                // Thumb
+                Capsule()
+                    .fill(Color.accentColor)
+                    .frame(width: isDragging ? trackW + 2 : trackW, height: thumbH)
+                    .offset(y: edgePad + thumbOffset)
+            }
+            .frame(width: 20, alignment: .trailing)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0, coordinateSpace: .local)
+                    .onChanged { value in
+                        if !isDragging {
+                            feedbackGenerator.prepare()
+                            withAnimation(.easeOut(duration: 0.1)) { isDragging = true }
+                        }
+                        let y = min(max(value.location.y - edgePad, 0), trackH)
+                        let newFraction = y / trackH
+                        thumbFraction = newFraction
+                        let idx = min(max(Int(newFraction * CGFloat(verses.count - 1)), 0), verses.count - 1)
+                        if idx != activeIndex {
+                            activeIndex = idx
+                            feedbackGenerator.impactOccurred()
+                            onScroll(verses[idx].index.verse_index)
+                        }
+                    }
+                    .onEnded { _ in
+                        withAnimation(.easeOut(duration: 0.2)) { isDragging = false }
+                    }
+            )
+        }
+        .frame(width: 20)
+        .onAppear { feedbackGenerator.prepare() }
     }
 }
 
