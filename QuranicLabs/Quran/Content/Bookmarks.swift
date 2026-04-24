@@ -210,8 +210,9 @@ struct Quran_Content_Bookmarks: View {
                 }
 
                 // Bookmarks
-                ForEach(Array(displayedBookmarks.enumerated()), id: \.element.id) { index, bookmark in
-                    bookmarkRow(bookmark, index: index + 1)
+                let bookmarks = displayedBookmarks
+                ForEach(Array(bookmarks.enumerated()), id: \.element.id) { index, bookmark in
+                    bookmarkRow(bookmark, index: bookmarks.count - index)
                 }
             }
             .padding(.bottom, 200)
