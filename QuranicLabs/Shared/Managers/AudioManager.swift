@@ -18,6 +18,7 @@ enum AudioCategory: String {
 
 /// Identifies the context/source of the current music queue
 enum MusicPlaybackContext: Equatable {
+    case latest
     case featured
     case category(id: UUID)
     case favorites
@@ -74,13 +75,15 @@ struct AudioTrackMetadata {
     // Music metadata
     let colorSeed: UUID?
     let lyrics: String?
+    let categoryName: String?
 
-    init(chapterNumber: Int? = nil, verseNumber: Int? = nil, verseIndex: Int? = nil, colorSeed: UUID? = nil, lyrics: String? = nil) {
+    init(chapterNumber: Int? = nil, verseNumber: Int? = nil, verseIndex: Int? = nil, colorSeed: UUID? = nil, lyrics: String? = nil, categoryName: String? = nil) {
         self.chapterNumber = chapterNumber
         self.verseNumber = verseNumber
         self.verseIndex = verseIndex
         self.colorSeed = colorSeed
         self.lyrics = lyrics
+        self.categoryName = categoryName
     }
 }
 
@@ -110,6 +113,9 @@ class AudioManager: ObservableObject {
 
     var player: AVPlayer?
     private var timeObserverToken: Any?
+    private var playbackEndedObserver: Any?
+    private var interruptionObserver: Any?
+    private var itemStatusObserver: NSKeyValueObservation?
     private var staticNowPlayingInfo: [String: Any] = [:]
     private var quranArtwork: MPMediaItemArtwork?
     private var musicArtwork: MPMediaItemArtwork?
@@ -120,14 +126,56 @@ class AudioManager: ObservableObject {
         setupAudioSession()
         setupRemoteCommandCenter()
         generateArtwork()
+        observeInterruptions()
     }
 
     private func setupAudioSession() {
         do {
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(.playback, mode: .default)
+            try audioSession.setActive(true)
         } catch {
             print("AVAudioSession setup failed: \(error)")
+        }
+    }
+
+    // MARK: - Interruption Handling
+
+    private func observeInterruptions() {
+        interruptionObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance(),
+            queue: .main
+        ) { [weak self] notification in
+            Task { @MainActor in
+                self?.handleInterruption(notification)
+            }
+        }
+    }
+
+    private func handleInterruption(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
+
+        switch type {
+        case .began:
+            if isPlaying {
+                player?.pause()
+                isPlaying = false
+                updateNowPlayingInfo()
+            }
+        case .ended:
+            if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
+                let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+                if options.contains(.shouldResume) {
+                    player?.play()
+                    isPlaying = true
+                    updateNowPlayingInfo()
+                }
+            }
+        @unknown default:
+            break
         }
     }
 
@@ -182,6 +230,8 @@ class AudioManager: ObservableObject {
             self.updateNowPlayingInfo()
             return .success
         }
+
+        updateCommandCenterAvailability()
     }
 
     // MARK: - Now Playing Info (Control Center)
@@ -197,6 +247,8 @@ class AudioManager: ObservableObject {
         info[MPMediaItemPropertyTitle] = track.title
         info[MPMediaItemPropertyArtist] = track.subtitle
         info[MPMediaItemPropertyAlbumTitle] = category == .quran ? "Quran" : "Music"
+        info[MPNowPlayingInfoPropertyPlaybackQueueIndex] = currentIndex
+        info[MPNowPlayingInfoPropertyPlaybackQueueCount] = queue.count
 
         if let player = player, let duration = player.currentItem?.duration.seconds, duration.isFinite {
             info[MPMediaItemPropertyPlaybackDuration] = duration
@@ -289,12 +341,6 @@ class AudioManager: ObservableObject {
                 info[MPNowPlayingInfoPropertyPlaybackRate] = self.isPlaying ? 1.0 : 0.0
                 MPNowPlayingInfoCenter.default().nowPlayingInfo = info
 
-                // Handle track end
-                if let duration = player.currentItem?.duration.seconds,
-                   duration > 0,
-                   player.currentTime().seconds / duration >= 0.99 {
-                    self.handleTrackEnd()
-                }
             }
         }
     }
@@ -306,6 +352,49 @@ class AudioManager: ObservableObject {
         }
     }
 
+    private func observeItemStatus(_ item: AVPlayerItem) {
+        itemStatusObserver?.invalidate()
+        itemStatusObserver = item.observe(\.status, options: [.new]) { [weak self] item, _ in
+            Task { @MainActor in
+                if item.status == .readyToPlay {
+                    self?.updateNowPlayingInfo()
+                }
+            }
+        }
+    }
+
+    private func observePlaybackEnd(for item: AVPlayerItem) {
+        removePlaybackEndObserver()
+        playbackEndedObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: item,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.handleTrackEnd()
+            }
+        }
+    }
+
+    private func removePlaybackEndObserver() {
+        if let observer = playbackEndedObserver {
+            NotificationCenter.default.removeObserver(observer)
+            playbackEndedObserver = nil
+        }
+    }
+
+    private func updateCommandCenterAvailability() {
+        let commandCenter = MPRemoteCommandCenter.shared()
+        let hasTrack = currentTrack != nil
+        let hasQueueNavigation = queue.count > 1 || loopMode != .off
+
+        commandCenter.playCommand.isEnabled = hasTrack
+        commandCenter.pauseCommand.isEnabled = hasTrack
+        commandCenter.changePlaybackPositionCommand.isEnabled = hasTrack
+        commandCenter.nextTrackCommand.isEnabled = hasTrack && hasQueueNavigation
+        commandCenter.previousTrackCommand.isEnabled = hasTrack
+    }
+
     private func handleTrackEnd() {
         switch loopMode {
         case .off:
@@ -315,6 +404,7 @@ class AudioManager: ObservableObject {
             } else {
                 player?.pause()
                 isPlaying = false
+                player?.seek(to: .zero)
                 updateNowPlayingInfo()
             }
         case .queue:
@@ -337,7 +427,7 @@ class AudioManager: ObservableObject {
         let chapterVerses = QuranUnified.fetchChapter(verse.index.chapter_number, context: modelContext)
 
         for v in chapterVerses {
-            let trackUrl = URL(string: "https://cdn.wikisubmission.org/media/quran-recitations/arabic-\(Defaults[.quran_reciter])/\(v.index.chapter_number)-\(v.index.verse_number).mp3")!
+            let trackUrl = URL(string: "https://cdn.wikisubmission.org/media/quran-recitations/\(Defaults[.quran_reciter].language.rawValue)-\(Defaults[.quran_reciter].rawValue)/\(v.index.chapter_number)-\(v.index.verse_number).mp3")!
             let track = AudioTrack(
                 id: v.index.verse_id,
                 title: v.index.verse_id,
@@ -371,12 +461,16 @@ class AudioManager: ObservableObject {
 
         // Clean up old player
         removeTimeObserver()
+        removePlaybackEndObserver()
+        itemStatusObserver?.invalidate()
         player?.pause()
 
         // Create new player
         let playerItem = AVPlayerItem(url: track.url)
         player = AVPlayer(playerItem: playerItem)
         player?.automaticallyWaitsToMinimizeStalling = true
+        observePlaybackEnd(for: playerItem)
+        observeItemStatus(playerItem)
 
         currentTrack = track
         currentIndex = index
@@ -384,15 +478,11 @@ class AudioManager: ObservableObject {
 
         // Update control center
         updateNowPlayingInfo()
+        updateCommandCenterAvailability()
         addPeriodicTimeObserver()
 
         // Start playback
         player?.play()
-
-        // Update now playing info after a short delay to get duration
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
-            self?.updateNowPlayingInfo()
-        }
     }
 
     func togglePlayPause() {
@@ -406,6 +496,7 @@ class AudioManager: ObservableObject {
             isPlaying = true
         }
         updateNowPlayingInfo()
+        updateCommandCenterAvailability()
     }
 
     func skipToNext() {
@@ -419,16 +510,16 @@ class AudioManager: ObservableObject {
 
         guard !queue.isEmpty else { return }
 
-        let nextIndex = (currentIndex + 1) % queue.count
-
-        // If loop is off and we wrapped around, stop
-        if loopMode == .off && nextIndex == 0 {
+        if loopMode == .off, currentIndex >= queue.count - 1 {
             player?.pause()
             isPlaying = false
+            player?.seek(to: .zero)
             updateNowPlayingInfo()
+            updateCommandCenterAvailability()
             return
         }
 
+        let nextIndex = (currentIndex + 1) % queue.count
         playTrack(at: nextIndex)
     }
 
@@ -452,28 +543,33 @@ class AudioManager: ObservableObject {
 
         guard !queue.isEmpty else { return }
 
+        if loopMode == .off && currentIndex == 0 {
+            player?.seek(to: .zero)
+            updateNowPlayingInfo()
+            return
+        }
+
         let previousIndex = currentIndex == 0 ? queue.count - 1 : currentIndex - 1
         playTrack(at: previousIndex)
     }
 
     func stop() {
         removeTimeObserver()
+        removePlaybackEndObserver()
+        itemStatusObserver?.invalidate()
         player?.pause()
         player = nil
         isPlaying = false
         currentTrack = nil
         queue = []
         currentIndex = 0
+        currentMusicContext = nil
         updateNowPlayingInfo()
+        updateCommandCenterAvailability()
     }
 
     func dismiss() {
-        removeTimeObserver()
-        player?.pause()
-        player = nil
-        isPlaying = false
-        currentTrack = nil
-        updateNowPlayingInfo()
+        stop()
     }
 
     func cycleLoopMode() {
@@ -485,6 +581,8 @@ class AudioManager: ObservableObject {
         case .repeatOne:
             loopMode = .off
         }
+        updateNowPlayingInfo()
+        updateCommandCenterAvailability()
     }
 
     // MARK: - Seek
@@ -516,7 +614,8 @@ class AudioManager: ObservableObject {
                 url: URL(string: musicTrack.url)!,
                 metadata: AudioTrackMetadata(
                     colorSeed: musicTrack.artist.id,
-                    lyrics: musicTrack.lyrics
+                    lyrics: musicTrack.lyrics,
+                    categoryName: musicTrack.category.name
                 )
             )
         }
@@ -548,7 +647,8 @@ class AudioManager: ObservableObject {
                   let chapterNumber = metadata.chapterNumber,
                   let verseNumber = metadata.verseNumber else { return track }
 
-            let newUrl = URL(string: "https://cdn.wikisubmission.org/media/quran-recitations/arabic-\(reciter)/\(chapterNumber)-\(verseNumber).mp3")!
+            let newUrl = URL(string: "https://cdn.wikisubmission.org/media/quran-recitations/\(reciter.language.rawValue)-\(reciter.rawValue)/\(chapterNumber)-\(verseNumber).mp3")!
+            
             return AudioTrack(
                 id: track.id,
                 title: track.title,
@@ -568,11 +668,15 @@ class AudioManager: ObservableObject {
 
             // Create new player with updated URL
             removeTimeObserver()
+            removePlaybackEndObserver()
+            itemStatusObserver?.invalidate()
             player?.pause()
 
             let playerItem = AVPlayerItem(url: updatedTrack.url)
             player = AVPlayer(playerItem: playerItem)
             player?.automaticallyWaitsToMinimizeStalling = true
+            observePlaybackEnd(for: playerItem)
+            observeItemStatus(playerItem)
 
             // Seek to previous position if available
             if let time = currentTime {
@@ -584,7 +688,55 @@ class AudioManager: ObservableObject {
             }
 
             updateNowPlayingInfo()
+            updateCommandCenterAvailability()
             addPeriodicTimeObserver()
         }
+    }
+
+    var queueCount: Int {
+        queue.count
+    }
+
+    var hasNextTrack: Bool {
+        guard currentTrack != nil else { return false }
+        return loopMode != .off || currentIndex < queue.count - 1
+    }
+
+    var hasPreviousTrack: Bool {
+        currentTrack != nil && !queue.isEmpty
+    }
+
+    var playbackContextLabel: String? {
+        switch currentMusicContext {
+        case .latest:
+            return "Latest"
+        case .featured:
+            return "Featured"
+        case .category:
+            return queue.first?.metadata?.categoryName ?? "Category"
+        case .favorites:
+            return "Favorites"
+        case nil:
+            return category == .quran ? "Quran" : nil
+        }
+    }
+
+    var queueSourceLabel: String {
+        switch currentMusicContext {
+        case .latest:
+            return "Latest releases"
+        case .featured:
+            return "Featured picks"
+        case .category:
+            return queue.first?.metadata?.categoryName ?? "Category queue"
+        case .favorites:
+            return "Favorites"
+        case nil:
+            return category == .quran ? "Verse playback" : "Now playing"
+        }
+    }
+
+    var loopSummary: String {
+        loopMode.displayName
     }
 }

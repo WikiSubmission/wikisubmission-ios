@@ -29,12 +29,6 @@ struct Quran: View {
                     prompt: "Chapter, verse, or text"
                 )
                 .autocorrectionDisabled()
-                // [Toolbar]
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Quran_Content_ToolbarRow()
-                    }
-                }
                 // [Modifiers for searchbar]
                 .onSubmit(of: .search) {
                     searchQuery.commitQuery()
@@ -92,6 +86,15 @@ struct Quran: View {
                                 selectMode: selectMode
                             )
                             Divider()
+                            VStack(spacing: 4) {
+                                Text("Browse")
+                                    .font(DS.Typography.heroMD)
+                                    .pushToLeft()
+                                // [Button options]
+                                Quran_Content_OptionsRowTwo(
+                                    searchQuery: $searchQuery
+                                )
+                            }
                             // [114 chapters list]
                             Quran_Content_ChapterList(
                                 searchQuery: $searchQuery

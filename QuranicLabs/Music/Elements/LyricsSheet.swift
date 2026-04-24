@@ -65,11 +65,11 @@ struct Music_LyricsSheet: View {
             // Track info
             VStack(spacing: 4) {
                 Text(trackTitle)
-                    .font(.title2.bold())
+                    .font(DS.Typography.titleMD)
                     .multilineTextAlignment(.center)
 
                 Text(artistName)
-                    .font(.subheadline)
+                    .font(DS.Typography.titleSM)
                     .foregroundColor(.secondary)
             }
             .padding(.top, 8)
@@ -86,7 +86,7 @@ struct Music_LyricsSheet: View {
                     // Section header (if any)
                     if let header = section.header {
                         Text(header)
-                            .font(.caption.weight(.semibold))
+                            .font(DS.Typography.body)
                             .foregroundColor(.secondary)
                             .textCase(.uppercase)
                             .tracking(1.5)
@@ -96,7 +96,7 @@ struct Music_LyricsSheet: View {
                     // Lyrics lines
                     ForEach(Array(section.lines.enumerated()), id: \.offset) { _, line in
                         Text(line)
-                            .font(.body)
+                            .font(DS.Typography.body)
                             .multilineTextAlignment(.center)
                             .foregroundColor(.primary.opacity(0.9))
                     }

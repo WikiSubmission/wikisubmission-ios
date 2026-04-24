@@ -9,6 +9,7 @@ struct QuranSettings_ReciterPicker: View {
     var body: some View {
         BetterPicker(selection: $quranReciter, previewLabel: "Reciter", previewIcon: "waveform.path") { reciter in
             HStack {
+                Text("\(reciter.language.displayName):")
                 Text(reciter.displayName)
             }
         }

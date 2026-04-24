@@ -8,13 +8,14 @@ struct Home_FooterSection: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 36, height: 36)
+                .padding(.bottom, 4)
             
             HStack {
                 Button {
                     openURL(URL(string: "https://wikisubmission.org")!)
                 } label: {
                     Text("WIKISUBMISSION.ORG")
-                        .font(.caption2)
+                        .font(DS.Typography.eyebrow)
                         .fontWeight(.light)
                         .tracking(3)
                         .multilineTextAlignment(.center)
@@ -24,7 +25,7 @@ struct Home_FooterSection: View {
             }
          
             Text("Version \(About.version)")
-                .font(.caption)
+                .font(DS.Typography.eyebrow)
                 .fontWeight(.light)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

@@ -17,11 +17,11 @@ struct Music_Content_Favorites: View {
             LazyVStack(spacing: 8) {
                 // Info text
                 HStack(alignment: .top, spacing: 6) {
-                    Image(systemName: "info.circle")
-                        .foregroundStyle(.accent)
+                    Image(systemName: audio.loopMode.icon)
+                        .foregroundColor(audio.loopMode == .off ? .secondary : .accentColor)
                         .font(.caption)
-                    Text("Tap the heart on any track to add it here. Playing from favorites will loop through this list.")
-                        .font(.caption)
+                    Text(favoritesPlaybackNote)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(.secondary)
                     Spacer()
                 }
@@ -81,5 +81,16 @@ struct Music_Content_Favorites: View {
     private func playTrack(_ track: MusicTrack) {
         // Play within favorites context
         audio.playMusic(track, queue: favoriteTracks, context: .favorites)
+    }
+
+    private var favoritesPlaybackNote: String {
+        switch audio.loopMode {
+        case .off:
+            return "Favorites will play through once and stop at the end."
+        case .queue:
+            return "Favorites will keep looping through this list."
+        case .repeatOne:
+            return "Repeat is on, so the current favorite will replay until you change it."
+        }
     }
 }

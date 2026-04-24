@@ -20,6 +20,7 @@ struct Home_PrayerSection: View {
                     router.selectTab(.prayer)
                 } label: {
                     Label("Prayer →", systemImage: "bolt.heart")
+                        .font(DS.Typography.eyebrow)
                 }
                 .pushToRight()
                 .buttonStyle(SignatureButtonStyle())

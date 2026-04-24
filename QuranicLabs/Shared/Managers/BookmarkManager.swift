@@ -142,6 +142,33 @@ class BookmarkManager: ObservableObject {
         save()
     }
 
+    func renameCategory(_ oldName: String, to newName: String) {
+        let trimmed = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        for i in bookmarks.indices {
+            if bookmarks[i].category == oldName {
+                bookmarks[i].category = trimmed.isEmpty ? nil : trimmed
+                bookmarks[i].updatedAt = Date()
+            }
+        }
+        if selectedCategory == oldName {
+            selectedCategory = trimmed.isEmpty ? nil : trimmed
+        }
+        save()
+    }
+
+    func deleteCategory(_ name: String) {
+        for i in bookmarks.indices {
+            if bookmarks[i].category == name {
+                bookmarks[i].category = nil
+                bookmarks[i].updatedAt = Date()
+            }
+        }
+        if selectedCategory == name {
+            selectedCategory = nil
+        }
+        save()
+    }
+
     func deleteAll() {
         bookmarks = []
         save()

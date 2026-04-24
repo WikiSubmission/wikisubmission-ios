@@ -1,6 +1,7 @@
 import SwiftUI
 import Defaults
 import UserNotifications
+import AVFoundation
 
 enum PrayerType {
     case fajr, dhuhr, asr, maghrib, isha, sunrise
@@ -18,8 +19,9 @@ struct Notifications: View {
     @Default(.maghrib_notification) private var maghribNotifications
     @Default(.isha_notification) private var ishaNotifications
     @Default(.sunrise_notification) private var sunriseNotifications
+    @Default(.prayer_notification_sound) private var prayerNotificationSound
 
-    @Default(.daily_verse_notifications) private var dailyVerseNotifications
+    @Default(.daily_reminders_notifications) private var dailyRemindersNotifications
     @Default(.random_verse_notifications) private var randomVerseNotifications
     @Default(.announcement_notifications) private var announcementNotifications
 
@@ -119,6 +121,21 @@ struct Notifications: View {
                         get: { sunriseNotifications },
                         set: { vm.togglePrayer(.sunrise, enabled: $0) }
                     ))
+                    NavigationLink {
+                        PrayerNotificationSoundPicker(
+                            selection: Binding(
+                                get: { prayerNotificationSound },
+                                set: { vm.updatePrayerSound($0) }
+                            )
+                        )
+                    } label: {
+                        HStack {
+                            Label("Notification Sound", systemImage: "speaker.wave.2")
+                            Spacer()
+                            Text(PrayerNotificationSoundOption.displayName(for: prayerNotificationSound))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                     Button(role: .destructive) {
                         vm.togglePrayerNotifications(false)
                     } label: {
@@ -141,19 +158,19 @@ struct Notifications: View {
             }
             .disabled(!notifications)
 
-            Section(header: Text("QURAN REMINDERS"), footer: Text("Random verses are sent every once in a while.")) {
-                Toggle("Random Verse", isOn: notifications ? Binding(
+            Section(header: Text("QURAN REMINDERS"), footer: Text("Daily reminders and daily verses are sent through our notification service once a day.")) {
+                Toggle("Daily Verse", isOn: notifications ? Binding(
                     get: { randomVerseNotifications },
                     set: { vm.toggleRandomVerse($0) }
                 ) : .constant(randomVerseNotifications))
-                Toggle("Daily Verse", isOn: notifications ? Binding(
-                    get: { dailyVerseNotifications },
-                    set: { vm.toggleDailyVerse($0) }
-                ) : .constant(dailyVerseNotifications))
+                Toggle("Daily Reminders", isOn: notifications ? Binding(
+                    get: { dailyRemindersNotifications },
+                    set: { vm.toggleDailyReminders($0) }
+                ) : .constant(dailyRemindersNotifications))
             }
             .disabled(!notifications)
 
-            Section(header: Text("GENERAL"), footer: Text("These are infrequent but may include important updates or announcements.")) {
+            Section(header: Text("GENERAL"), footer: Text("These are infrequent but may include important community updates or announcements.")) {
                 Toggle("Announcements", isOn: notifications ? Binding(
                     get: { announcementNotifications },
                     set: { vm.toggleAnnouncements($0) }
@@ -226,7 +243,7 @@ struct Notifications: View {
                                 let requestBody: [String: String] = [
                                       "device_token": deviceToken,
                                       "platform": "ios",
-                                      "category": "RANDOM_VERSE"
+                                      "category": "DAILY_VERSE"
                                 ]
                                 request.httpBody = try? JSONSerialization.data(withJSONObject: requestBody)
                                 
@@ -347,10 +364,10 @@ class NotificationsViewModel: ObservableObject {
         }
     }
 
-    func toggleDailyVerse(_ enabled: Bool) {
-        Defaults[.daily_verse_notifications] = enabled
+    func toggleDailyReminders(_ enabled: Bool) {
+        Defaults[.daily_reminders_notifications] = enabled
         Task { @MainActor in
-            try? await notificationManager.sync([.dailyVerse])
+            try? await notificationManager.sync([.dailyReminders])
         }
     }
 
@@ -374,6 +391,13 @@ class NotificationsViewModel: ObservableObject {
             try? await notificationManager.sync([.prayerTimes])
         }
     }
+
+    func updatePrayerSound(_ value: String) {
+        Defaults[.prayer_notification_sound] = value
+        Task { @MainActor in
+            try? await notificationManager.sync([.prayerTimes])
+        }
+    }
     
     func toggleAllNotifications(_ enabled: Bool) {
         Defaults[.notifications] = enabled
@@ -391,5 +415,150 @@ class NotificationsViewModel: ObservableObject {
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
 
         UNUserNotificationCenter.current().add(request)
+    }
+}
+
+private struct PrayerNotificationSoundPicker: View {
+    @Binding var selection: String
+    @StateObject private var previewPlayer = PrayerSoundPreviewPlayer()
+
+    var body: some View {
+        List {
+            ForEach(PrayerNotificationSoundOption.options) { option in
+                HStack(spacing: 12) {
+                    Button {
+                        selection = option.value
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(option.displayName)
+                                    .foregroundStyle(.primary)
+
+                                if option.value == "default" {
+                                    Text("Uses the standard notification tone.")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+
+                            Spacer()
+
+                            if selection == option.value {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(.accent)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+
+                    if option.fileURL != nil {
+                        Button {
+                            previewPlayer.toggle(option: option)
+                        } label: {
+                            Image(systemName: previewPlayer.isPreviewing(option.value) ? "stop.circle.fill" : "play.circle.fill")
+                                .font(.title3)
+                                .foregroundStyle(.accent)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+
+            Section {
+                Text(.init("These will take effect immediately for your next prayer notification. For new suggestions, send us an [\(About.contactEmail)](mailto:\(About.contactEmail)) or reach us on [Discord](\(About.developerDiscordLink))."))
+                    .font(DS.Typography.eyebrow)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+            }
+        }
+        .navigationTitle("Notification Sound")
+        .navigationBarTitleDisplayMode(.inline)
+        .onDisappear {
+            previewPlayer.stop()
+        }
+    }
+}
+
+private struct PrayerNotificationSoundOption: Identifiable, Hashable {
+    let value: String
+    let displayName: String
+    let fileURL: URL?
+
+    var id: String { value }
+
+    static var options: [PrayerNotificationSoundOption] {
+        let bundlePaths = Bundle.main.paths(forResourcesOfType: "mp3", inDirectory: nil)
+            .filter { URL(fileURLWithPath: $0).lastPathComponent.hasPrefix("call_to_prayer_") }
+            .sorted {
+                index(for: $0) < index(for: $1)
+            }
+
+        return [PrayerNotificationSoundOption(value: "default", displayName: "Default", fileURL: nil)] +
+            bundlePaths.map { path in
+                let url = URL(fileURLWithPath: path)
+                let number = index(for: path)
+                return PrayerNotificationSoundOption(
+                    value: url.lastPathComponent,
+                    displayName: number > 0 ? "Call to Prayer \(number)" : "Call to Prayer",
+                    fileURL: url
+                )
+            }
+    }
+
+    static func displayName(for value: String) -> String {
+        options.first(where: { $0.value == value })?.displayName ?? "Default"
+    }
+
+    private static func index(for path: String) -> Int {
+        let filename = URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent
+        return Int(filename.replacingOccurrences(of: "call_to_prayer_", with: "")) ?? 0
+    }
+}
+
+@MainActor
+private final class PrayerSoundPreviewPlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
+    private var player: AVAudioPlayer?
+    @Published private var currentValue: String?
+    @Published private var isPlaying = false
+
+    func toggle(option: PrayerNotificationSoundOption) {
+        if currentValue == option.value {
+            stop()
+            return
+        }
+
+        guard let fileURL = option.fileURL else {
+            stop()
+            return
+        }
+
+        do {
+            player = try AVAudioPlayer(contentsOf: fileURL)
+            player?.delegate = self
+            currentValue = option.value
+            isPlaying = true
+            player?.prepareToPlay()
+            player?.play()
+        } catch {
+            stop()
+        }
+    }
+
+    func isPreviewing(_ value: String) -> Bool {
+        currentValue == value && isPlaying
+    }
+
+    func stop() {
+        player?.stop()
+        player = nil
+        currentValue = nil
+        isPlaying = false
+    }
+
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        self.player = nil
+        currentValue = nil
+        isPlaying = false
     }
 }

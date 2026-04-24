@@ -5,6 +5,11 @@ import Defaults
 struct Quran_Content_ChapterList: View {
     @Binding var searchQuery: QuranQuery
 
+    private let columns = [
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12)
+    ]
+
     @Environment(\.modelContext) private var modelContext
 
     @State private var filteredChapters: [QuranChapters] = []
@@ -19,10 +24,17 @@ struct Quran_Content_ChapterList: View {
         }
     }
 
+    private var displayedChapters: [QuranChapters] {
+        filteredChapters.isEmpty ? allChapters : filteredChapters
+    }
+
     var body: some View {
-        VStack {
-            ForEach(filteredChapters.isEmpty ? allChapters : filteredChapters, id: \.self) { chapter in
-                Quran_Element_ChapterCard(chapter: chapter)
+        LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+            ForEach(Array(displayedChapters.enumerated()), id: \.element.chapter_number) { index, chapter in
+                Quran_Element_ChapterCard(
+                    chapter: chapter,
+                    revelationOrderIndex: sortByRevelationOrder ? index + 1 : nil
+                )
             }
         }
         .onChange(of: searchQuery.query) { old, new in

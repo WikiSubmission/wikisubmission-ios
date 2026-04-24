@@ -121,6 +121,7 @@ struct PushNotificationsRegistryPrayerTimes: Encodable {
     let enabled: Bool
     let location: String?
     let afternoon_midpoint_method: Bool
+    let notification_sound: String
     let dawn: Bool
     let noon: Bool
     let afternoon: Bool
@@ -129,7 +130,7 @@ struct PushNotificationsRegistryPrayerTimes: Encodable {
     let sunrise: Bool
 }
 
-struct PushNotificationsRegistryDailyVerse: Encodable {
+struct PushNotificationsRegistryDailyReminders: Encodable {
     let user_id: UUID
     let updated_at: String?
     let device_token: String

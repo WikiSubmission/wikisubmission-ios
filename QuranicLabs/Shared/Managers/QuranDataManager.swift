@@ -212,13 +212,24 @@ class QuranDataManager: ObservableObject {
 
     func checkForUpdates() async {
         var foundUpdates: [QuranDataFiles] = []
-        let storedLastModified = Defaults[.quran_data_last_modified]
+        var storedLastModified = Defaults[.quran_data_last_modified]
+        var datesChanged = false
 
         for file in QuranDataFiles.allCases {
-            if let _ = await checkFileForUpdate(file: file, currentLastModified: storedLastModified[file.rawValue]) {
+            if storedLastModified[file.rawValue] == nil {
+                // No baseline yet (fresh install) — record CDN date without flagging update
+                if let cdnDate = await getLastModifiedDate(for: file) {
+                    storedLastModified[file.rawValue] = cdnDate
+                    datesChanged = true
+                }
+            } else if let _ = await checkFileForUpdate(file: file, currentLastModified: storedLastModified[file.rawValue]) {
                 foundUpdates.append(file)
                 print("Update available for \(file.displayName)")
             }
+        }
+
+        if datesChanged {
+            Defaults[.quran_data_last_modified] = storedLastModified
         }
 
         pendingUpdates = foundUpdates

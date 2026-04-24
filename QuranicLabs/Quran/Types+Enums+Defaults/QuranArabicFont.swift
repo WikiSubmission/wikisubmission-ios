@@ -28,9 +28,9 @@ enum QuranArabicFont: String, CaseIterable, Defaults.Serializable {
     var lineSpacing: CGFloat {
         switch self {
         case .system:
-            return 20
+            return 0
         case .amiriQuran:
-            return 20
+            return 0
         }
     }
 

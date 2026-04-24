@@ -25,6 +25,7 @@ struct Home_MusicSection: View {
                     router.selectTab(.music)
                 } label: {
                     Label("Music →", systemImage: "music.note")
+                        .font(DS.Typography.eyebrow)
                 }
                 .pushToRight()
                 .buttonStyle(SignatureButtonStyle())

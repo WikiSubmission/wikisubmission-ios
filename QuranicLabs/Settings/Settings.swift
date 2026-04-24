@@ -16,9 +16,6 @@ struct Settings: View {
                 }
             }
             .navigationTitle("Settings")
-            .toolbar {
-                InAppNotices()
-            }
         }
     }
     
@@ -40,7 +37,6 @@ struct Settings: View {
 
         Section {
             QuranSettings_ArabicToggle()
-            QuranSettings_WordByWordToggle()
             QuranSettings_SubtitlesToggle()
             QuranSettings_FootnotesToggle()
             QuranSettings_TransliterationToggle()

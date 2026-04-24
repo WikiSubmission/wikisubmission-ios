@@ -5,7 +5,7 @@ import UserNotifications
 enum NotificationTables: String {
     case user
     case prayerTimes
-    case dailyVerse
+    case dailyReminders
     case randomVerse
     case announcements
     
@@ -15,8 +15,8 @@ enum NotificationTables: String {
             return "ws_push_notifications_users"
         case .prayerTimes:
             return "ws_push_notifications_registry_prayer_times"
-        case .dailyVerse:
-            return "ws_push_notifications_registry_daily_verse"
+        case .dailyReminders:
+            return "ws_push_notifications_registry_daily_reminders"
         case .randomVerse:
             return "ws_push_notifications_registry_random_verse"
         case .announcements:
@@ -61,16 +61,16 @@ class NotificationManager: ObservableObject {
                     }
                 }
             }
-            if tables == nil || (tables?.contains(.dailyVerse) == true) {
+            if tables == nil || (tables?.contains(.dailyReminders) == true) {
                 group.addTask {
                     do {
-                        try await self.syncPushNotificationsRegistryDailyVerse(
+                        try await self.syncPushNotificationsRegistryDailyReminders(
                             deviceToken: deviceToken,
                             userId: user.id,
-                            table: .dailyVerse
+                            table: .dailyReminders
                         )
                     } catch {
-                        print("Notification sync error (dailyVerse): \(error)")
+                        print("Notification sync error (dailyReminders): \(error)")
                     }
                 }
             }
@@ -161,6 +161,7 @@ class NotificationManager: ObservableObject {
             enabled: Defaults[.prayer_notifications],
             location: Defaults[.prayer_times]?.location_string ?? Defaults[.prayer_times_location],
             afternoon_midpoint_method: Defaults[.prayer_times_use_midpoint_method_for_asr],
+            notification_sound: Defaults[.prayer_notification_sound],
             dawn: Defaults[.fajr_notification],
             noon: Defaults[.dhuhr_notification],
             afternoon: Defaults[.asr_notification],
@@ -178,12 +179,12 @@ class NotificationManager: ObservableObject {
         print("Synced ws_push_notifications_registry_prayer_times")
     }
     
-    private func syncPushNotificationsRegistryDailyVerse(deviceToken: String, userId: UUID, table: NotificationTables) async throws {
-        let payload = PushNotificationsRegistryDailyVerse(
+    private func syncPushNotificationsRegistryDailyReminders(deviceToken: String, userId: UUID, table: NotificationTables) async throws {
+        let payload = PushNotificationsRegistryDailyReminders(
             user_id: userId,
             updated_at: Date().ISO8601Format(),
             device_token: deviceToken,
-            enabled: Defaults[.daily_verse_notifications]
+            enabled: Defaults[.daily_reminders_notifications]
         )
         
         try await SupabaseManager.client
@@ -192,7 +193,7 @@ class NotificationManager: ObservableObject {
             .upsert(payload, onConflict: "device_token")
             .execute()
         
-        print("Synced ws_push_notifications_registry_daily_verse")
+        print("Synced ws_push_notifications_registry_daily_reminders")
     }
     
     private func syncPushNotificationsRegistryRandomVerse(deviceToken: String, userId: UUID, table: NotificationTables) async throws {

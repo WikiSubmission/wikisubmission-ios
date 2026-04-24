@@ -24,7 +24,6 @@ struct Music_TrackCard: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Main tappable area
             Button(action: onPlay) {
                 HStack(spacing: 12) {
                     artwork
@@ -35,28 +34,37 @@ struct Music_TrackCard: View {
             }
             .buttonStyle(.plain)
 
-            // Favorite button
             favoriteButton
         }
-        .padding(8)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(isPlaying ? Color.accentColor.opacity(0.16) : Color.gray.opacity(0.05))
-        )
+        .padding(10)
+        .background(cardBackground)
     }
 
     // MARK: - Artwork
 
     private var artwork: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(colorTheme.artworkGradient)
-                .frame(width: 52, height: 52)
+                .frame(width: 56, height: 56)
 
-            Image(systemName: isPlaying ? "pause.circle.fill" : "music.note")
-                .font(.system(size: 22))
-                .foregroundColor(isPlaying ? .accentColor : .white.opacity(0.8))
+            Image(systemName: isPlaying ? "waveform" : "music.note")
+                .font(.system(size: 20, weight: .medium))
+                .foregroundColor(.white.opacity(0.92))
         }
+    }
+
+    private var cardBackground: some View {
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(cardBackgroundStyle)
+    }
+
+    private var cardBackgroundStyle: AnyShapeStyle {
+        if isPlaying {
+            return AnyShapeStyle(Color.accentColor.opacity(0.12))
+        }
+
+        return AnyShapeStyle(Color.primary.opacity(0.04))
     }
 
     // MARK: - Track Info
@@ -65,7 +73,7 @@ struct Music_TrackCard: View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 6) {
                 Text(track.name)
-                    .font(.body)
+                    .font(DS.Typography.titleSM)
                     .lineLimit(2)
                     .foregroundColor(.primary)
 
@@ -83,7 +91,7 @@ struct Music_TrackCard: View {
             }
 
             Text(track.artist.name)
-                .font(.caption)
+                .font(DS.Typography.caption)
                 .foregroundColor(.secondary)
         }
     }

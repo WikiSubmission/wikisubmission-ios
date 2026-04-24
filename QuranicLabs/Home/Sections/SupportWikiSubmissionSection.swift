@@ -35,7 +35,7 @@ struct Home_SupportWikiSubmissionSection: View {
             })
 
             Text("Donations are external and do not unlock any in-app features or content. WikiSubmission is a registered 501(c)3 nonprofit.")
-                .font(.system(size: 11))
+                .font(DS.Typography.eyebrow)
                 .fontWeight(.light)
                 .foregroundStyle(.secondary)
                 .padding(.top, DS.Spacing.xs)

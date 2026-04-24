@@ -4,7 +4,12 @@ import Defaults
 struct Home_QuranSection: View {
     @ObservedObject var router = Router.shared
     @ObservedObject var audioManager = AudioManager.shared
-    @Default(.last_read_verse_id) private var lastReadVerseId
+
+    @State private var showBookmarks = false
+    @State private var showAppendices = false
+    @State private var showNotifications = false
+
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: DS.Spacing.sm), count: 3)
 
     var body: some View {
         VStack(spacing: DS.Spacing.md) {
@@ -18,62 +23,68 @@ struct Home_QuranSection: View {
                         scrollToVerseNumber: Int(track.title.split(separator: ":")[1]) ?? 1
                     ))
                 } label: {
-                    Label("Playing: \(track.title) →", systemImage: "waveform")
+                    Label("Playing: \(track.title)", systemImage: "waveform")
+                        .font(DS.Typography.eyebrow)
+                        .frame(maxWidth: .infinity)
                 }
-                .font(.caption)
                 .buttonStyle(SignatureButtonStyle())
             }
 
             QuranSearchBar()
 
-            Card(title: "Browse", options: .action(
-                systemImage: "book.closed",
-                showChevron: true
-            ) {
-                router.selectTab(.quran)
-                router.popToRoot(for: .quran)
-            })
-
-            Card(title: "Bookmarks", options: .destination(
-                systemImage: "bookmark",
-                showChevron: true
-            ) {
-                Quran_Content_Bookmarks()
-            })
-
-            Card(title: "Appendices", options: .destination(
-                systemImage: "text.page",
-                showChevron: true
-            ) {
-                Appendices()
-            })
-
-            HStack {
-                Spacer()
-                Button {
+            LazyVGrid(columns: columns, spacing: DS.Spacing.sm) {
+                tile(icon: "book.closed", label: "Browse") {
+                    router.selectTab(.quran)
                     router.popToRoot(for: .quran)
-                    router.navigate(to: .chapter(
-                        chapterNumber: Int(lastReadVerseId.split(separator: ":")[0])!,
-                        scrollToVerseNumber: Int(lastReadVerseId.split(separator: ":")[1])!
-                    ))
-                } label: {
-                    Label("Random", systemImage: "sparkles")
                 }
-                if lastReadVerseId != "1:1" {
-                    Button {
-                        router.popToRoot(for: .quran)
-                        router.navigate(to: .chapter(
-                            chapterNumber: Int(lastReadVerseId.split(separator: ":")[0])!,
-                            scrollToVerseNumber: Int(lastReadVerseId.split(separator: ":")[1])!
-                        ))
-                    } label: {
-                        Label("\(lastReadVerseId) →", systemImage: "arrow.counterclockwise")
-                    }
+                tile(icon: "bookmark", label: "Bookmarks") {
+                    showBookmarks = true
+                }
+                tile(icon: "text.page", label: "Appendices") {
+                    showAppendices = true
+                }
+                tile(icon: "dice", label: "Random") {
+                    router.popToRoot(for: .quran)
+                    router.navigate(to: .randomVerse)
+                }
+                tile(icon: "clock.arrow.circlepath", label: "History") {
+                    Router.shared.push(.readingHistory)
+                }
+                tile(icon: "bell", label: "Alerts") {
+                    showNotifications = true
                 }
             }
-            .font(.caption)
-            .buttonStyle(SignatureButtonStyle())
         }
         .removeParentListStyle()
+        .sheet(isPresented: $showBookmarks) {
+            Quran_Content_Bookmarks()
+        }
+        .sheet(isPresented: $showAppendices) {
+            NavigationStack {
+                Appendices()
+            }
+        }
+        .sheet(isPresented: $showNotifications) {
+            NavigationStack {
+                Notifications()
+            }
+        }
+    }
+
+    private func tile(icon: String, label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 20))
+                    .frame(height: 24)
+                Text(label)
+                    .font(DS.Typography.eyebrowSM)
+            }
+            .foregroundStyle(.accent)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, DS.Spacing.md)
+            .background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: DS.Radius.lg))
+        }
+        .buttonStyle(.plain)
     }
 }

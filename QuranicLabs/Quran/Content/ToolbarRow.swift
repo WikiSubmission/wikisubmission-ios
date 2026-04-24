@@ -14,7 +14,7 @@ struct Quran_Content_ToolbarRow: View {
             Button {
                 Router.shared.push(.randomVerse)
             } label: {
-                Image(systemName: "sparkles")
+                Image(systemName: "shippingbox")
             }
 
             Quran_Element_QuickSettings()

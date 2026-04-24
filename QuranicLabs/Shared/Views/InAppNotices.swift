@@ -6,95 +6,105 @@ extension Defaults.Keys {
     static let inAppNotices_lastCheckedForUpdates = Key<Date>("inAppNotices_lastCheckedForUpdates", default: .distantPast)
 }
 
-struct InAppNotices: View {
+// MARK: - Inline Notice (for Home title section)
+
+struct InAppNoticesBanner: View {
     @ObservedObject private var appUpdateManager = AppUpdateManager.shared
     @ObservedObject private var quranDataManager = QuranDataManager.shared
-
     @Default(.inAppNotices_lastCheckedForUpdates) private var lastCheckedForUpdates
-    @State private var isCheckingForUpdates = false
-    @State private var lastManualCheck: Date = .distantPast
 
-    private var hasUpdate: Bool {
-        appUpdateManager.updateAvailable || quranDataManager.updatesAvailable
-    }
+    @State private var showSheet = false
 
-    private var recentlyCheckedManually: Bool {
-        Date().timeIntervalSince(lastManualCheck) < 15
-    }
+    private var hasAppUpdate: Bool { appUpdateManager.updateAvailable }
+    private var hasDataUpdate: Bool { quranDataManager.updatesAvailable }
+    private var hasUpdate: Bool { hasAppUpdate || hasDataUpdate }
 
-    /// Minimum interval between update checks triggered by onAppear (12 minutes)
+    /// Minimum interval between update checks (12 minutes)
     private static let minimumCheckInterval: TimeInterval = 12 * 60
 
     var body: some View {
-        VStack {
-            NavigationLink {
-                VStack {
-                    if isCheckingForUpdates {
-                        ProgressView()
-                    } else {
-                        ScrollView {
-                            if hasUpdate {
-                                AppUpdateNotice()
-                                QuranDataUpdateNotice()
-                            } else if recentlyCheckedManually {
-                                Card(title: "No New Updates", options: .init(
-                                    systemImage: "checkmark.circle.fill",
-                                    style: .secondary
-                                ))
-                            } else {
-                                Card(title: "All Caught Up", options: .action(
-                                    subtitle: "Tap to check for any updates",
-                                    systemImage: "checkmark.circle.fill",
-                                    imageAlignment: .top
-                                ) {
-                                    Task {
-                                        await checkForUpdates(manual: true)
-                                    }
-                                })
-                            }
-                        }
-                    }
+        VStack(spacing: DS.Spacing.xs) {
+            if hasAppUpdate {
+                Button {
+                    showSheet = true
+                } label: {
+                    Text("APP UPDATE AVAILABLE →")
+                        .font(DS.Typography.eyebrowSM)
+                        .foregroundStyle(.red)
                 }
-                .padding()
-                .navigationTitle("Notices")
-                .onAppear {
-                    checkForUpdatesIfNeeded(threshold: 5)
+                .pushToLeft()
+                .buttonStyle(.plain)
+                .contentShape(Rectangle())
+                .zIndex(2)
+            }
+
+            if hasDataUpdate {
+                Button {
+                    showSheet = true
+                } label: {
+                    Text("DATA UPDATE AVAILABLE →")
+                        .font(DS.Typography.eyebrowSM)
+                        .foregroundStyle(.accent)
                 }
-            } label: {
-                Image(systemName: hasUpdate ? "bell.badge" : "bell")
-                    .foregroundStyle(hasUpdate ? .red : .accent)
+                .pushToLeft()
+                .buttonStyle(.plain)
+                .contentShape(Rectangle())
+                .zIndex(2)
             }
         }
         .onAppear {
-            checkForUpdatesIfNeeded(threshold: Self.minimumCheckInterval)
+            checkForUpdatesIfNeeded()
+        }
+        .sheet(isPresented: $showSheet) {
+            InAppNoticesSheet()
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
         }
     }
 
-    private func checkForUpdatesIfNeeded(threshold: TimeInterval) {
+    private func checkForUpdatesIfNeeded() {
         guard !hasUpdate,
-              !isCheckingForUpdates,
-              Date().timeIntervalSince(lastCheckedForUpdates) > threshold else { return }
+              Date().timeIntervalSince(lastCheckedForUpdates) > Self.minimumCheckInterval else { return }
 
         Task {
-            await checkForUpdates()
-        }
-    }
-
-    private func checkForUpdates(manual: Bool = false) async {
-        isCheckingForUpdates = true
-
-        await appUpdateManager.checkForUpdates()
-        await quranDataManager.checkForUpdates()
-
-        withAnimation {
+            await appUpdateManager.checkForUpdates()
+            await quranDataManager.checkForUpdates()
             lastCheckedForUpdates = Date()
-            if manual {
-                lastManualCheck = Date()
-            }
         }
-        isCheckingForUpdates = false
     }
 }
+
+// MARK: - Notices Sheet
+
+struct InAppNoticesSheet: View {
+    @ObservedObject private var appUpdateManager = AppUpdateManager.shared
+    @ObservedObject private var quranDataManager = QuranDataManager.shared
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: DS.Spacing.lg) {
+                VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                    Text("Notices")
+                        .font(DS.Typography.heroMD)
+                    Text("The following updates are available:")
+                        .font(DS.Typography.bodySM)
+                        .foregroundStyle(.secondary)
+                }
+
+                if appUpdateManager.updateAvailable {
+                    AppUpdateNotice()
+                }
+
+                if quranDataManager.updatesAvailable {
+                    QuranDataUpdateNotice()
+                }
+            }
+            .padding()
+        }
+    }
+}
+
+// MARK: - App Update Notice
 
 struct AppUpdateNotice: View {
     @StateObject var appUpdateManager = AppUpdateManager.shared
@@ -114,12 +124,14 @@ struct AppUpdateNotice: View {
     }
 }
 
+// MARK: - Quran Data Update Notice
+
 struct QuranDataUpdateNotice: View {
     @Environment(\.modelContext) var modelContext
     @StateObject var quranDataManager = QuranDataManager.shared
     @State private var presentConfirmationDialog = false
     @State private var filesToUpdateText = ""
-    
+
     var body: some View {
         if quranDataManager.updatesAvailable {
             Card(title: "Data update available", options: .action(
@@ -143,9 +155,9 @@ struct QuranDataUpdateNotice: View {
                     }
                 }
             }
-            
+
             Text(.init(filesToUpdateText))
-                .font(.caption)
+                .font(DS.Typography.eyebrow)
                 .fontWeight(.light)
                 .foregroundStyle(.secondary)
                 .pushToLeft()

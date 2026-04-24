@@ -72,7 +72,7 @@ struct Prayer_Element_PrayerTutorial: View {
                     }
                 } label: {
                     Image(systemName: "chevron.left")
-                        .font(.headline)
+                        .font(DS.Typography.titleSM)
                         .frame(width: 50, height: 44)
                         .background(Color.secondary.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -82,8 +82,7 @@ struct Prayer_Element_PrayerTutorial: View {
 
                 // Page title
                 Text(pages[currentPage].title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                    .font(DS.Typography.label)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
 
@@ -93,7 +92,7 @@ struct Prayer_Element_PrayerTutorial: View {
                     }
                 } label: {
                     Image(systemName: "chevron.right")
-                        .font(.headline)
+                        .font(DS.Typography.titleSM)
                         .frame(width: 50, height: 44)
                         .background(Color.secondary.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -151,8 +150,7 @@ struct Prayer_Element_PrayerTutorial: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
 
                 Text("The Contact Prayers")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
+                    .font(DS.Typography.heroMD)
             }
             .padding(.top, 20)
 
@@ -198,10 +196,10 @@ struct Prayer_Element_PrayerTutorial: View {
             Spacer()
 
             Text("\(units) units")
-                .font(.subheadline)
+                .font(DS.Typography.bodySM)
                 .foregroundStyle(.secondary)
         }
-        .font(.subheadline)
+        .font(DS.Typography.bodySM)
     }
 
     // MARK: - Ablution Page
@@ -215,11 +213,10 @@ struct Prayer_Element_PrayerTutorial: View {
                     .foregroundStyle(.cyan)
 
                 Text("The Ablution")
-                    .font(.title)
-                    .fontWeight(.bold)
+                    .font(DS.Typography.titleLG)
 
                 Text("Wudu")
-                    .font(.title3)
+                    .font(DS.Typography.titleSM)
                     .foregroundStyle(.secondary)
             }
             .padding(.top)
@@ -235,7 +232,7 @@ struct Prayer_Element_PrayerTutorial: View {
             tutorialCard {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Four Steps")
-                        .font(.headline)
+                        .font(DS.Typography.titleSM)
 
                     ablutionStep(number: 1, title: "Wash your face", icon: "face.smiling")
                     ablutionStep(number: 2, title: "Wash your arms to the elbows", icon: "hand.raised")
@@ -248,11 +245,11 @@ struct Prayer_Element_PrayerTutorial: View {
             tutorialCard {
                 VStack(alignment: .leading, spacing: 12) {
                     Label("Dry Ablution (Tayammum)", systemImage: "leaf")
-                        .font(.headline)
+                        .font(DS.Typography.titleSM)
                         .foregroundStyle(.orange)
 
                     Text("If water is unavailable or harmful, touch clean soil and wipe your face and hands.")
-                        .font(.subheadline)
+                        .font(DS.Typography.bodySM)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -261,7 +258,7 @@ struct Prayer_Element_PrayerTutorial: View {
             tutorialCard {
                 VStack(alignment: .leading, spacing: 12) {
                     Label("Ablution is Nullified By", systemImage: "exclamationmark.triangle")
-                        .font(.headline)
+                        .font(DS.Typography.titleSM)
                         .foregroundStyle(.red)
 
                     VStack(alignment: .leading, spacing: 6) {
@@ -269,7 +266,7 @@ struct Prayer_Element_PrayerTutorial: View {
                         Text("• Passing gas")
                         Text("• Sleep")
                     }
-                    .font(.subheadline)
+                    .font(DS.Typography.bodySM)
                     .foregroundStyle(.secondary)
                 }
             }
@@ -284,14 +281,13 @@ struct Prayer_Element_PrayerTutorial: View {
                     .frame(width: 44, height: 44)
 
                 Text("\(number)")
-                    .font(.headline)
+                    .font(DS.Typography.titleSM)
                     .foregroundStyle(.cyan)
             }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                    .font(DS.Typography.label)
             }
 
             Spacer()
@@ -312,11 +308,10 @@ struct Prayer_Element_PrayerTutorial: View {
                     .foregroundStyle(.green)
 
                 Text("Direction")
-                    .font(.title)
-                    .fontWeight(.bold)
+                    .font(DS.Typography.titleLG)
 
                 Text("Qiblah")
-                    .font(.title3)
+                    .font(DS.Typography.titleSM)
                     .foregroundStyle(.secondary)
             }
             .padding(.top)
@@ -324,7 +319,7 @@ struct Prayer_Element_PrayerTutorial: View {
             tutorialCard {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Face Mecca")
-                        .font(.headline)
+                        .font(DS.Typography.titleSM)
 
                     Text("God decrees that all Submitters face the same direction when observing the Contact Prayers. This direction is toward the Sacred Mosque (Kaaba) in Mecca.")
                         .foregroundStyle(.secondary)
@@ -335,14 +330,13 @@ struct Prayer_Element_PrayerTutorial: View {
             tutorialCard {
                 VStack(alignment: .leading, spacing: 16) {
                     Label("State Your Intention", systemImage: "text.bubble")
-                        .font(.headline)
+                        .font(DS.Typography.titleSM)
 
                     Text("Before starting, secretly or audibly state your intention in your own language:")
                         .foregroundStyle(.secondary)
 
                     Text("\"I intend to observe the [Dawn/Noon/Afternoon/Sunset/Night] prayer.\"")
-                        .font(.subheadline)
-                        .italic()
+                        .font(DS.Typography.quote)
                         .padding()
                         .frame(maxWidth: .infinity)
                         .background(Color.secondary.opacity(0.1))
@@ -370,11 +364,10 @@ struct Prayer_Element_PrayerTutorial: View {
                     .foregroundStyle(.purple)
 
                 Text("Prayer Positions")
-                    .font(.title)
-                    .fontWeight(.bold)
+                    .font(DS.Typography.titleLG)
 
                 Text("One Unit (Rak'ah)")
-                    .font(.title3)
+                    .font(DS.Typography.titleSM)
                     .foregroundStyle(.secondary)
             }
             .padding(.top)
@@ -456,15 +449,14 @@ struct Prayer_Element_PrayerTutorial: View {
                     .frame(width: 36, height: 36)
 
                 Text("\(number)")
-                    .font(.headline)
+                    .font(DS.Typography.titleSM)
                     .foregroundStyle(.purple)
             }
 
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     Text(title)
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
+                        .font(DS.Typography.label)
 
                     Spacer()
 
@@ -473,11 +465,11 @@ struct Prayer_Element_PrayerTutorial: View {
                 }
 
                 Text(arabic)
-                    .font(.caption)
+                    .font(DS.Typography.caption)
                     .foregroundStyle(Color.accentColor)
 
                 Text(description)
-                    .font(.caption)
+                    .font(DS.Typography.caption)
                     .foregroundStyle(.secondary)
             }
         }
@@ -497,11 +489,10 @@ struct Prayer_Element_PrayerTutorial: View {
                     .foregroundStyle(.orange)
 
                 Text("Al-Fatiha")
-                    .font(.title)
-                    .fontWeight(.bold)
+                    .font(DS.Typography.titleLG)
 
                 Text("The Key")
-                    .font(.title3)
+                    .font(DS.Typography.titleSM)
                     .foregroundStyle(.secondary)
             }
             .padding(.top)
@@ -562,19 +553,17 @@ struct Prayer_Element_PrayerTutorial: View {
     private func fatihaVerse(arabic: String, transliteration: String, meaning: String) -> some View {
         VStack(spacing: 10) {
             Text(arabic)
-                .font(.title3)
-                .fontWeight(.medium)
+                .font(DS.Font.arabic(20))
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
 
             Text(transliteration)
-                .font(.subheadline)
-                .italic()
+                .font(DS.Typography.quote)
                 .foregroundStyle(Color.accentColor)
                 .multilineTextAlignment(.center)
 
             Text(meaning)
-                .font(.caption)
+                .font(DS.Typography.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
@@ -595,11 +584,10 @@ struct Prayer_Element_PrayerTutorial: View {
                     .foregroundStyle(.teal)
 
                 Text("Tashahhud")
-                    .font(.title)
-                    .fontWeight(.bold)
+                    .font(DS.Typography.titleLG)
 
                 Text("Testimony of Faith")
-                    .font(.title3)
+                    .font(DS.Typography.titleSM)
                     .foregroundStyle(.secondary)
             }
             .padding(.top)
@@ -614,20 +602,19 @@ struct Prayer_Element_PrayerTutorial: View {
             tutorialCard {
                 VStack(spacing: 16) {
                     Text("First Declaration")
-                        .font(.headline)
+                        .font(DS.Typography.titleSM)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     VStack(spacing: 8) {
                         Text("أَشْهَدُ أَنْ لَا إِلَٰهَ إِلَّا اللَّهُ")
-                            .font(.title2)
+                            .font(DS.Font.arabic(24))
 
                         Text("Ash-hadu allaa ilaaha illallaah")
-                            .font(.subheadline)
-                            .italic()
+                            .font(DS.Typography.quote)
                             .foregroundStyle(Color.accentColor)
 
                         Text("I bear witness that there is no god except God")
-                            .font(.caption)
+                            .font(DS.Typography.caption)
                             .foregroundStyle(.secondary)
                     }
                     .multilineTextAlignment(.center)
@@ -638,20 +625,19 @@ struct Prayer_Element_PrayerTutorial: View {
             tutorialCard {
                 VStack(spacing: 16) {
                     Text("Second Declaration")
-                        .font(.headline)
+                        .font(DS.Typography.titleSM)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     VStack(spacing: 8) {
                         Text("وَحْدَهُ لَا شَرِيكَ لَهُ")
-                            .font(.title2)
+                            .font(DS.Font.arabic(24))
 
                         Text("Wahdahu laa shareeka lah")
-                            .font(.subheadline)
-                            .italic()
+                            .font(DS.Typography.quote)
                             .foregroundStyle(Color.accentColor)
 
                         Text("He alone is God; He has no partner")
-                            .font(.caption)
+                            .font(DS.Typography.caption)
                             .foregroundStyle(.secondary)
                     }
                     .multilineTextAlignment(.center)
@@ -662,7 +648,7 @@ struct Prayer_Element_PrayerTutorial: View {
             tutorialCard {
                 VStack(spacing: 16) {
                     Label("Ending the Prayer", systemImage: "hand.wave")
-                        .font(.headline)
+                        .font(DS.Typography.titleSM)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     VStack(alignment: .leading, spacing: 12) {
@@ -672,12 +658,12 @@ struct Prayer_Element_PrayerTutorial: View {
 
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("Look right and say:")
-                                    .font(.caption)
+                                    .font(DS.Typography.caption)
                                     .foregroundStyle(.secondary)
                                 Text("Assalaamu Alaikum")
                                     .fontWeight(.medium)
                                 Text("Peace be upon you")
-                                    .font(.caption)
+                                    .font(DS.Typography.caption)
                                     .foregroundStyle(.secondary)
                             }
                         }
@@ -688,12 +674,12 @@ struct Prayer_Element_PrayerTutorial: View {
 
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("Look left and say:")
-                                    .font(.caption)
+                                    .font(DS.Typography.caption)
                                     .foregroundStyle(.secondary)
                                 Text("Assalaamu Alaikum")
                                     .fontWeight(.medium)
                                 Text("Peace be upon you")
-                                    .font(.caption)
+                                    .font(DS.Typography.caption)
                                     .foregroundStyle(.secondary)
                             }
                         }
@@ -714,11 +700,10 @@ struct Prayer_Element_PrayerTutorial: View {
                     .foregroundStyle(.indigo)
 
                 Text("Prayer Units")
-                    .font(.title)
-                    .fontWeight(.bold)
+                    .font(DS.Typography.titleLG)
 
                 Text("Rak'ah Structure")
-                    .font(.title3)
+                    .font(DS.Typography.titleSM)
                     .foregroundStyle(.secondary)
             }
             .padding(.top)
@@ -789,29 +774,28 @@ struct Prayer_Element_PrayerTutorial: View {
                     .frame(width: 50, height: 50)
 
                 Image(systemName: icon)
-                    .font(.title2)
+                    .font(DS.Typography.titleMD)
                     .foregroundStyle(color)
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(name)
-                        .font(.headline)
+                        .font(DS.Typography.titleSM)
 
                     Text("(\(arabic))")
-                        .font(.subheadline)
+                        .font(DS.Typography.bodySM)
                         .foregroundStyle(.secondary)
 
                     Spacer()
 
                     Text("\(units) units")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
+                        .font(DS.Typography.label)
                         .foregroundStyle(color)
                 }
 
                 Text(structure)
-                    .font(.caption)
+                    .font(DS.Typography.caption)
                     .foregroundStyle(.secondary)
             }
         }
@@ -831,11 +815,10 @@ struct Prayer_Element_PrayerTutorial: View {
                     .foregroundStyle(.blue)
 
                 Text("Friday Prayer")
-                    .font(.title)
-                    .fontWeight(.bold)
+                    .font(DS.Typography.titleLG)
 
                 Text("Jumu'ah")
-                    .font(.title3)
+                    .font(DS.Typography.titleSM)
                     .foregroundStyle(.secondary)
             }
             .padding(.top)
@@ -849,7 +832,7 @@ struct Prayer_Element_PrayerTutorial: View {
             tutorialCard {
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Structure")
-                        .font(.headline)
+                        .font(DS.Typography.titleSM)
 
                     VStack(alignment: .leading, spacing: 12) {
                         fridayStep(number: 1, title: "First Sermon (Khutba)", description: "Begins with \"Al-Hamdu Lillah\" and \"Laa Ilaaha Illa Allah\"")
@@ -869,16 +852,16 @@ struct Prayer_Element_PrayerTutorial: View {
             tutorialCard {
                 VStack(alignment: .leading, spacing: 12) {
                     Label("Group Prayer", systemImage: "person.2")
-                        .font(.headline)
+                        .font(DS.Typography.titleSM)
 
                     Text("In congregation, only the Imam recites Al-Fatiha aloud. Others listen silently and follow the movements.")
-                        .font(.subheadline)
+                        .font(DS.Typography.bodySM)
                         .foregroundStyle(.secondary)
 
                     Divider()
 
                     Text("If you join late, complete your missed units after the Imam finishes.")
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -887,14 +870,14 @@ struct Prayer_Element_PrayerTutorial: View {
             tutorialCard {
                 VStack(spacing: 12) {
                     Image(systemName: "checkmark.seal.fill")
-                        .font(.largeTitle)
+                        .font(DS.Typography.titleLG)
                         .foregroundStyle(.green)
 
                     Text("After Prayer")
-                        .font(.headline)
+                        .font(DS.Typography.titleSM)
 
                     Text("Worshippers may shake hands, hug, and greet each other, customarily saying \"Congratulations!\"")
-                        .font(.subheadline)
+                        .font(DS.Typography.bodySM)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
@@ -906,7 +889,7 @@ struct Prayer_Element_PrayerTutorial: View {
     private func fridayStep(number: Int, title: String, description: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Text("\(number)")
-                .font(.caption)
+                .font(DS.Typography.caption)
                 .fontWeight(.bold)
                 .foregroundStyle(.white)
                 .frame(width: 22, height: 22)
@@ -915,11 +898,10 @@ struct Prayer_Element_PrayerTutorial: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                    .font(DS.Typography.label)
 
                 Text(description)
-                    .font(.caption)
+                    .font(DS.Typography.caption)
                     .foregroundStyle(.secondary)
             }
         }
@@ -940,17 +922,17 @@ struct Prayer_Element_PrayerTutorial: View {
     private func tutorialHighlight(icon: String, title: String, text: String) -> some View {
         HStack(alignment: .top, spacing: 16) {
             Image(systemName: icon)
-                .font(.title2)
+                .font(DS.Typography.titleMD)
                 .foregroundStyle(Color.accentColor)
                 .frame(width: 32)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.subheadline)
+                    .font(DS.Typography.bodySM)
                     .fontWeight(.semibold)
 
                 Text(text)
-                    .font(.subheadline)
+                    .font(DS.Typography.bodySM)
                     .foregroundStyle(.secondary)
             }
         }

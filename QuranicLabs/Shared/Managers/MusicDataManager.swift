@@ -44,11 +44,16 @@ class MusicDataManager: ObservableObject {
 
     /// Fetches all music data from Supabase.
     func fetchAll() async {
-        isLoading = true
-        error = nil
         if let lastFetch = lastSuccessfulFetch,
            Date().timeIntervalSince(lastFetch) < 60 {
             return
+        }
+
+        isLoading = true
+        error = nil
+
+        defer {
+            isLoading = false
         }
 
         do {
@@ -71,8 +76,6 @@ class MusicDataManager: ObservableObject {
             self.error = error
             print("MusicDataManager: Failed to fetch - \(error.localizedDescription)")
         }
-
-        isLoading = false
     }
 
     private func fetchTracks() async throws -> [MusicTrack] {

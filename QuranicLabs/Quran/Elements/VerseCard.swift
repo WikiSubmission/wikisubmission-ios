@@ -111,7 +111,6 @@ struct Quran_Element_VerseCard: View {
     @Default(.quran_secondary_language) var secondaryLanguage
     @Default(.last_read_verse_id) var lastReadVerse
     @Default(.quran_reader_style) var quranReaderStyle
-    @Default(.word_by_word) var wordByWord
     @Default(.quran_arabic_font) var arabicFont
     @Default(.arabic_font_size) var arabicFontSize
 
@@ -170,7 +169,9 @@ struct Quran_Element_VerseCard: View {
                 footnoteView
             }
         }
-        .padding(cardPadding)
+        .padding(.vertical, cardPadding)
+        .padding(.leading, cardPadding)
+        .padding(.trailing, cardPadding + 4)
         .frame(maxWidth: quranReaderStyle == .book ? 600 : .infinity, alignment: .leading)
         .background(cardBackground)
         .contentShape(Rectangle())
@@ -189,7 +190,7 @@ struct Quran_Element_VerseCard: View {
     @ViewBuilder
     private var verseHeader: some View {
         switch quranReaderStyle {
-        case .cards:
+        case .cards, .wordByWord:
             HStack {
                 HStack(spacing: 1) {
                     Text("\(data.index.chapter_number)")
@@ -197,8 +198,7 @@ struct Quran_Element_VerseCard: View {
                     Text("\(data.index.verse_number)")
                         .foregroundStyle(.secondary)
                 }
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.title2.bold())
                 .padding(8)
                 .background(
                     Color.secondary
@@ -234,9 +234,10 @@ struct Quran_Element_VerseCard: View {
                     text: subtitle.getTextInUserLanguage(),
                     query: options.highlightPhrase
                 )
-                .font(.system(size: CGFloat(fontSize) - 6))
+                .font(quranReaderStyle == .book
+                      ? DS.Font.body(CGFloat(fontSize) - 6, weight: .semibold)
+                      : .system(size: CGFloat(fontSize) - 6, weight: .semibold))
                 .foregroundStyle(.accent)
-                .fontWeight(.semibold)
                 .environment(\.layoutDirection, primaryLanguage.isRightToLeft ? .rightToLeft : .leftToRight)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -273,17 +274,19 @@ struct Quran_Element_VerseCard: View {
         HStack(alignment: .firstTextBaseline, spacing: 0) {
             if quranReaderStyle == .book {
                 Text("\(options.linkToChapterContext ? data.index.verse_id : String(data.index.verse_number))")
-                    .font(.system(size: CGFloat(fontSize) - 6, weight: .regular))
-                    .foregroundColor(.secondary)
-                    .frame(minWidth: options.linkToChapterContext ? 44 : 24, alignment: .trailing)
-                    .padding(.trailing, 8)
+                    .font(DS.Typography.eyebrowSM)
+                    .foregroundColor(.accent.opacity(0.5))
+                    .frame(minWidth: options.linkToChapterContext ? 40 : 24, alignment: .trailing)
+                    .padding(.trailing, 10)
                     .fixedSize()
             }
             ConditionalHighlight(
                 text: data.text.getTextInUserLanguage(),
                 query: options.highlightPhrase
             )
-            .font(.system(size: CGFloat(fontSize), design: quranReaderStyle == .book ? .serif : .default))
+            .font(quranReaderStyle == .book
+                  ? DS.Font.body(CGFloat(fontSize))
+                  : .system(size: CGFloat(fontSize)))
             .lineSpacing(quranReaderStyle == .book ? 8 : 0)
             .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
@@ -305,7 +308,9 @@ struct Quran_Element_VerseCard: View {
             .fixedSize(horizontal: false, vertical: true)
             Spacer()
         }
-        .font(.system(size: CGFloat(fontSize), design: quranReaderStyle == .book ? .serif : .default))
+        .font(quranReaderStyle == .book
+              ? DS.Font.body(CGFloat(fontSize))
+              : .system(size: CGFloat(fontSize)))
         .environment(\.layoutDirection, secondaryLanguage.isRightToLeft ? .rightToLeft : .leftToRight)
         .foregroundStyle(.secondary)
         .padding(.leading, quranReaderStyle == .book ? bookTextLeadingPadding : 0)
@@ -317,14 +322,16 @@ struct Quran_Element_VerseCard: View {
                 .fixedSize(horizontal: false, vertical: true)
             Spacer()
         }
-        .font(.system(size: CGFloat(fontSize), design: quranReaderStyle == .book ? .serif : .default))
+        .font(quranReaderStyle == .book
+              ? DS.Font.body(CGFloat(fontSize), italic: true)
+              : .system(size: CGFloat(fontSize)).italic())
         .foregroundStyle(.secondary)
         .padding(.leading, quranReaderStyle == .book ? bookTextLeadingPadding : 0)
     }
 
     private var arabicTextView: some View {
         Group {
-            if wordByWord {
+            if quranReaderStyle == .wordByWord {
                 // Expanded word-by-word layout with transliteration and english
                 arabicWordByWordExpandedView
             } else {
@@ -450,12 +457,12 @@ struct Quran_Element_VerseCard: View {
             // Transliteration and English
             VStack(spacing: 2) {
                 Text(word.transliterated)
-                    .font(.system(size: 10, weight: .medium))
+                    .font(DS.Typography.eyebrowSM)
                     .foregroundStyle(Color.accentColor.opacity(0.9))
 
                 Text(word.english)
                     .tracking(1)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(DS.Typography.eyebrow)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
@@ -486,10 +493,10 @@ struct Quran_Element_VerseCard: View {
                     text: footnote.getTextInUserLanguage(),
                     query: options.highlightPhrase
                 )
-                .italic()
-                .font(.system(size: CGFloat(fontSize) - 6))
+                .font(quranReaderStyle == .book
+                      ? DS.Font.body(CGFloat(fontSize) - 6, italic: true)
+                      : .system(size: CGFloat(fontSize) - 6).italic())
                 .foregroundStyle(.secondary)
-                .fontWeight(quranReaderStyle == .cards ? .light : .regular)
                 .environment(\.layoutDirection, primaryLanguage.isRightToLeft ? .rightToLeft : .leftToRight)
                 .multilineTextAlignment(primaryLanguage.isRightToLeft ? .trailing : .leading)
                 .fixedSize(horizontal: false, vertical: true)
@@ -511,13 +518,13 @@ struct Quran_Element_VerseCard: View {
 
     private var cardPadding: CGFloat {
         if options.unformatted { return 0 }
-        return quranReaderStyle == .book ? 12 : 12
+        return quranReaderStyle == .book ? 12 : 16
     }
 
     private var cardBackground: some View {
         Group {
             switch quranReaderStyle {
-            case .cards:
+            case .cards, .wordByWord:
                 Color.secondary
                     .opacity(cardBackgroundOpacity)
                     .padding(options.unformatted ? 0 : -4)
@@ -590,7 +597,7 @@ struct Quran_Element_VerseCard: View {
                     selectMode.isActive = true
                     toggleSelection()
                 } label: {
-                    Label("Select", systemImage: "hand.tap")
+                    Label("Select", systemImage: "checklist")
                 }
             }
             Button {

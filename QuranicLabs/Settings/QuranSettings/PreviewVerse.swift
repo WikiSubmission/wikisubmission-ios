@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct QuranSettings_PreviewVerse: View {
-    @State private var isExpanded = true
+    @State private var isExpanded = false
     @Environment(\.modelContext) var modelContext
     @ObservedObject private var quranDataManager = QuranDataManager.shared
 

@@ -1,77 +1,20 @@
 import SwiftUI
 import Defaults
 
-struct FeaturedTracksSection: View {
-    let title: String
-    let tracks: [MusicTrack]
-
-    /// Optional visual state
-    var showsIndicator: Bool = false
-
-    /// Tap handling is injected
-    let onSelect: (MusicTrack) -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            header
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 14) {
-                    ForEach(tracks) { track in
-                        Music_FeaturedCard(track: track) {
-                            onSelect(track)
-                        }
-                        .id("featured-\(track.id)")
-                    }
-                }
-                .padding(.horizontal)
-            }
-        }
-    }
-
-    private var header: some View {
-        HStack(spacing: 8) {
-            Text(title)
-                .font(.title2.bold())
-
-            if showsIndicator {
-                LoopingIndicator()
-            }
-        }
-        .padding(.horizontal)
-    }
-}
-
-enum MusicListMode: String, CaseIterable {
-    case categories = "Categories"
-    case newReleases = "New Releases"
-}
-
 struct Music: View {
     @StateObject private var dataManager = MusicDataManager.shared
     @ObservedObject private var audio = AudioManager.shared
     @ObservedObject private var router = Router.shared
     @Default(.music_favorites) private var favoriteUrls
 
-    @State private var showFavorites = false
     @State private var scrollProxy: ScrollViewProxy?
-    @State private var listMode: MusicListMode = .categories
+    @State private var listMode: MusicListMode = .newReleases
 
     var body: some View {
         NavigationStack(path: router.pathBinding(for: .music)) {
             content
                 .navigationTitle("Music")
                 .requiresInternet(reason: "An internet connection is required to stream music/audio")
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        favoritesButton
-                    }
-                }
-                .sheet(isPresented: $showFavorites) {
-                    NavigationStack {
-                        Music_Content_Favorites(dataManager: dataManager)
-                    }
-                }
                 .onAppear {
                     Task {
                         await dataManager.fetchAll()
@@ -117,17 +60,6 @@ struct Music: View {
                 let categoryTracks = self.dataManager.tracks.filter { $0.category.id == track.category.id }
                 self.audio.playMusic(track, queue: categoryTracks, context: .category(id: track.category.id))
             }
-        }
-    }
-
-    // MARK: - Favorites Button
-
-    private var favoritesButton: some View {
-        Button {
-            showFavorites = true
-        } label: {
-            Image(systemName: favoriteUrls.isEmpty ? "heart" : "heart.fill")
-                .foregroundColor(.red)
         }
     }
 
@@ -184,7 +116,7 @@ struct Music: View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 20) {
-                    // Disclaimer
+                    
                     header
 
                     // Featured section
@@ -197,10 +129,12 @@ struct Music: View {
 
                     // Content based on mode
                     switch listMode {
-                    case .categories:
-                        categorySections
                     case .newReleases:
                         newReleasesSection
+                    case .categories:
+                        categorySections
+                    case .favorites:
+                        favoritesSection
                     }
                 }
                 .padding(.bottom, 200)
@@ -214,6 +148,20 @@ struct Music: View {
         }
     }
 
+    // MARK: - Header
+
+    private var header: some View {
+        HStack(spacing: 6) {
+            Label("Glorification and commemoration of God through beautiful recitations and melodies.", systemImage: "music.note")
+                .fontWeight(.light)
+                .tracking(1.1)
+            Spacer()
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .padding(.horizontal)
+    }
+
     // MARK: - List Mode Picker
 
     private var recentReleaseCount: Int {
@@ -223,8 +171,9 @@ struct Music: View {
 
     private var listModePicker: some View {
         HStack(spacing: 10) {
+            musicPickerButton(.newReleases, label: recentReleaseCount > 0 ? "Latest (\(recentReleaseCount))" : "Latest", icon: recentReleaseCount > 1 ? "sparkles" : "clock")
             musicPickerButton(.categories, label: "All Genres", icon: "square.grid.2x2")
-            musicPickerButton(.newReleases, label: recentReleaseCount > 0 ? "New (\(recentReleaseCount))" : "New", icon: recentReleaseCount > 1 ? "sparkles" : "clock")
+            musicPickerButton(.favorites, label: "Favorites", icon: favoriteUrls.isEmpty ? "heart" : "heart.fill")
         }
         .padding(.horizontal)
         .pushToLeft()
@@ -242,7 +191,7 @@ struct Music: View {
                     .font(.caption)
                     .symbolEffect(.pulse, isActive: showGlow)
                 Text(label)
-                    .font(.subheadline.weight(.medium))
+                    .font(DS.Typography.caption)
             }
             .fontWeight(isSelected ? .bold : .light)
         }
@@ -258,7 +207,7 @@ struct Music: View {
                     track: track,
                     isPlaying: audio.isPlayingTrack(track)
                 ) {
-                    audio.playMusic(track, queue: dataManager.tracks, context: .category(id: track.category.id))
+                    audio.playMusic(track, queue: dataManager.tracks, context: .latest)
                 }
                 .id("track-\(track.id)")
             }
@@ -266,28 +215,16 @@ struct Music: View {
         .padding(.horizontal)
     }
 
-    // MARK: - Header
-
-    private var header: some View {
-        HStack(spacing: 6) {
-            Label("Glorification and commemoration of God through beautiful recitations and melodies.", systemImage: "music.note")
-                .fontWeight(.light)
-                .tracking(1.1)
-            Spacer()
-        }
-        .font(.caption)
-        .foregroundStyle(.secondary)
-        .padding(.horizontal)
-    }
-
     // MARK: - Featured Section
 
     private var featuredSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
+            HStack {
                 Text("Featured")
-                    .font(.title2.bold())
+                    .font(DS.Typography.heroMD)
 
+                Spacer()
+                
                 if audio.isPlayingContext(.featured) {
                     LoopingIndicator()
                 }
@@ -298,7 +235,7 @@ struct Music: View {
                 HStack(spacing: 14) {
                     ForEach(dataManager.featuredTracks) { track in
                         Music_FeaturedCard(track: track) {
-                            router.musicScrollToTrackId = track.id
+                            audio.playMusic(track, queue: dataManager.featuredTracks, context: .featured)
                         }
                         .id("featured-\(track.id)")
                     }
@@ -306,6 +243,56 @@ struct Music: View {
                 .padding(.horizontal)
             }
         }
+    }
+
+    // MARK: - Favorites Section
+
+    private var favoriteTracks: [MusicTrack] {
+        dataManager.favoriteTracks(urls: favoriteUrls.reversed())
+    }
+
+    private var favoritesSection: some View {
+        LazyVStack(spacing: 4) {
+            if favoriteTracks.isEmpty {
+                VStack(spacing: 16) {
+                    Image(systemName: "heart")
+                        .font(.system(size: 48))
+                        .foregroundColor(.secondary)
+
+                    Text("No favorites yet")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+
+                    Text("Tap the heart icon on any track to save it here.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 60)
+            } else {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: audio.loopMode.icon)
+                        .foregroundColor(audio.loopMode == .off ? .secondary : .accentColor)
+                        .font(.caption)
+                    Text(favoritesPlaybackNote)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                }
+                .padding(.bottom, 8)
+
+                ForEach(favoriteTracks) { track in
+                    Music_TrackCard(
+                        track: track,
+                        isPlaying: audio.isPlayingTrack(track)
+                    ) {
+                        audio.playMusic(track, queue: favoriteTracks, context: .favorites)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal)
     }
 
     // MARK: - Category Sections
@@ -338,6 +325,17 @@ struct Music: View {
             }
         }
     }
+
+    private var favoritesPlaybackNote: String {
+        switch audio.loopMode {
+        case .off:
+            return "Favorites will play through once and stop at the end."
+        case .queue:
+            return "Favorites will keep looping through this list."
+        case .repeatOne:
+            return "Repeat is on, so the current favorite will replay until you change it."
+        }
+    }
 }
 
 // MARK: - Looping Indicator
@@ -361,6 +359,53 @@ private struct LoopingIndicator: View {
                 .onAppear { isPulsing = true }
         }
     }
+}
+
+struct FeaturedTracksSection: View {
+    let title: String
+    let tracks: [MusicTrack]
+
+    /// Optional visual state
+    var showsIndicator: Bool = false
+
+    /// Tap handling is injected
+    let onSelect: (MusicTrack) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            header
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 14) {
+                    ForEach(tracks) { track in
+                        Music_FeaturedCard(track: track) {
+                            onSelect(track)
+                        }
+                        .id("featured-\(track.id)")
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+    }
+
+    private var header: some View {
+        HStack(spacing: 8) {
+            Text(title)
+                .font(.title2.bold())
+
+            if showsIndicator {
+                LoopingIndicator()
+            }
+        }
+        .padding(.horizontal)
+    }
+}
+
+enum MusicListMode: String, CaseIterable {
+    case newReleases = "New Releases"
+    case categories = "Categories"
+    case favorites = "Favorites"
 }
 
 #Preview {

@@ -21,8 +21,7 @@ struct DataLoading: View {
                     .opacity(animateIn ? 1 : 0)
 
                 Text(title)
-                    .font(.title)
-                    .fontWeight(.semibold)
+                    .font(DS.Typography.heroMD)
                     .opacity(animateIn ? 1 : 0)
                     .offset(y: animateIn ? 0 : 20)
             }
@@ -33,7 +32,7 @@ struct DataLoading: View {
             VStack(spacing: 12) {
                 ProgressView()
                 Text(statusText)
-                    .font(.caption)
+                    .font(DS.Typography.eyebrow)
                     .foregroundStyle(.secondary)
             }
             .opacity(animateIn ? 1 : 0)

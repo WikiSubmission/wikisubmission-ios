@@ -24,7 +24,7 @@ struct Onboarding: View {
                     .opacity(animateIn ? 1 : 0)
 
                 Text("WikiSubmission")
-                    .font(.title)
+                    .font(DS.Typography.heroMD)
                     .fontWeight(.semibold)
                     .opacity(animateIn ? 1 : 0)
                     .offset(y: animateIn ? 0 : 20)
@@ -39,7 +39,7 @@ struct Onboarding: View {
                     onboarded = true
                 } label: {
                     Text("Continue")
-                        .font(.title2)
+                        .font(DS.Typography.lede)
                         .fontWeight(.bold)
                         .frame(width: 200, height: 40)
                 }

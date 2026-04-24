@@ -2,6 +2,18 @@ import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
 
+private struct BookmarkDestination: Identifiable {
+    let chapterNumber: Int
+    let verseNumber: Int?
+
+    var id: String {
+        if let verseNumber {
+            return "\(chapterNumber):\(verseNumber)"
+        }
+        return "\(chapterNumber)"
+    }
+}
+
 struct Quran_Content_Bookmarks: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -14,7 +26,7 @@ struct Quran_Content_Bookmarks: View {
     @State private var showAddChapter = false
     @State private var showAddVerse = false
     @State private var showCategorySheet = false
-    @State private var showNoteAlert = false
+    @State private var showNoteSheet = false
     @State private var showImporter = false
     @State private var importError: Error?
 
@@ -22,8 +34,30 @@ struct Quran_Content_Bookmarks: View {
     @State private var noteInput = ""
     @State private var categoryInput = ""
 
+    // Category rename
+    @State private var showRenameCategorySheet = false
+    @State private var renameCategoryOldName = ""
+    @State private var renameCategoryNewName = ""
+
     // Selection
     @State private var activeBookmark: Bookmark?
+    @State private var presentedBookmarkDestination: BookmarkDestination?
+
+    // Multi-select
+    @State private var isSelecting = false
+    @State private var selectedKeys: Set<String> = []
+
+    // Sort
+    @State private var sortOrder: SortOrder = .newest
+
+    // Search
+    @State private var searchText = ""
+
+    enum SortOrder: String, CaseIterable {
+        case newest = "Newest"
+        case oldest = "Oldest"
+        case chapter = "Chapter"
+    }
 
     var body: some View {
         NavigationStack {
@@ -34,12 +68,21 @@ struct Quran_Content_Bookmarks: View {
                 .sheet(isPresented: $showAddChapter) { addChapterSheet }
                 .sheet(isPresented: $showAddVerse) { addVerseSheet }
                 .sheet(isPresented: $showCategorySheet) { categorySheet }
+                .sheet(isPresented: $showNoteSheet) { noteSheet }
+                .sheet(isPresented: $showRenameCategorySheet) { renameCategorySheet }
+                .sheet(item: $presentedBookmarkDestination) { destination in
+                    NavigationStack {
+                        Quran_Content_ChapterReader(
+                            chapterNumber: destination.chapterNumber,
+                            options: .init(scrollToVerseNumber: destination.verseNumber)
+                        )
+                    }
+                }
                 .fileImporter(
                     isPresented: $showImporter,
                     allowedContentTypes: [.json],
                     allowsMultipleSelection: false
                 ) { handleImport($0) }
-                .alert("Bookmark Note", isPresented: $showNoteAlert) { noteAlertContent }
                 .confirmationDialog(
                     "Delete all bookmarks?",
                     isPresented: $showDeleteAllConfirmation,
@@ -59,6 +102,41 @@ struct Quran_Content_Bookmarks: View {
                     Text(importError?.localizedDescription ?? "Unknown error")
                 }
         }
+    }
+
+    // MARK: - Sorted & Filtered Bookmarks
+
+    private var displayedBookmarks: [Bookmark] {
+        var list = manager.filteredBookmarks
+
+        // Search filter
+        if !searchText.isEmpty {
+            let query = searchText.lowercased()
+            list = list.filter { bookmark in
+                bookmark.key.contains(query)
+                || (bookmark.notes?.lowercased().contains(query) ?? false)
+                || (bookmark.category?.lowercased().contains(query) ?? false)
+                || chapterTitle(for: bookmark)?.lowercased().contains(query) ?? false
+            }
+        }
+
+        // Sort
+        switch sortOrder {
+        case .newest:
+            list.sort { $0.createdAt > $1.createdAt }
+        case .oldest:
+            list.sort { $0.createdAt < $1.createdAt }
+        case .chapter:
+            list.sort { ($0.chapterNumber ?? 0) < ($1.chapterNumber ?? 0) }
+        }
+
+        return list
+    }
+
+    private func chapterTitle(for bookmark: Bookmark) -> String? {
+        guard let chapterNumber = bookmark.chapterNumber,
+              let chapter = QuranChapters.fetch(chapterNumber: chapterNumber, context: modelContext) else { return nil }
+        return chapter.title_english
     }
 
     // MARK: - Content
@@ -82,10 +160,10 @@ struct Quran_Content_Bookmarks: View {
 
             VStack(spacing: 8) {
                 Text("No Bookmarks")
-                    .font(.title3.bold())
+                    .font(DS.Typography.titleLG)
 
                 Text("Tap any verse to bookmark it, or use the buttons below to add chapters and verses.")
-                    .font(.subheadline)
+                    .font(DS.Typography.bodySM)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
@@ -106,156 +184,413 @@ struct Quran_Content_Bookmarks: View {
                 }
                 .buttonStyle(.bordered)
             }
-            .font(.subheadline)
+            .font(DS.Typography.bodySM)
 
             Spacer()
         }
         .padding()
     }
 
+    // MARK: - Bookmark List
+
     private var bookmarkList: some View {
         ScrollView {
-            LazyVStack(spacing: 16) {
-                // Quick add buttons
-                HStack(spacing: 12) {
-                    Button {
-                        showAddChapter = true
-                    } label: {
-                        Label("Chapter", systemImage: "plus.circle.fill")
-                    }
+            LazyVStack(spacing: 0) {
+                // Stats bar
+                statsBar
 
-                    Button {
-                        showAddVerse = true
-                    } label: {
-                        Label("Verse", systemImage: "plus.circle.fill")
-                    }
-
-                    Spacer()
+                // Category chips
+                if !manager.uniqueCategories.isEmpty {
+                    categoryChips
                 }
-                .font(.caption)
-                .padding(.horizontal)
+
+                // Selection toolbar
+                if isSelecting {
+                    selectionToolbar
+                }
 
                 // Bookmarks
-                ForEach(manager.sortedBookmarks) { bookmark in
-                    bookmarkCard(bookmark)
-                        .padding(.horizontal)
+                ForEach(Array(displayedBookmarks.enumerated()), id: \.element.id) { index, bookmark in
+                    bookmarkRow(bookmark, index: index + 1)
                 }
             }
-            .padding(.vertical)
+            .padding(.bottom, 200)
         }
+        .searchable(text: $searchText, prompt: "Search bookmarks...")
     }
 
-    // MARK: - Bookmark Card
+    // MARK: - Stats Bar
 
-    private func bookmarkCard(_ bookmark: Bookmark) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Note badge
-            if let notes = bookmark.notes, !notes.isEmpty {
+    private var statsBar: some View {
+        HStack(spacing: DS.Spacing.lg) {
+
+            Spacer()
+
+            // Sort
+            Menu {
+                ForEach(SortOrder.allCases, id: \.self) { order in
+                    Button {
+                        withAnimation { sortOrder = order }
+                    } label: {
+                        HStack {
+                            Text(order.rawValue)
+                            if sortOrder == order {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
                 HStack(spacing: 4) {
-                    Image(systemName: "quote.bubble.fill")
-                        .font(.caption2)
-                    Text(notes)
-                        .font(.caption)
-                }
-                .foregroundStyle(.accent)
-                .fontWeight(.medium)
-            }
-
-            // Content - wrapped in button for custom navigation
-            switch bookmark.type {
-            case .chapter:
-                if let chapterNumber = bookmark.chapterNumber,
-                   let chapter = QuranChapters.fetch(chapterNumber: chapterNumber, context: modelContext) {
-                    Quran_Element_ChapterCard(
-                        chapter: chapter,
-                        hideBookmarkStatus: true
-                    )
-                }
-            case .verse:
-                if let unified = QuranUnified.fetchVerse(
-                    chapter: bookmark.chapterNumber ?? 1,
-                    verse: bookmark.verseNumber ?? 1,
-                    context: modelContext
-                ) {
-                    Quran_Element_VerseCard(
-                        unified: unified,
-                        options: .init(
-                            linkToChapterContext: true,
-                            hideBookmarkStatus: true
-                        )
-                    )
-                }
-            }
-
-            // Footer
-            bookmarkFooter(bookmark)
-        }
-    }
-
-    private func navigateToBookmark(_ bookmark: Bookmark) {
-        dismiss()
-        router.selectTab(.quran)
-        router.popToRoot(for: .quran)
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            switch bookmark.type {
-            case .verse:
-                if let chapter = bookmark.chapterNumber, let verse = bookmark.verseNumber {
-                    router.push(.chapter(chapterNumber: chapter, scrollToVerseNumber: verse))
-                }
-            case .chapter:
-                if let chapter = bookmark.chapterNumber {
-                    router.push(.chapter(chapterNumber: chapter))
+                    Image(systemName: "arrow.up.arrow.down")
+                    Text(sortOrder.rawValue)
                 }
             }
         }
+        .font(DS.Typography.caption)
+        .foregroundStyle(.secondary)
+        .padding(.horizontal)
+        .padding(.vertical, DS.Spacing.sm)
     }
 
-    private func bookmarkFooter(_ bookmark: Bookmark) -> some View {
-        HStack {
-            // Date
-            Text(bookmark.createdAt.relativeFormatted())
-                .foregroundStyle(.secondary)
+    // MARK: - Category Chips
 
-            // Category badge
-            if let category = bookmark.category {
-                Text(category)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(Capsule().fill(Color.accentColor.opacity(0.15)))
-                    .foregroundStyle(.accent)
+    private var categoryChips: some View {
+        HStack(spacing: DS.Spacing.sm) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: DS.Spacing.sm) {
+                    categoryChip(label: "All", count: manager.bookmarks.count, isSelected: manager.selectedCategory == nil) {
+                        withAnimation { manager.selectedCategory = nil }
+                    }
+
+                    ForEach(manager.uniqueCategories, id: \.self) { category in
+                        let count = manager.bookmarks.filter { $0.category == category }.count
+                        categoryChip(
+                            label: category,
+                            count: count,
+                            isSelected: manager.selectedCategory == category
+                        ) {
+                            withAnimation {
+                                manager.selectedCategory = manager.selectedCategory == category ? nil : category
+                            }
+                        }
+                    }
+                }
+                .padding(.leading)
+            }
+
+            if !manager.uniqueCategories.isEmpty {
+                Menu {
+                    ForEach(manager.uniqueCategories, id: \.self) { category in
+                        Menu(category) {
+                            Button {
+                                renameCategoryOldName = category
+                                renameCategoryNewName = category
+                                showRenameCategorySheet = true
+                            } label: {
+                                Label("Rename", systemImage: "pencil")
+                            }
+
+                            Button(role: .destructive) {
+                                manager.deleteCategory(category)
+                            } label: {
+                                Label("Remove from All", systemImage: "trash")
+                            }
+                        }
+                    }
+                } label: {
+                    Image(systemName: "pencil.circle")
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.trailing)
+            }
+        }
+        .padding(.bottom, DS.Spacing.md)
+    }
+
+    private func categoryChip(label: String, count: Int, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Text(label)
+                Text("\(count)")
+                    .foregroundStyle(isSelected ? AnyShapeStyle(.accent.opacity(0.7)) : AnyShapeStyle(.tertiary))
+            }
+            .font(DS.Typography.caption)
+            .fontWeight(isSelected ? .semibold : .regular)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(
+                isSelected
+                ? Color.accentColor.opacity(0.15)
+                : Color.secondary.opacity(0.06)
+            )
+            .foregroundStyle(isSelected ? .accent : .primary)
+            .clipShape(Capsule())
+        }
+    }
+
+    // MARK: - Selection Toolbar
+
+    private var selectionToolbar: some View {
+        HStack(spacing: DS.Spacing.lg) {
+            Button {
+                if selectedKeys.count == displayedBookmarks.count {
+                    selectedKeys.removeAll()
+                } else {
+                    selectedKeys = Set(displayedBookmarks.map(\.key))
+                }
+            } label: {
+                let allSelected = selectedKeys.count == displayedBookmarks.count && !displayedBookmarks.isEmpty
+                Label(
+                    allSelected ? "Deselect All" : "Select All",
+                    systemImage: allSelected ? "checkmark.circle.fill" : "circle"
+                )
             }
 
             Spacer()
 
-            // Actions
-            HStack(spacing: 16) {
+            if !selectedKeys.isEmpty {
+                // Batch category
                 Button {
-                    activeBookmark = bookmark
-                    categoryInput = bookmark.category ?? ""
+                    categoryInput = ""
+                    activeBookmark = nil
                     showCategorySheet = true
                 } label: {
-                    Image(systemName: bookmark.category == nil ? "tag" : "tag.fill")
+                    Label("Tag (\(selectedKeys.count))", systemImage: "tag")
                 }
 
-                Button {
-                    activeBookmark = bookmark
-                    noteInput = bookmark.notes ?? ""
-                    showNoteAlert = true
+                // Batch delete
+                Button(role: .destructive) {
+                    for key in selectedKeys {
+                        manager.removeByKey(key)
+                    }
+                    selectedKeys.removeAll()
+                    if manager.isEmpty { isSelecting = false }
                 } label: {
-                    Image(systemName: bookmark.notes == nil ? "note.text" : "note.text.badge.plus")
+                    Label("Delete (\(selectedKeys.count))", systemImage: "trash")
                 }
-
-                Button {
-                    activeBookmark = bookmark
-                    showDeleteConfirmation = true
-                } label: {
-                    Image(systemName: "trash")
-                        .foregroundStyle(.red)
-                }
+                .foregroundStyle(.red)
             }
         }
-        .font(.caption)
+        .font(DS.Typography.caption)
+        .padding(.horizontal)
+        .padding(.vertical, DS.Spacing.sm)
+        .background(Color.secondary.opacity(0.05))
+    }
+
+    // MARK: - Bookmark Row
+
+    private func bookmarkRow(_ bookmark: Bookmark, index: Int) -> some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: DS.Spacing.md) {
+                // Selection checkbox
+                if isSelecting {
+                    Button {
+                        if selectedKeys.contains(bookmark.key) {
+                            selectedKeys.remove(bookmark.key)
+                        } else {
+                            selectedKeys.insert(bookmark.key)
+                        }
+                    } label: {
+                        Image(systemName: selectedKeys.contains(bookmark.key) ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(selectedKeys.contains(bookmark.key) ? .accent : .secondary)
+                            .font(.title3)
+                    }
+                    .padding(.top, 14)
+                }
+
+                // Main content
+                VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                    // Header line
+                    HStack(alignment: .firstTextBaseline) {
+                        Text("Bookmark #\(index) · \(bookmark.createdAt.relativeFormatted())")
+                            .font(DS.Typography.eyebrowSM)
+                            .foregroundStyle(.tertiary)
+
+                        Spacer()
+
+                        if let category = bookmark.category {
+                            Button {
+                                activeBookmark = bookmark
+                                categoryInput = category
+                                showCategorySheet = true
+                            } label: {
+                                Text(category)
+                                    .font(DS.Typography.eyebrowSM)
+                                    .tracking(0.5)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 3)
+                                    .background(Capsule().fill(Color.accentColor.opacity(0.12)))
+                                    .foregroundStyle(.accent)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
+                    // Note
+                    if let notes = bookmark.notes, !notes.isEmpty {
+                        HStack(alignment: .top, spacing: 6) {
+                            Image(systemName: "quote.opening")
+                                .font(.caption)
+                                .foregroundStyle(.accent)
+                                .padding(.top, 1)
+                            Text(notes)
+                                .font(DS.Typography.bodySM)
+                                .foregroundStyle(.accent)
+                        }
+                    }
+
+                    // Content preview
+                    contentPreview(bookmark)
+
+                    // Footer: actions
+                    if !isSelecting {
+                        bookmarkActions(bookmark)
+                    }
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, DS.Spacing.lg)
+            .contentShape(Rectangle())
+            .contextMenu { bookmarkContextMenu(bookmark) }
+
+            Divider().padding(.leading)
+        }
+    }
+
+    // MARK: - Content Preview
+
+    @ViewBuilder
+    private func contentPreview(_ bookmark: Bookmark) -> some View {
+        Button {
+            navigateToBookmark(bookmark)
+        } label: {
+            Group {
+                switch bookmark.type {
+                case .chapter:
+                    if let chapterNumber = bookmark.chapterNumber,
+                       let chapter = QuranChapters.fetch(chapterNumber: chapterNumber, context: modelContext) {
+                        Quran_Element_ChapterCard(
+                            chapter: chapter,
+                            hideBookmarkStatus: true
+                        )
+                        .allowsHitTesting(false)
+                    }
+                case .verse:
+                    if let unified = QuranUnified.fetchVerse(
+                        chapter: bookmark.chapterNumber ?? 1,
+                        verse: bookmark.verseNumber ?? 1,
+                        context: modelContext
+                    ) {
+                        Quran_Element_VerseCard(
+                            unified: unified,
+                            options: .init(
+                                linkToChapterContext: true,
+                                hideBookmarkStatus: true
+                            )
+                        )
+                        .allowsHitTesting(false)
+                    }
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Bookmark Actions
+
+    private func bookmarkActions(_ bookmark: Bookmark) -> some View {
+        HStack(spacing: DS.Spacing.sm) {
+            Spacer()
+
+            actionChip(bookmark.category == nil ? "Tag" : "Edit Tag", icon: "tag") {
+                activeBookmark = bookmark
+                categoryInput = bookmark.category ?? ""
+                showCategorySheet = true
+            }
+
+            actionChip(bookmark.notes == nil ? "Note" : "Edit Note", icon: "note.text") {
+                activeBookmark = bookmark
+                noteInput = bookmark.notes ?? ""
+                showNoteSheet = true
+            }
+
+            actionChip("Delete", icon: "trash", destructive: true) {
+                activeBookmark = bookmark
+                showDeleteConfirmation = true
+            }
+        }
+    }
+
+    private func actionChip(_ label: String, icon: String, destructive: Bool = false, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                Text(label)
+            }
+            .font(DS.Typography.eyebrowSM)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(
+                Capsule().fill(destructive ? Color.red.opacity(0.1) : Color.secondary.opacity(0.08))
+            )
+            .foregroundStyle(destructive ? .red : .secondary)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Context Menu
+
+    @ViewBuilder
+    private func bookmarkContextMenu(_ bookmark: Bookmark) -> some View {
+        Button {
+            navigateToBookmark(bookmark)
+        } label: {
+            Label("Go to \(bookmark.type == .verse ? "Verse" : "Chapter")", systemImage: "arrow.right.circle")
+        }
+
+        Divider()
+
+        Button {
+            activeBookmark = bookmark
+            categoryInput = bookmark.category ?? ""
+            showCategorySheet = true
+        } label: {
+            Label(bookmark.category == nil ? "Add Category" : "Edit Category", systemImage: "tag")
+        }
+
+        Button {
+            activeBookmark = bookmark
+            noteInput = bookmark.notes ?? ""
+            showNoteSheet = true
+        } label: {
+            Label(bookmark.notes == nil ? "Add Note" : "Edit Note", systemImage: "note.text")
+        }
+
+        Divider()
+
+        Button(role: .destructive) {
+            manager.remove(bookmark)
+        } label: {
+            Label("Delete", systemImage: "trash")
+        }
+    }
+
+    // MARK: - Navigation
+
+    private func navigateToBookmark(_ bookmark: Bookmark) {
+        switch bookmark.type {
+        case .verse:
+            if let chapter = bookmark.chapterNumber, let verse = bookmark.verseNumber {
+                presentedBookmarkDestination = .init(chapterNumber: chapter, verseNumber: verse)
+            }
+        case .chapter:
+            if let chapter = bookmark.chapterNumber {
+                presentedBookmarkDestination = .init(chapterNumber: chapter, verseNumber: nil)
+            }
+        }
     }
 
     // MARK: - Toolbar
@@ -263,61 +598,57 @@ struct Quran_Content_Bookmarks: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItemGroup(placement: .topBarTrailing) {
-            // Category filter
-            if !manager.uniqueCategories.isEmpty {
-                Menu {
-                    Button {
-                        manager.selectedCategory = nil
-                    } label: {
-                        HStack {
-                            Text("All")
-                            if manager.selectedCategory == nil {
-                                Image(systemName: "checkmark")
-                            }
-                        }
-                    }
-
-                    Divider()
-
-                    ForEach(manager.uniqueCategories, id: \.self) { category in
-                        Button {
-                            manager.selectedCategory = category
-                        } label: {
-                            HStack {
-                                Text(category)
-                                if manager.selectedCategory == category {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
+            // Select / Done
+            if !manager.isEmpty {
+                Button {
+                    withAnimation {
+                        isSelecting.toggle()
+                        if !isSelecting { selectedKeys.removeAll() }
                     }
                 } label: {
-                    Image(systemName: manager.selectedCategory == nil ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
-                        .foregroundStyle(manager.selectedCategory == nil ? Color.primary : Color.accentColor)
+                    Image(systemName: isSelecting ? "checkmark.circle" : "checklist")
                 }
             }
 
             // More options
             Menu {
-                Button {
-                    showImporter = true
-                } label: {
-                    Label("Import", systemImage: "square.and.arrow.down")
+                Section {
+                    Button {
+                        showAddChapter = true
+                    } label: {
+                        Label("Add Chapter", systemImage: "book.closed")
+                    }
+
+                    Button {
+                        showAddVerse = true
+                    } label: {
+                        Label("Add Verse", systemImage: "text.quote")
+                    }
+                }
+
+                Section {
+                    Button {
+                        showImporter = true
+                    } label: {
+                        Label("Import", systemImage: "square.and.arrow.down")
+                    }
+
+                    if !manager.isEmpty {
+                        Button {
+                            manager.shareExport()
+                        } label: {
+                            Label("Export", systemImage: "square.and.arrow.up")
+                        }
+                    }
                 }
 
                 if !manager.isEmpty {
-                    Button {
-                        manager.shareExport()
-                    } label: {
-                        Label("Export", systemImage: "square.and.arrow.up")
-                    }
-
-                    Divider()
-
-                    Button(role: .destructive) {
-                        showDeleteAllConfirmation = true
-                    } label: {
-                        Label("Delete All", systemImage: "trash")
+                    Section {
+                        Button(role: .destructive) {
+                            showDeleteAllConfirmation = true
+                        } label: {
+                            Label("Delete All", systemImage: "trash")
+                        }
                     }
                 }
             } label: {
@@ -388,9 +719,15 @@ struct Quran_Content_Bookmarks: View {
     // MARK: - Category Sheet
 
     private var categorySheet: some View {
-        NavigationStack {
-            VStack(alignment: .leading, spacing: 16) {
-                if let current = activeBookmark?.category, !current.isEmpty {
+        let isBatch = isSelecting && !selectedKeys.isEmpty && activeBookmark == nil
+
+        return NavigationStack {
+            VStack(alignment: .leading, spacing: DS.Spacing.lg) {
+                if isBatch {
+                    Label("\(selectedKeys.count) bookmarks selected", systemImage: "checkmark.circle.fill")
+                        .font(DS.Typography.bodySM)
+                        .foregroundStyle(.accent)
+                } else if let current = activeBookmark?.category, !current.isEmpty {
                     HStack(spacing: 6) {
                         Image(systemName: "tag.fill")
                             .foregroundStyle(.secondary)
@@ -399,33 +736,44 @@ struct Quran_Content_Bookmarks: View {
                         Text(current)
                             .fontWeight(.semibold)
                     }
+                    .font(DS.Typography.bodySM)
                 }
 
                 TextField("Category name", text: $categoryInput)
                     .textFieldStyle(.roundedBorder)
 
                 if !manager.uniqueCategories.isEmpty {
-                    Text("Suggestions")
-                        .font(.subheadline)
+                    Text("EXISTING TAGS")
+                        .font(DS.Typography.eyebrowSM)
+                        .tracking(1.5)
                         .foregroundStyle(.secondary)
 
                     ScrollView {
-                        LazyVStack(alignment: .leading, spacing: 8) {
+                        LazyVStack(spacing: 4) {
                             ForEach(manager.uniqueCategories, id: \.self) { suggestion in
+                                let isSelected = categoryInput == suggestion
                                 Button {
-                                    categoryInput = suggestion
+                                    categoryInput = isSelected ? "" : suggestion
                                 } label: {
                                     HStack {
                                         Text(suggestion)
+                                            .font(DS.Typography.bodySM)
+                                            .foregroundStyle(isSelected ? .white : .primary)
                                         Spacer()
-                                        if categoryInput == suggestion {
+                                        if isSelected {
                                             Image(systemName: "checkmark")
-                                                .foregroundStyle(.accent)
+                                                .font(.caption)
+                                                .foregroundStyle(.white)
                                         }
                                     }
+                                    .padding(.horizontal, DS.Spacing.md)
+                                    .padding(.vertical, 10)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(isSelected ? Color.accentColor : Color.secondary.opacity(0.08))
+                                    )
                                 }
                                 .buttonStyle(.plain)
-                                .padding(.vertical, 6)
                             }
                         }
                     }
@@ -434,7 +782,7 @@ struct Quran_Content_Bookmarks: View {
 
                 Spacer()
 
-                if activeBookmark?.category != nil {
+                if !isBatch, activeBookmark?.category != nil {
                     Button(role: .destructive) {
                         if let bookmark = activeBookmark {
                             manager.updateCategory(bookmark, category: nil)
@@ -446,7 +794,7 @@ struct Quran_Content_Bookmarks: View {
                 }
             }
             .padding()
-            .navigationTitle("Category")
+            .navigationTitle(isBatch ? "Tag Selected" : "Category")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -454,10 +802,16 @@ struct Quran_Content_Bookmarks: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        if let bookmark = activeBookmark {
+                        if isBatch {
+                            for key in selectedKeys {
+                                if let bookmark = manager.bookmarks.first(where: { $0.key == key }) {
+                                    manager.updateCategory(bookmark, category: categoryInput)
+                                }
+                            }
+                        } else if let bookmark = activeBookmark {
                             manager.updateCategory(bookmark, category: categoryInput)
-                            showCategorySheet = false
                         }
+                        showCategorySheet = false
                     }
                 }
             }
@@ -465,18 +819,103 @@ struct Quran_Content_Bookmarks: View {
         .presentationDetents([.medium])
     }
 
-    // MARK: - Alerts & Dialogs
+    // MARK: - Note Sheet
 
-    @ViewBuilder
-    private var noteAlertContent: some View {
-        TextField("Note", text: $noteInput)
-        Button("Save") {
-            if let bookmark = activeBookmark {
-                manager.updateNotes(bookmark, notes: noteInput)
+    private var noteSheet: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: DS.Spacing.lg) {
+                if let bookmark = activeBookmark {
+                    HStack(spacing: 6) {
+                        Text(bookmark.type == .verse ? "VERSE" : "CHAPTER")
+                            .font(DS.Typography.eyebrowSM)
+                            .tracking(1)
+                            .foregroundStyle(.secondary)
+                        Text(bookmark.key)
+                            .font(DS.Typography.label)
+                    }
+                }
+
+                TextEditor(text: $noteInput)
+                    .font(DS.Typography.body)
+                    .frame(minHeight: 120)
+                    .scrollContentBackground(.hidden)
+                    .padding(DS.Spacing.sm)
+                    .background(
+                        RoundedRectangle(cornerRadius: DS.Radius.md)
+                            .fill(Color.secondary.opacity(0.08))
+                    )
+
+                if activeBookmark?.notes != nil {
+                    Button(role: .destructive) {
+                        if let bookmark = activeBookmark {
+                            manager.updateNotes(bookmark, notes: nil)
+                            showNoteSheet = false
+                        }
+                    } label: {
+                        Label("Remove Note", systemImage: "trash")
+                    }
+                }
+
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Note")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showNoteSheet = false }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        if let bookmark = activeBookmark {
+                            manager.updateNotes(bookmark, notes: noteInput)
+                        }
+                        showNoteSheet = false
+                    }
+                }
             }
         }
-        Button("Cancel", role: .cancel) {}
+        .presentationDetents([.medium])
     }
+
+    // MARK: - Rename Category Sheet
+
+    private var renameCategorySheet: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: DS.Spacing.lg) {
+                Label("Renaming \"\(renameCategoryOldName)\"", systemImage: "tag.fill")
+                    .font(DS.Typography.bodySM)
+                    .foregroundStyle(.accent)
+
+                Text("This will update all bookmarks with this category.")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(.secondary)
+
+                TextField("New category name", text: $renameCategoryNewName)
+                    .textFieldStyle(.roundedBorder)
+
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Rename Category")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { showRenameCategorySheet = false }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Rename") {
+                        manager.renameCategory(renameCategoryOldName, to: renameCategoryNewName)
+                        showRenameCategorySheet = false
+                    }
+                    .disabled(renameCategoryNewName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+
+    // MARK: - Dialogs
 
     @ViewBuilder
     private var deleteAllDialogContent: some View {
@@ -554,10 +993,11 @@ private struct AddVerseSheet: View {
 
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(verse.index.verse_id)
-                                    .font(.caption.bold())
+                                    .font(DS.Typography.caption)
+                                    .fontWeight(.bold)
                                     .foregroundStyle(.secondary)
                                 Text(verse.text.english)
-                                    .font(.subheadline)
+                                    .font(DS.Typography.bodySM)
                                     .foregroundStyle(.primary)
                                     .lineLimit(3)
                             }
@@ -576,7 +1016,6 @@ private struct AddVerseSheet: View {
                 }
             }
             .onAppear {
-                // Load first chapter by default
                 Task { await loadInitial() }
             }
             .navigationTitle("Add Verse")
@@ -601,7 +1040,6 @@ private struct AddVerseSheet: View {
             return
         }
 
-        // Search by verse ID first, then by content
         let byId = QuranUnified.searchVerseIds(query: query, context: modelContext)
         if !byId.isEmpty {
             results = Array(byId.prefix(50))

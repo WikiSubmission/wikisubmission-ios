@@ -34,13 +34,13 @@ struct Music_FeaturedCard: View {
 
                     HStack(spacing: 6) {
                         Text(track.name)
-                            .font(.headline)
+                            .font(DS.Typography.titleMD)
                             .lineLimit(2)
                             .foregroundColor(.primary)
 
                         if isNewRelease {
                             Text("NEW")
-                                .font(.caption2.weight(.semibold))
+                                .font(DS.Typography.caption)
                                 .foregroundColor(.accentColor)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
@@ -52,7 +52,7 @@ struct Music_FeaturedCard: View {
                     }
 
                     Text(track.artist.name)
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                         .foregroundColor(.secondary)
                 }
                 .padding()

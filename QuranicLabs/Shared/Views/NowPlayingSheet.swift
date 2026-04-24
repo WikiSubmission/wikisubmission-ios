@@ -6,12 +6,12 @@ struct NowPlayingSheet: View {
     @ObservedObject private var audio = AudioManager.shared
     @ObservedObject private var router = Router.shared
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var progress: CGFloat = 0.0
     @State private var isScrubbing = false
     @State private var currentTimeSeconds: Double = 0
     @State private var durationSeconds: Double = 0
-    @State private var volume: Float = AVAudioSession.sharedInstance().outputVolume
     @State private var selectedTab: Tab = .nowPlaying
 
     private let progressUpdateInterval: TimeInterval = 0.25
@@ -31,7 +31,7 @@ struct NowPlayingSheet: View {
     }
 
     private var showQueue: Bool {
-        audio.loopMode == .queue
+        audio.category == .music && audio.queueCount > 1
     }
 
     private var availableTabs: [Tab] {
@@ -79,7 +79,6 @@ struct NowPlayingSheet: View {
         }
         .onAppear {
             updateProgress()
-            setupVolumeObserver()
         }
         .onReceive(Timer.publish(every: progressUpdateInterval, on: .main, in: .common).autoconnect()) { _ in
             if !isScrubbing {
@@ -91,14 +90,19 @@ struct NowPlayingSheet: View {
     // MARK: - Background
 
     private var background: some View {
-        Group {
-            if audio.category == .music {
-                theme.cardGradient
-                    .ignoresSafeArea()
-            } else {
-                Color(.systemBackground)
-                    .ignoresSafeArea()
-            }
+        ZStack {
+            DS.Color.bg
+                .ignoresSafeArea()
+
+            LinearGradient(
+                colors: [
+                    Color.accentColor.opacity(colorScheme == .dark ? 0.18 : 0.08),
+                    Color.clear
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
         }
     }
 
@@ -127,7 +131,7 @@ struct NowPlayingSheet: View {
                     }
                 } label: {
                     Text(tab.rawValue)
-                        .font(.subheadline.weight(selectedTab == tab ? .semibold : .regular))
+                        .font(selectedTab == tab ? DS.Typography.label : DS.Typography.caption)
                         .foregroundColor(selectedTab == tab ? .primary : .secondary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
@@ -150,31 +154,30 @@ struct NowPlayingSheet: View {
     // MARK: - Now Playing Content
 
     private func nowPlayingContent(geometry: GeometryProxy) -> some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 24) {
-                // Artwork
-                artwork(size: min(geometry.size.width - 80, 320))
+        let compactHeight = geometry.size.height < 760
+        let artworkSize = min(
+            geometry.size.width - (compactHeight ? 152 : 112),
+            compactHeight ? 182 : 232,
+            geometry.size.height * (compactHeight ? 0.22 : 0.28)
+        )
 
-                // Track info
-                trackInfo
+        return VStack(spacing: compactHeight ? 14 : 20) {
+            Spacer(minLength: compactHeight ? 4 : 12)
+            artwork(size: artworkSize)
+            trackInfo
+            progressSection
+            mainControls(compact: compactHeight)
 
-                // Progress
-                progressSection
-
-                // Main controls
-                mainControls
-
-                // Volume
+            VStack(spacing: compactHeight ? 10 : 14) {
                 volumeSection
-
-                // Secondary controls
                 secondaryControls
-
-                Spacer(minLength: 40)
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 16)
+
+            Spacer(minLength: compactHeight ? 10 : 20)
         }
+        .padding(.horizontal, compactHeight ? 20 : 24)
+        .padding(.top, compactHeight ? 8 : 14)
+        .padding(.bottom, 20)
     }
 
     // MARK: - Artwork
@@ -208,16 +211,17 @@ struct NowPlayingSheet: View {
     private var trackInfo: some View {
         VStack(spacing: 6) {
             if let track = audio.currentTrack {
+                Text(track.subtitle)
+                    .font(DS.Typography.eyebrow)
+                    .tracking(1.5)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+
                 Text(track.title)
-                    .font(.title2.bold())
+                    .font(DS.Typography.heroMD)
                     .foregroundColor(.primary)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
-
-                Text(track.subtitle)
-                    .font(.title3)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
             }
         }
         .padding(.horizontal)
@@ -236,7 +240,7 @@ struct NowPlayingSheet: View {
 
                     // Progress fill
                     Capsule()
-                        .fill(Color.primary)
+                        .fill(progressFill)
                         .frame(width: max(geo.size.width * progress, 0))
                 }
                 .frame(height: isScrubbing ? 8 : 6)
@@ -262,13 +266,15 @@ struct NowPlayingSheet: View {
             // Time labels
             HStack {
                 Text(formatTime(currentTimeSeconds))
-                    .font(.caption.monospacedDigit())
+                    .font(DS.Typography.eyebrowSM)
+                    .monospacedDigit()
                     .foregroundColor(.secondary)
 
                 Spacer()
 
                 Text("-\(formatTime(durationSeconds - currentTimeSeconds))")
-                    .font(.caption.monospacedDigit())
+                    .font(DS.Typography.eyebrowSM)
+                    .monospacedDigit()
                     .foregroundColor(.secondary)
             }
         }
@@ -276,34 +282,35 @@ struct NowPlayingSheet: View {
 
     // MARK: - Main Controls
 
-    private var mainControls: some View {
-        HStack(spacing: 50) {
-            // Previous
+    private func mainControls(compact: Bool) -> some View {
+        HStack(spacing: compact ? 36 : 50) {
             Button {
                 audio.skipToPrevious()
             } label: {
                 Image(systemName: "backward.fill")
-                    .font(.system(size: 32))
+                    .font(.system(size: compact ? 24 : 30))
                     .foregroundColor(.primary)
             }
+            .disabled(!audio.hasPreviousTrack)
+            .opacity(audio.hasPreviousTrack ? 1 : 0.35)
 
-            // Play/Pause
             Button {
                 audio.togglePlayPause()
             } label: {
                 Image(systemName: audio.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                    .font(.system(size: 72))
-                    .foregroundColor(.primary)
+                    .font(.system(size: compact ? 58 : 68))
+                    .foregroundColor(.accentColor)
             }
 
-            // Next
             Button {
                 audio.skipToNext()
             } label: {
                 Image(systemName: "forward.fill")
-                    .font(.system(size: 32))
+                    .font(.system(size: compact ? 24 : 30))
                     .foregroundColor(.primary)
             }
+            .disabled(!audio.hasNextTrack)
+            .opacity(audio.hasNextTrack ? 1 : 0.35)
         }
         .buttonStyle(.plain)
     }
@@ -320,7 +327,6 @@ struct NowPlayingSheet: View {
             VolumeSlider()
                 .frame(height: 6)
                 .frame(maxWidth: .infinity)
-                .offset(y: -5)
                 .tint(.primary)
 
             Image(systemName: "speaker.wave.3.fill")
@@ -335,33 +341,35 @@ struct NowPlayingSheet: View {
 
     private var secondaryControls: some View {
         HStack(spacing: 36) {
-            // Loop mode
             Button {
                 audio.cycleLoopMode()
             } label: {
-                Image(systemName: audio.loopMode.icon)
-                    .font(.title3)
-                    .foregroundColor(audio.loopMode == .off ? .secondary : .accentColor)
-                    .symbolEffect(.bounce, value: audio.loopMode)
+                controlBadge(
+                    title: "Loop",
+                    symbol: audio.loopMode.icon,
+                    tint: audio.loopMode == .off ? .secondary : .accentColor
+                )
             }
+            .buttonStyle(.plain)
 
-            // AirPlay
             AirPlayButton()
                 .frame(width: 24, height: 24)
+                .frame(minWidth: 54)
 
-            // Share
             if audio.category == .music, let track = audio.currentTrack {
                 Button {
                     shareText("https://wikisubmission.org/music?track=\(track.id.lowercased())")
                 } label: {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.title3)
-                        .foregroundColor(.secondary)
-                        .offset(y: -2)
+                    controlBadge(
+                        title: "Share",
+                        symbol: "square.and.arrow.up",
+                        tint: .secondary
+                    )
                 }
+                .buttonStyle(.plain)
             }
         }
-        .buttonStyle(.plain)
+        .padding(.top, 2)
     }
 
     // MARK: - Lyrics Content
@@ -377,10 +385,10 @@ struct NowPlayingSheet: View {
                         VStack(alignment: .leading, spacing: 2) {
                             if let track = audio.currentTrack {
                                 Text(track.title)
-                                    .font(.headline)
+                                    .font(DS.Typography.titleSM)
                                     .lineLimit(1)
                                 Text(track.subtitle)
-                                    .font(.subheadline)
+                                    .font(DS.Typography.caption)
                                     .foregroundColor(.secondary)
                                     .lineLimit(1)
                             }
@@ -396,7 +404,7 @@ struct NowPlayingSheet: View {
                             VStack(spacing: 12) {
                                 if let header = section.header {
                                     Text(header)
-                                        .font(.caption.weight(.semibold))
+                                        .font(DS.Typography.eyebrow)
                                         .foregroundColor(.secondary)
                                         .textCase(.uppercase)
                                         .tracking(1.5)
@@ -405,7 +413,7 @@ struct NowPlayingSheet: View {
 
                                 ForEach(Array(section.lines.enumerated()), id: \.offset) { _, line in
                                     Text(line)
-                                        .font(.title3)
+                                        .font(DS.Typography.titleMD)
                                         .multilineTextAlignment(.center)
                                         .foregroundColor(.primary.opacity(0.9))
                                 }
@@ -428,28 +436,12 @@ struct NowPlayingSheet: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
                     // Queue header
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Up Next")
-                                .font(.title2.bold())
-                            Text("\(audio.queue.count) tracks")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-
-                        Spacer()
-
-                        // Loop mode indicator
-                        HStack(spacing: 6) {
-                            Image(systemName: audio.loopMode.icon)
-                                .font(.caption)
-                            Text(audio.loopMode.displayName)
-                                .font(.caption)
-                        }
-                        .foregroundColor(audio.loopMode == .off ? .secondary : .accentColor)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Capsule().fill(Color.primary.opacity(0.1)))
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Up Next")
+                            .font(DS.Typography.titleLG)
+                        Text("\(audio.queue.count) tracks • \(audio.queueSourceLabel)")
+                            .font(DS.Typography.caption)
+                            .foregroundColor(.secondary)
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 16)
@@ -514,12 +506,12 @@ struct NowPlayingSheet: View {
                 // Track info
                 VStack(alignment: .leading, spacing: 2) {
                     Text(track.title)
-                        .font(.subheadline.weight(isCurrent ? .semibold : .regular))
+                        .font(isCurrent ? DS.Typography.label : DS.Typography.bodySM)
                         .foregroundColor(isCurrent ? .accentColor : .primary)
                         .lineLimit(1)
 
                     Text(track.subtitle)
-                        .font(.caption)
+                        .font(DS.Typography.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                 }
@@ -590,9 +582,8 @@ struct NowPlayingSheet: View {
         return String(format: "%d:%02d", mins, secs)
     }
 
-    private func setupVolumeObserver() {
-        // Initial volume
-        volume = AVAudioSession.sharedInstance().outputVolume
+    private var progressFill: LinearGradient {
+        LinearGradient(colors: [.accentColor, .accentColor], startPoint: .leading, endPoint: .trailing)
     }
 
     private func parseLyrics(_ raw: String) -> [LyricSection] {
@@ -629,6 +620,36 @@ struct NowPlayingSheet: View {
         }
 
         return sections
+    }
+
+    private func metaPill(_ text: String, systemImage: String, accented: Bool = false) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: systemImage)
+                .font(.caption2)
+            Text(text)
+                .font(DS.Typography.eyebrowSM)
+        }
+        .foregroundStyle(accented ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.secondary))
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            Capsule()
+                .fill(Color.primary.opacity(colorScheme == .dark ? 0.16 : 0.08))
+        )
+    }
+
+    private func controlBadge(title: String, symbol: String, tint: Color) -> some View {
+        VStack(spacing: 6) {
+            Image(systemName: symbol)
+                .font(.title3)
+                .foregroundStyle(tint)
+                .symbolEffect(.bounce, value: title == "Loop" ? audio.loopMode.rawValue : symbol)
+
+            Text(title)
+                .font(DS.Typography.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(minWidth: 54)
     }
 }
 

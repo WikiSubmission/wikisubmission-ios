@@ -19,13 +19,12 @@ struct Quran_Element_QuickSettings: View {
             // Reader Settings
             Section("READER") {
                 QuranSettings_ArabicToggle()
-                QuranSettings_WordByWordToggle()
                 QuranSettings_SubtitlesToggle()
                 QuranSettings_FootnotesToggle()
                 QuranSettings_TransliterationToggle()
             }
             
-            QuranSettings_ReaderStyle()
+            QuranSettings_ReaderStylePicker()
             
             // Language
             QuranSettings_FontSizeSlider()

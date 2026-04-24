@@ -69,7 +69,7 @@ struct Quran_Element_SearchResultCard: View {
                     // Header row
                     HStack {
                         Label("Subtitle", systemImage: "text.badge.star")
-                            .font(.caption)
+                            .font(DS.Typography.caption)
                             .foregroundStyle(.accent)
 
                         Spacer()
@@ -83,7 +83,7 @@ struct Quran_Element_SearchResultCard: View {
                             text: subtitle.getTextInUserLanguage(),
                             query: highlightPhrase
                         )
-                        .font(.system(size: CGFloat(fontSize) - 4))
+                        .font(DS.Font.body(CGFloat(fontSize) - 4))
                         .environment(\.layoutDirection, primaryLanguage.isRightToLeft ? .rightToLeft : .leftToRight)
                     }
                 }
@@ -126,7 +126,7 @@ struct Quran_Element_SearchResultCard: View {
                     // Header row
                     HStack {
                         Label("Footnote", systemImage: "note.text")
-                            .font(.caption)
+                            .font(DS.Typography.caption)
                             .foregroundStyle(.secondary)
                         
                         Spacer()
@@ -140,7 +140,7 @@ struct Quran_Element_SearchResultCard: View {
                             text: footnote.getTextInUserLanguage(),
                             query: highlightPhrase
                         )
-                        .font(.system(size: CGFloat(fontSize) - 4))
+                        .font(DS.Font.body(CGFloat(fontSize) - 4))
                         .italic()
                         .foregroundStyle(.secondary)
                         .environment(\.layoutDirection, primaryLanguage.isRightToLeft ? .rightToLeft : .leftToRight)
@@ -174,7 +174,7 @@ struct Quran_Element_SearchResultCard: View {
             Image(systemName: "chevron.right")
                 .foregroundStyle(.secondary.opacity(0.5))
         }
-        .font(.caption)
+        .font(DS.Typography.caption)
     }
     
     private func toggleSelection() {

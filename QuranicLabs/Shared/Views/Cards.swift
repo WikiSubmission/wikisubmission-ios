@@ -51,7 +51,7 @@ struct Card: View {
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.title2)
+                        .font(DS.Typography.eyebrowLG)
                         .fontWeight(.semibold)
                         .foregroundColor(style.foreground)
                         .multilineTextAlignment(.leading)
@@ -59,7 +59,7 @@ struct Card: View {
 
                     if let subtitle = options?.subtitle {
                         Text(.init(subtitle))
-                            .font(.subheadline)
+                            .font(DS.Typography.eyebrow)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.leading)
                             .pushToLeft()
@@ -83,7 +83,8 @@ struct Card: View {
                 }
                 .offset(y: options?.imageAlignment == .top ? 8 : 0)
             }
-            .padding()
+            .padding(.vertical, 12)
+            .padding(.horizontal)
         }
             .textSelection(.enabled)
 

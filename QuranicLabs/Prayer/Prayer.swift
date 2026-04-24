@@ -12,6 +12,7 @@ struct Prayer: View {
     @Default(.prayer_notifications) private var prayerNotifications
 
     @State private var showLocationSearch = false
+    @State private var showDeleteLocationConfirmation = false
 
     private var hasInternet: Bool {
         network.hasInternet
@@ -64,13 +65,6 @@ struct Prayer: View {
                                 })
                             }
                             
-                            // Ramadan
-                            Card(title: "Ramadan", options: .destination(
-                                systemImage: "moon.stars"
-                            ){
-                                Prayer_Element_Ramadan2026()
-                            })
-                            
                             // Prayer guide
                             Card(title: "Prayer Guide", options: .destination(
                                 systemImage: "questionmark.circle.dashed"
@@ -85,6 +79,14 @@ struct Prayer: View {
                                 style: .secondary
                             ){
                                 showLocationSearch = true
+                            })
+
+                            Card(title: "Delete Location", options: .action(
+                                subtitle: "Remove your saved location and prayer schedule.",
+                                systemImage: "trash",
+                                style: .error
+                            ) {
+                                showDeleteLocationConfirmation = true
                             })
                             
                             if AudioManager.shared.currentTrack != nil {
@@ -102,38 +104,21 @@ struct Prayer: View {
                 .padding()
             }
             .navigationTitle("Prayer")
-            .toolbar {
-                if prayerTimesLocation != nil {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        HStack {
-                            Button {
-                                shareText("https://wikisubmission.org/prayer-times?q=\(Defaults[.prayer_times]?.location_string ?? prayerTimesLocation ?? "" )\(Defaults[.prayer_times_use_midpoint_method_for_asr] == true ? "&asr_adjustment=true" : "")")
-                            } label: {
-                                Image(systemName: "square.and.arrow.up")
-                            }
-                            
-                            Menu {
-                                Button {
-                                    showLocationSearch = true
-                                } label: {
-                                    Label("Change Location", systemImage: "location")
-                                }
-
-                                Button(role: .destructive) {
-                                    manager.clearData()
-                                } label: {
-                                    Label("Reset", systemImage: "trash")
-                                }
-                            } label: {
-                                Image(systemName: "ellipsis.circle")
-                            }
-                        }
-                    }
-                }
-            }
             .sheet(isPresented: $showLocationSearch) {
                 Prayer_Content_LocationSearch()
                     .presentationDetents([.medium, .large])
+            }
+            .confirmationDialog(
+                "Delete your saved location?",
+                isPresented: $showDeleteLocationConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Delete Location", role: .destructive) {
+                    manager.clearData()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This will remove your saved prayer times location and cached prayer schedule.")
             }
             .onDisappear {
                 manager.stopAutoRefresh()

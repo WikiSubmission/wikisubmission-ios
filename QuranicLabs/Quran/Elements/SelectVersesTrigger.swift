@@ -50,7 +50,7 @@ struct Quran_Element_SelectVersesTrigger: View {
         Button {
             toggleSelectMode()
         } label: {
-            Image(systemName: selectMode.isActive ? "checkmark.circle.fill" : "hand.point.up.left.fill")
+            Image(systemName: selectMode.isActive ? "checkmark.circle.fill" : "checklist")
         }
     }
 

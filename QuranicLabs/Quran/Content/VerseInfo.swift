@@ -94,7 +94,7 @@ struct Quran_Content_VerseInfo: View {
                             presentTextSelectorSheet = true
                         } label: {
                             HStack {
-                                Image(systemName: "pencil")
+                                Image(systemName: "checklist")
                                 Text("Select")
                             }
                         }
@@ -113,7 +113,7 @@ struct Quran_Content_VerseInfo: View {
                 }
                 .removeParentListStyle()
             }
-            .font(.caption)
+            .font(DS.Typography.eyebrow)
             .sheet(isPresented: $presentBookmarkSheet, content: {
                 Quran_Content_Bookmarks()
             })
@@ -122,14 +122,18 @@ struct Quran_Content_VerseInfo: View {
             })
             
             Section(header: HStack {
-                Text("\(data.wordByWord.count) words")
+                Text("\(data.wordByWord.count) WORDS")
+                    .font(DS.Typography.eyebrow)
+                    .tracking(2)
                 Spacer()
-                Text("")
             }) {
                 Quran_Element_WordByWordInfo(verse: data)
             }
             
-            Section("CHAPTER \(data.chapter.chapter_number)") {
+            Section(header: Text("CHAPTER \(data.chapter.chapter_number)")
+                .font(DS.Typography.eyebrow)
+                .tracking(2)
+            ) {
                 Quran_Element_ChapterInfo(verse: data)
             }
         }

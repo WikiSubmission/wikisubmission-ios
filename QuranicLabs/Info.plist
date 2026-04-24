@@ -2,10 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>UIAppFonts</key>
-	<array>
-		<string>AmiriQuran-Regular.ttf</string>
-	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -33,6 +29,24 @@
 			<string></string>
 		</dict>
 	</dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>AmiriQuran-Regular.ttf</string>
+		<string>CormorantGaramond-Regular.ttf</string>
+		<string>CormorantGaramond-Medium.ttf</string>
+		<string>CormorantGaramond-SemiBold.ttf</string>
+		<string>CormorantGaramond-Italic.ttf</string>
+		<string>CormorantGaramond-MediumItalic.ttf</string>
+		<string>CormorantGaramond-SemiBoldItalic.ttf</string>
+		<string>SourceSerif4-Regular.ttf</string>
+		<string>SourceSerif4-Italic.ttf</string>
+		<string>SourceSerif4-Medium.ttf</string>
+		<string>SourceSerif4-MediumItalic.ttf</string>
+		<string>SourceSerif4-SemiBold.ttf</string>
+		<string>JetBrainsMono-Regular.ttf</string>
+		<string>JetBrainsMono-Medium.ttf</string>
+		<string>JetBrainsMono-SemiBold.ttf</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

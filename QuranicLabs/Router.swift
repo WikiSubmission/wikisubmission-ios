@@ -42,14 +42,23 @@ class Router: ObservableObject {
         
     func push(_ destination: Destination) {
         let currentTab = Defaults[.active_tab]
-        pushToPath(destination: destination, tab: currentTab)
+        if destination.tab != currentTab {
+            navigate(to: destination)
+        } else {
+            pushToPath(destination: destination, tab: currentTab)
+        }
     }
 
     /// Appends a destination to the current tab's navigation path without changing tabs
     /// or performing any rerouting logic.
     func append(_ destination: Destination) {
         let currentTab = Defaults[.active_tab]
-        pushToPath(destination: destination, tab: currentTab)
+        if destination.tab != currentTab {
+            selectTab(destination.tab)
+            pushToPath(destination: destination, tab: destination.tab)
+        } else {
+            pushToPath(destination: destination, tab: currentTab)
+        }
     }
     
     func navigate(to destination: Destination) {
@@ -133,7 +142,10 @@ extension Router {
         
         // Quran
         case quran
+        case ai
         case randomVerse
+        case readingHistory
+        case insights
         case chapter(chapterNumber: Int, scrollToVerseNumber: Int? = nil)
         case verseInfo(chapterNumber: Int, verseNumber: Int)
         case wordInfo(chapterNumber: Int, verseNumber: Int, wordIndex: Int)
@@ -152,7 +164,10 @@ extension Router {
             switch self {
             case .home: return "home"
             case .quran: return "quran"
+            case .ai: return "ai"
             case .randomVerse: return "quran/random-verse"
+            case .readingHistory: return "quran/reading-history"
+            case .insights: return "quran/insights"
             case .chapter(let chapterNumber, let verseNumber):
                 if let verse = verseNumber {
                     return "quran/verse/\(chapterNumber):\(verse)"
@@ -176,7 +191,7 @@ extension Router {
         var tab: TabItem {
             switch self {
             case .home: return .home
-            case .quran, .randomVerse, .chapter, .verseInfo, .wordInfo: return .quran
+            case .quran, .ai, .randomVerse, .readingHistory, .insights, .chapter, .verseInfo, .wordInfo: return .quran
             case .prayerTimes: return .prayer
             case .music, .track: return .music
             case .settings: return .settings
@@ -197,10 +212,16 @@ extension Router {
                 Home()
             case .quran:
                 Quran()
+            case .ai:
+                AIChat()
             case .settings:
                 Settings()
             case .randomVerse:
                 Quran_Content_RandomVerse()
+            case .readingHistory:
+                Quran_Content_ReadingHistory()
+            case .insights:
+                Quran_Content_Insights()
             case .chapter(let chapterNumber, let scrollToVerseNumber):
                 Quran_Content_ChapterReader(
                     chapterNumber: chapterNumber,
@@ -247,6 +268,12 @@ extension Router {
                 case "random-verse":
                     return .randomVerse
 
+                case "reading-history":
+                    return .readingHistory
+
+                case "insights":
+                    return .insights
+
                 case "verse":
                     guard components.count >= 3 else { return nil }
                     let verseRef = components[2].split(separator: ":").map(String.init)
@@ -276,6 +303,9 @@ extension Router {
                 default:
                     return nil
                 }
+
+            case "ai":
+                return .ai
 
             case "prayer-times":
                 return .prayerTimes

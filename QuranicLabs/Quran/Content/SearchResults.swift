@@ -117,13 +117,12 @@ struct Quran_Content_SearchResults: View {
                     .foregroundStyle(.secondary)
                 HStack {
                     Text(selectedSort.rawValue)
-                        .fontWeight(.medium)
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.caption2)
                 }
                 .foregroundStyle(.accent)
             }
-            .font(.caption)
+            .font(DS.Typography.caption)
         }
         .buttonStyle(.plain)
     }
@@ -149,7 +148,7 @@ struct Quran_Content_SearchResults: View {
                 Text(filter.rawValue)
                 Text("(\(count))")
             }
-            .font(.caption)
+            .font(DS.Typography.caption)
             .fontWeight(isSelected ? .bold : .regular)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
