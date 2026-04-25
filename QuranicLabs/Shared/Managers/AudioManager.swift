@@ -133,10 +133,13 @@ class AudioManager: ObservableObject {
         do {
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(.playback, mode: .default)
-            try audioSession.setActive(true)
         } catch {
             print("AVAudioSession setup failed: \(error)")
         }
+    }
+
+    private func activateAudioSession() {
+        try? AVAudioSession.sharedInstance().setActive(true)
     }
 
     // MARK: - Interruption Handling
@@ -482,6 +485,7 @@ class AudioManager: ObservableObject {
         addPeriodicTimeObserver()
 
         // Start playback
+        activateAudioSession()
         player?.play()
     }
 
