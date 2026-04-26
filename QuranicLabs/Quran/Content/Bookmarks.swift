@@ -60,7 +60,7 @@ struct Quran_Content_Bookmarks: View {
     }
 
     var body: some View {
-        NavigationStack {
+        VStack {
             content
                 .navigationTitle("Bookmarks")
                 .navigationBarTitleDisplayMode(.large)

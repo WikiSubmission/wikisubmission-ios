@@ -144,6 +144,7 @@ extension Router {
         case quran
         case ai
         case randomVerse
+        case bookmarks
         case readingHistory
         case insights
         case chapter(chapterNumber: Int, scrollToVerseNumber: Int? = nil)
@@ -166,6 +167,7 @@ extension Router {
             case .quran: return "quran"
             case .ai: return "ai"
             case .randomVerse: return "quran/random-verse"
+            case .bookmarks: return "quran/bookmarks"
             case .readingHistory: return "quran/reading-history"
             case .insights: return "quran/insights"
             case .chapter(let chapterNumber, let verseNumber):
@@ -191,7 +193,7 @@ extension Router {
         var tab: TabItem {
             switch self {
             case .home: return .home
-            case .quran, .ai, .randomVerse, .readingHistory, .insights, .chapter, .verseInfo, .wordInfo: return .quran
+            case .quran, .ai, .randomVerse, .bookmarks, .readingHistory, .insights, .chapter, .verseInfo, .wordInfo: return .quran
             case .prayerTimes: return .prayer
             case .music, .track: return .music
             case .settings: return .settings
@@ -218,6 +220,8 @@ extension Router {
                 Settings()
             case .randomVerse:
                 Quran_Content_RandomVerse()
+            case .bookmarks:
+                Quran_Content_Bookmarks()
             case .readingHistory:
                 Quran_Content_ReadingHistory()
             case .insights:
@@ -267,6 +271,9 @@ extension Router {
                 switch components[1] {
                 case "random-verse":
                     return .randomVerse
+
+                case "bookmarks":
+                    return .bookmarks
 
                 case "reading-history":
                     return .readingHistory

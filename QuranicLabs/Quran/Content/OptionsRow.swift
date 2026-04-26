@@ -4,7 +4,6 @@ import Defaults
 struct Quran_Content_OptionsRow: View {
     @Binding var searchQuery: QuranQuery
 
-    @State private var showBookmarks = false
     @State private var showHistory = false
     @State private var showNotifications = false
 
@@ -33,7 +32,7 @@ struct Quran_Content_OptionsRow: View {
             // Icon grid
             LazyVGrid(columns: columns, spacing: DS.Spacing.sm) {
                 tile(icon: "bookmark", label: "Bookmarks") {
-                    showBookmarks = true
+                    Router.shared.push(.bookmarks)
                 }
                 tile(icon: "dice", label: "Random") {
                     Router.shared.push(.randomVerse)
@@ -41,8 +40,8 @@ struct Quran_Content_OptionsRow: View {
                 tile(icon: "chart.bar.xaxis.ascending", label: "Insights") {
                     Router.shared.push(.insights)
                 }
-                tile(icon: "clock.arrow.circlepath", label: "History") {
-                    showHistory = true
+                tile(icon: "clock.arrow.circlepath", label: "Activity") {
+                    Router.shared.push(.readingHistory)
                 }
             }
 
@@ -67,9 +66,6 @@ struct Quran_Content_OptionsRow: View {
                 .background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: DS.Radius.lg))
             }
             .buttonStyle(.plain)
-        }
-        .sheet(isPresented: $showBookmarks) {
-            Quran_Content_Bookmarks()
         }
         .sheet(isPresented: $showHistory) {
             NavigationStack {

@@ -5,7 +5,6 @@ struct Home_QuranSection: View {
     @ObservedObject var router = Router.shared
     @ObservedObject var audioManager = AudioManager.shared
 
-    @State private var showBookmarks = false
     @State private var showAppendices = false
     @State private var showNotifications = false
 
@@ -38,7 +37,7 @@ struct Home_QuranSection: View {
                     router.popToRoot(for: .quran)
                 }
                 tile(icon: "bookmark", label: "Bookmarks") {
-                    showBookmarks = true
+                    Router.shared.push(.bookmarks)
                 }
                 tile(icon: "text.page", label: "Appendices") {
                     showAppendices = true
@@ -47,7 +46,7 @@ struct Home_QuranSection: View {
                     router.popToRoot(for: .quran)
                     router.navigate(to: .randomVerse)
                 }
-                tile(icon: "clock.arrow.circlepath", label: "History") {
+                tile(icon: "clock.arrow.circlepath", label: "Activity") {
                     Router.shared.push(.readingHistory)
                 }
                 tile(icon: "bell", label: "Notifications") {
@@ -56,9 +55,6 @@ struct Home_QuranSection: View {
             }
         }
         .removeParentListStyle()
-        .sheet(isPresented: $showBookmarks) {
-            Quran_Content_Bookmarks()
-        }
         .sheet(isPresented: $showAppendices) {
             NavigationStack {
                 Appendices()
