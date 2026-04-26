@@ -71,7 +71,7 @@ struct Home: View {
                             subtitle: "Chat about Submission, scripture, or a verse reference.",
                             systemImage: "sparkles",
                             showChevron: true,
-                            style: .accent
+                            style: .default
                         ) {
                             router.navigate(to: .ai)
                         })
@@ -208,33 +208,33 @@ struct WhatsNew: View {
 
                 VStack(spacing: DS.Spacing.md) {
                     whatsNewCard(
+                        title: "Activity log and insights",
+                        subtitle: "A new structured activity timeline tracks your reading sessions with lifecycle events, and insights surfaces streaks, charts, and chapter breakdowns.",
+                        systemImage: "chart.bar.xaxis.ascending"
+                    )
+                    whatsNewCard(
+                        title: "Refreshed music experience",
+                        subtitle: "Browse by category, featured cards, a dedicated favorites page, and genre labels on every track.",
+                        systemImage: "music.note"
+                    )
+                    whatsNewCard(
                         title: "AI chat (limited early preview)",
                         subtitle: "Ask broader questions across the app. Early preview.",
                         systemImage: "sparkles"
                     )
                     whatsNewCard(
                         title: "English Quran recitation",
-                        subtitle: "Our first English recitation, Onyx, is now available the default Quran voice.",
+                        subtitle: "Our first English recitation, Onyx, is now available as the default Quran voice.",
                         systemImage: "waveform"
                     )
                     whatsNewCard(
-                        title: "Quran history & insights",
-                        subtitle: "Your reading history now keeps more than just the latest verse.",
-                        systemImage: "clock.arrow.circlepath"
-                    )
-                    whatsNewCard(
-                        title: "Daily reminders",
-                        subtitle: "If you have notifications on, they'll enabled by default!",
-                        systemImage: "bell.badge"
-                    )
-                    whatsNewCard(
-                        title: "Prayer alert sounds",
-                        subtitle: "If you want, you can choose a call to prayer sound for the prayer alert.",
+                        title: "Daily reminders and prayer sounds",
+                        subtitle: "Daily reminder notifications are on by default. You can also choose a call to prayer sound for prayer alerts.",
                         systemImage: "bell.badge"
                     )
                     whatsNewCard(
                         title: "Refined design",
-                        subtitle: "A refreshed visual theme brings a cleaner, more polished feel across the app.",
+                        subtitle: "An editorial visual theme with custom typography across the app.",
                         systemImage: "paintpalette"
                     )
                     Rectangle()
@@ -308,10 +308,6 @@ struct WhatsNew: View {
                     .frame(height: 1)
 
                 HStack {
-                    Text("Connect with us")
-                        .font(DS.Typography.bodySM)
-                        .foregroundStyle(.secondary)
-
                     Spacer()
 
                     HStack(spacing: 6) {

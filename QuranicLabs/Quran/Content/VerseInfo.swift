@@ -94,8 +94,8 @@ struct Quran_Content_VerseInfo: View {
                             presentTextSelectorSheet = true
                         } label: {
                             HStack {
-                                Image(systemName: "checklist")
-                                Text("Select")
+                                Image(systemName: "pencil")
+                                Text("Text Selector")
                             }
                         }
                         .buttonStyle(SignatureButtonStyle(tint: .green))

@@ -30,11 +30,6 @@ struct Home_FooterSection: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .pushToCenter()
-            
-            if AudioManager.shared.currentTrack != nil {
-                Color.clear.frame(height: 56)
-                    .removeParentListStyle()
-            }
         }
     }
 }

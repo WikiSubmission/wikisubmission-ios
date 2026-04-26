@@ -32,6 +32,12 @@ struct Quran: View {
                 // [Modifiers for searchbar]
                 .onSubmit(of: .search) {
                     searchQuery.commitQuery()
+                    if !searchQuery.query.isEmpty {
+                        QuranReadingHistoryStore.shared.log(
+                            action: .searched,
+                            detail: "Searched \"\(searchQuery.query)\""
+                        )
+                    }
                 }
                 .onChange(of: searchQuery.query) { _, new in
                     selectMode.reset()
@@ -103,10 +109,6 @@ struct Quran: View {
                     }
                 }
                 .padding(.horizontal)
-                
-                if AudioManager.shared.currentTrack != nil {
-                    Color.clear.frame(height: 56)
-                }
             }
             .frame(maxWidth: .infinity)
             

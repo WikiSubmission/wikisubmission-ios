@@ -32,28 +32,41 @@ struct Quran_Content_OptionsRow: View {
 
             // Icon grid
             LazyVGrid(columns: columns, spacing: DS.Spacing.sm) {
-                tile(icon: "sparkles", label: "AI Chat") {
-                    router.navigate(to: .ai)
-                }
                 tile(icon: "bookmark", label: "Bookmarks") {
                     showBookmarks = true
                 }
                 tile(icon: "dice", label: "Random") {
                     Router.shared.push(.randomVerse)
                 }
-                tile(icon: "clock.arrow.circlepath", label: "History") {
-                    showHistory = true
-                }
                 tile(icon: "chart.bar.xaxis.ascending", label: "Insights") {
                     Router.shared.push(.insights)
                 }
-                tile(icon: "bell", label: "Alerts") {
-                    showNotifications = true
-                }
-                tile(icon: "gearshape", label: "Settings") {
-                    Router.shared.push(.settings)
+                tile(icon: "clock.arrow.circlepath", label: "History") {
+                    showHistory = true
                 }
             }
+
+            // AI card
+            Button {
+                router.navigate(to: .ai)
+            } label: {
+                HStack(spacing: DS.Spacing.sm) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 16))
+                    Text("Ask AI")
+                        .font(DS.Typography.label)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.accent.opacity(0.5))
+                }
+                .foregroundStyle(.accent)
+                .padding(.horizontal, DS.Spacing.lg)
+                .padding(.vertical, DS.Spacing.md)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: DS.Radius.lg))
+            }
+            .buttonStyle(.plain)
         }
         .sheet(isPresented: $showBookmarks) {
             Quran_Content_Bookmarks()

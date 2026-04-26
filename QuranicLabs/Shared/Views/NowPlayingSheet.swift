@@ -172,6 +172,10 @@ struct NowPlayingSheet: View {
                 volumeSection
                 secondaryControls
             }
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in }
+            )
 
             Spacer(minLength: compactHeight ? 10 : 20)
         }
@@ -211,11 +215,23 @@ struct NowPlayingSheet: View {
     private var trackInfo: some View {
         VStack(spacing: 6) {
             if let track = audio.currentTrack {
-                Text(track.subtitle)
-                    .font(DS.Typography.eyebrow)
-                    .tracking(1.5)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Text(track.subtitle)
+                        .font(DS.Typography.eyebrow)
+                        .tracking(1.5)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+
+                    if let categoryName = track.metadata?.categoryName {
+                        Text("·")
+                            .foregroundStyle(.tertiary)
+                        Text(categoryName)
+                            .font(DS.Typography.eyebrow)
+                            .tracking(1.5)
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(1)
+                    }
+                }
 
                 Text(track.title)
                     .font(DS.Typography.heroMD)
@@ -345,7 +361,7 @@ struct NowPlayingSheet: View {
                 audio.cycleLoopMode()
             } label: {
                 controlBadge(
-                    title: "Loop",
+                    title: audio.loopMode.displayName,
                     symbol: audio.loopMode.icon,
                     tint: audio.loopMode == .off ? .secondary : .accentColor
                 )

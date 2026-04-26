@@ -11,7 +11,8 @@ struct Quran_Content_RandomVerse: View {
                 Quran_Content_ChapterReader(
                     chapterNumber: data.chapter.chapter_number,
                     options: .init(
-                        scrollToVerseIndex: data.index.verse_index
+                        scrollToVerseIndex: data.index.verse_index,
+                        action: .randomVerse
                     )
                 )
             } else {
@@ -34,5 +35,16 @@ struct Quran_Content_RandomVerse: View {
         }
         
         self.data = QuranUnified(from: randomIndex, context: modelContext)
+        if let data = self.data {
+            QuranReadingHistoryStore.shared.log(
+                action: .randomVerse,
+                detail: "Random verse \(data.index.verse_id) in Sura \(data.chapter.chapter_number): \(data.chapter.title_english)",
+                chapterNumber: data.chapter.chapter_number,
+                chapterTitle: data.chapter.title_english,
+                chapterVerses: data.chapter.chapter_verses,
+                verseId: data.index.verse_id,
+                verseNumber: data.index.verse_number
+            )
+        }
     }
 }

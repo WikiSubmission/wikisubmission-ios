@@ -50,7 +50,7 @@ struct Home_QuranSection: View {
                 tile(icon: "clock.arrow.circlepath", label: "History") {
                     Router.shared.push(.readingHistory)
                 }
-                tile(icon: "bell", label: "Alerts") {
+                tile(icon: "bell", label: "Notifications") {
                     showNotifications = true
                 }
             }
@@ -79,6 +79,7 @@ struct Home_QuranSection: View {
                     .frame(height: 24)
                 Text(label)
                     .font(DS.Typography.eyebrowSM)
+                    .lineLimit(1)
             }
             .foregroundStyle(.accent)
             .frame(maxWidth: .infinity)

@@ -6,6 +6,7 @@ struct Quran_Content_ChapterReader_Options {
     var scrollToVerseIndex: Int? = nil
     var scrollToVerseNumber: Int? = nil
     var scrollToVerseId: String? = nil
+    var action: ReadingAction = .read
 }
 
 struct Quran_Content_ChapterReader: View {
@@ -38,10 +39,6 @@ struct Quran_Content_ChapterReader: View {
                             switch quranReaderStyle {
                             case .cards, .wordByWord: cardReader
                             case .book: bookReader
-                            }
-                            if AudioManager.shared.currentTrack != nil {
-                                Color.clear.frame(height: 56)
-                                    .removeParentListStyle()
                             }
                         }
                         .opacity(appeared ? 1 : 0)
@@ -320,7 +317,7 @@ struct Quran_Content_ChapterReader: View {
 
         historyDebounceTask?.cancel()
         historyDebounceTask = Task {
-            try? await Task.sleep(nanoseconds: 2_000_000_000) // 2s dwell time
+            try? await Task.sleep(nanoseconds: 4_000_000_000) // 4s dwell time
             guard !Task.isCancelled else { return }
             let verse = data[index]
             await QuranReadingHistoryStore.shared.record(
@@ -328,7 +325,9 @@ struct Quran_Content_ChapterReader: View {
                 chapterTitle: verse.chapter.title_english,
                 verseId: verse.index.verse_id,
                 verseNumber: verse.index.verse_number,
-                excerpt: verse.text.english
+                chapterVerses: verse.chapter.chapter_verses,
+                excerpt: verse.text.english,
+                action: options.action
             )
         }
     }

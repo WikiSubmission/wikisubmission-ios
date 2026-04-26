@@ -586,10 +586,22 @@ struct Quran_Content_Bookmarks: View {
         case .verse:
             if let chapter = bookmark.chapterNumber, let verse = bookmark.verseNumber {
                 presentedBookmarkDestination = .init(chapterNumber: chapter, verseNumber: verse)
+                QuranReadingHistoryStore.shared.log(
+                    action: .bookmarked,
+                    detail: "Opened bookmark \(bookmark.key)",
+                    chapterNumber: chapter,
+                    verseId: bookmark.key,
+                    verseNumber: verse
+                )
             }
         case .chapter:
             if let chapter = bookmark.chapterNumber {
                 presentedBookmarkDestination = .init(chapterNumber: chapter, verseNumber: nil)
+                QuranReadingHistoryStore.shared.log(
+                    action: .bookmarked,
+                    detail: "Opened bookmarked Sura \(chapter)",
+                    chapterNumber: chapter
+                )
             }
         }
     }

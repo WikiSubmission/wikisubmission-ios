@@ -1,7 +1,7 @@
 import SwiftUI
 import Charts
 
-// MARK: - Store Extensions
+// MARK: - Supporting Types
 
 struct DailyReading: Identifiable {
     let date: Date
@@ -10,13 +10,22 @@ struct DailyReading: Identifiable {
     var id: Date { date }
 }
 
-struct ChapterFrequency {
+struct ChapterFrequency: Identifiable {
     let chapterNumber: Int
     let chapterTitle: String
     let count: Int
+    var id: Int { chapterNumber }
 }
 
+// MARK: - Store Extensions
+
 extension QuranReadingHistoryStore {
+
+    private static let minimumSessionDuration: TimeInterval = 15
+
+    func sessionDuration(_ session: QuranReadingSession) -> TimeInterval {
+        max(session.duration, Self.minimumSessionDuration)
+    }
 
     var hasReadToday: Bool {
         history.contains { Calendar.current.isDateInToday($0.startedAt) }
@@ -35,8 +44,7 @@ extension QuranReadingHistoryStore {
 
         while true {
             let dayStart = checkDay
-            let hasEntry = history.contains { calendar.startOfDay(for: $0.startedAt) == dayStart }
-            if hasEntry {
+            if history.contains(where: { calendar.startOfDay(for: $0.startedAt) == dayStart }) {
                 streak += 1
                 guard let prev = calendar.date(byAdding: .day, value: -1, to: checkDay) else { break }
                 checkDay = prev
@@ -44,32 +52,40 @@ extension QuranReadingHistoryStore {
                 break
             }
         }
-
         return streak
     }
 
     var totalReadingTime: TimeInterval {
-        history.reduce(0) { sum, entry in
-            sum + min(entry.updatedAt.timeIntervalSince(entry.startedAt), 1200)
-        }
+        history.reduce(0) { $0 + sessionDuration($1) }
     }
 
-    var totalVersesRead: Int { history.count }
+    var totalSessions: Int { history.count }
+
+    var totalEvents: Int {
+        history.reduce(0) { $0 + $1.events.count }
+    }
 
     var uniqueChaptersVisited: Int {
-        Set(history.map(\.chapterNumber)).count
+        Set(history.filter { $0.chapterNumber > 0 }.map(\.chapterNumber)).count
     }
 
-    var mostReadChapter: ChapterFrequency? {
-        let grouped = Dictionary(grouping: history, by: \.chapterNumber)
-        guard let top = grouped.max(by: { $0.value.count < $1.value.count }) else { return nil }
-        let title = top.value.first?.chapterTitle ?? ""
-        return ChapterFrequency(chapterNumber: top.key, chapterTitle: title, count: top.value.count)
+    var topChapters: [ChapterFrequency] {
+        let relevant = history.filter { $0.chapterNumber > 0 }
+        let grouped = Dictionary(grouping: relevant, by: \.chapterNumber)
+        return grouped.map { ChapterFrequency(chapterNumber: $0.key, chapterTitle: $0.value.first?.chapterTitle ?? "", count: $0.value.count) }
+            .sorted { $0.count > $1.count }
     }
+
+    var mostReadChapter: ChapterFrequency? { topChapters.first }
 
     var averageSessionDuration: TimeInterval {
         guard !history.isEmpty else { return 0 }
         return totalReadingTime / Double(history.count)
+    }
+
+    var averageEventsPerSession: Double {
+        guard !history.isEmpty else { return 0 }
+        return Double(totalEvents) / Double(history.count)
     }
 
     var last7DaysActivity: [DailyReading] {
@@ -80,48 +96,42 @@ extension QuranReadingHistoryStore {
 
         return (0..<7).reversed().map { daysAgo in
             let day = calendar.date(byAdding: .day, value: -daysAgo, to: today)!
-            let entries = history.filter { calendar.startOfDay(for: $0.startedAt) == day }
-            let minutes = entries.reduce(0.0) { sum, entry in
-                sum + min(entry.updatedAt.timeIntervalSince(entry.startedAt), 1200) / 60.0
-            }
-            return DailyReading(
-                date: day,
-                label: formatter.string(from: day),
-                minutes: minutes
-            )
+            let sessions = history.filter { calendar.startOfDay(for: $0.startedAt) == day }
+            let minutes = sessions.reduce(0.0) { $0 + sessionDuration($1) / 60.0 }
+            return DailyReading(date: day, label: formatter.string(from: day), minutes: minutes)
         }
     }
 
     var weeklyMinutes: Int {
         Int(last7DaysActivity.reduce(0) { $0 + $1.minutes })
     }
+
+    var actionBreakdown: [(action: ReadingAction, count: Int)] {
+        let grouped = Dictionary(grouping: history, by: \.action)
+        return ReadingAction.allCases.compactMap { act in
+            guard let count = grouped[act]?.count, count > 0 else { return nil }
+            return (action: act, count: count)
+        }
+    }
 }
 
-// MARK: - Formatting Helpers
+// MARK: - Formatting
 
 private func formattedDuration(_ interval: TimeInterval) -> String {
-    let totalMinutes = Int(interval / 60)
-    if totalMinutes < 60 {
-        return "\(totalMinutes)m"
-    }
+    let totalSeconds = Int(interval)
+    if totalSeconds < 60 { return totalSeconds > 0 ? "<1m" : "0m" }
+    let totalMinutes = totalSeconds / 60
+    if totalMinutes < 60 { return "\(totalMinutes)m" }
     let hours = totalMinutes / 60
     let minutes = totalMinutes % 60
     return minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h"
 }
 
-/// Large rounded number for stat display (Apple Health style)
-private let statNumberFont = Font.system(size: 28, weight: .semibold, design: .rounded)
-/// Medium rounded number for detail cards
-private let detailNumberFont = Font.system(size: 22, weight: .semibold, design: .rounded)
-
-// MARK: - Reusable card background
+// MARK: - Card Container
 
 private struct InsightCard<Content: View>: View {
     let content: () -> Content
-
-    init(@ViewBuilder content: @escaping () -> Content) {
-        self.content = content
-    }
+    init(@ViewBuilder content: @escaping () -> Content) { self.content = content }
 
     var body: some View {
         content()
@@ -137,11 +147,16 @@ private struct InsightCard<Content: View>: View {
     }
 }
 
-// MARK: - Full Insights View
+// MARK: - Insights View
 
 struct Quran_Content_Insights: View {
     @ObservedObject private var store = QuranReadingHistoryStore.shared
     @ObservedObject private var router = Router.shared
+
+    private let mono = DS.Font.mono(10, weight: .regular)
+    private let monoMed = DS.Font.mono(10, weight: .medium)
+    private let monoSm = DS.Font.mono(9, weight: .regular)
+    private let statFont = Font.system(size: 28, weight: .semibold, design: .rounded)
 
     var body: some View {
         Group {
@@ -155,7 +170,7 @@ struct Quran_Content_Insights: View {
         .navigationBarTitleDisplayMode(.large)
     }
 
-    // MARK: - Empty State
+    // MARK: - Empty
 
     private var emptyState: some View {
         VStack(spacing: 16) {
@@ -188,19 +203,21 @@ struct Quran_Content_Insights: View {
     private var insightsContent: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: DS.Spacing.xl) {
-                dailyCheckIn
-                statsRow
+                streakCard
                 weeklyChart
-                detailCards
+                statsGrid
+                topChaptersCard
+                activitySummary
+                activityLink
             }
             .padding(.horizontal)
             .padding(.bottom, 200)
         }
     }
 
-    // MARK: - Daily Check-In
+    // MARK: - Streak
 
-    private var dailyCheckIn: some View {
+    private var streakCard: some View {
         let readToday = store.hasReadToday
         let streak = store.currentStreak
 
@@ -214,7 +231,7 @@ struct Quran_Content_Insights: View {
                     Text(readToday ? "Read Today" : "Not Yet Today")
                         .font(DS.Typography.titleSM)
                     Text(streak > 0 ? "\(streak)-day streak" : "Start a streak")
-                        .font(DS.Typography.eyebrowSM)
+                        .font(monoSm)
                         .foregroundStyle(.secondary)
                 }
 
@@ -229,49 +246,6 @@ struct Quran_Content_Insights: View {
                     .foregroundStyle(.orange)
                 }
             }
-        }
-    }
-
-    // MARK: - Stats Row
-
-    private var statsRow: some View {
-        InsightCard {
-            HStack(spacing: 0) {
-                statItem(
-                    value: "\(store.currentStreak)",
-                    label: "DAY STREAK",
-                    alignment: .leading
-                )
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                statItem(
-                    value: formattedDuration(store.totalReadingTime),
-                    label: "TOTAL TIME",
-                    alignment: .center
-                )
-                .frame(maxWidth: .infinity)
-
-                statItem(
-                    value: "\(store.totalVersesRead)",
-                    label: "SESSIONS",
-                    alignment: .trailing
-                )
-                .frame(maxWidth: .infinity, alignment: .trailing)
-            }
-        }
-    }
-
-    private func statItem(value: String, label: String, alignment: HorizontalAlignment) -> some View {
-        VStack(alignment: alignment, spacing: DS.Spacing.xs) {
-            Text(value)
-                .font(statNumberFont)
-                .foregroundStyle(DS.Color.fg)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-            Text(label)
-                .font(DS.Typography.eyebrowSM)
-                .tracking(1.5)
-                .foregroundStyle(DS.Color.fgMuted)
         }
     }
 
@@ -313,8 +287,8 @@ struct Quran_Content_Insights: View {
                     }
                     .frame(height: 180)
 
-                    Text("\(weekTotal) min this week".uppercased())
-                        .font(DS.Typography.eyebrowSM)
+                    Text("\(weekTotal) MIN THIS WEEK")
+                        .font(monoSm)
                         .foregroundStyle(DS.Color.fgMuted)
                         .tracking(1.5)
                 }
@@ -322,47 +296,149 @@ struct Quran_Content_Insights: View {
         }
     }
 
-    // MARK: - Detail Cards
+    // MARK: - Stats Grid
 
-    private var detailCards: some View {
-        HStack(spacing: DS.Spacing.sm) {
-            InsightCard {
-                VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                    Text(store.mostReadChapter?.chapterTitle ?? "—")
-                        .font(detailNumberFont)
-                        .foregroundStyle(DS.Color.fg)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                    Text("MOST READ")
-                        .font(DS.Typography.eyebrowSM)
-                        .tracking(1.5)
-                        .foregroundStyle(DS.Color.fgMuted)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+    private var statsGrid: some View {
+        let columns = [GridItem(.flexible()), GridItem(.flexible())]
+
+        return LazyVGrid(columns: columns, spacing: DS.Spacing.sm) {
+            statCell(value: "\(store.totalSessions)", label: "SESSIONS")
+            statCell(value: formattedDuration(store.totalReadingTime), label: "TOTAL TIME")
+            statCell(value: "\(store.uniqueChaptersVisited)", label: "CHAPTERS")
+            statCell(value: formattedDuration(store.averageSessionDuration), label: "AVG SESSION")
+            statCell(value: "\(store.totalEvents)", label: "EVENTS")
+            statCell(value: String(format: "%.1f", store.averageEventsPerSession), label: "EVENTS / SESSION")
+        }
+    }
+
+    private func statCell(value: String, label: String) -> some View {
+        InsightCard {
+            VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                Text(value)
+                    .font(statFont)
+                    .foregroundStyle(DS.Color.fg)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                Text(label)
+                    .font(monoSm)
+                    .tracking(1.5)
+                    .foregroundStyle(DS.Color.fgMuted)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    // MARK: - Top Chapters
+
+    private var topChaptersCard: some View {
+        let top = Array(store.topChapters.prefix(5))
+        let maxCount = top.first?.count ?? 1
+
+        return VStack(alignment: .leading, spacing: DS.Spacing.md) {
+            SectionLabel("TOP CHAPTERS")
 
             InsightCard {
-                VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                    Text(formattedDuration(store.averageSessionDuration))
-                        .font(detailNumberFont)
-                        .foregroundStyle(DS.Color.fg)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                    Text("AVG SESSION")
-                        .font(DS.Typography.eyebrowSM)
-                        .tracking(1.5)
-                        .foregroundStyle(DS.Color.fgMuted)
+                VStack(spacing: DS.Spacing.sm) {
+                    ForEach(top) { chapter in
+                        HStack(spacing: DS.Spacing.sm) {
+                            Text("\(chapter.chapterNumber)")
+                                .font(monoSm)
+                                .foregroundStyle(DS.Color.fgMuted)
+                                .frame(width: 20, alignment: .trailing)
+
+                            Text(chapter.chapterTitle)
+                                .font(mono)
+                                .foregroundStyle(DS.Color.fg)
+                                .lineLimit(1)
+                                .frame(width: 80, alignment: .leading)
+
+                            GeometryReader { geo in
+                                Capsule()
+                                    .fill(Color.accentColor.opacity(0.5))
+                                    .frame(width: geo.size.width * CGFloat(chapter.count) / CGFloat(maxCount))
+                            }
+                            .frame(height: 4)
+
+                            Text("\(chapter.count)")
+                                .font(monoMed)
+                                .foregroundStyle(DS.Color.fgMuted)
+                                .frame(width: 20, alignment: .trailing)
+                        }
+                    }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+    }
+
+    // MARK: - Activity Summary (action breakdown)
+
+    private var activitySummary: some View {
+        let actions = store.actionBreakdown
+
+        return VStack(alignment: .leading, spacing: DS.Spacing.md) {
+            SectionLabel("ACTIVITY BREAKDOWN")
+
+            InsightCard {
+                VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                    ForEach(actions, id: \.action) { item in
+                        HStack(spacing: DS.Spacing.sm) {
+                            Image(systemName: item.action.icon)
+                                .font(.system(size: 10))
+                                .foregroundStyle(.accent)
+                                .frame(width: 16)
+
+                            Text(item.action.verb.uppercased())
+                                .font(monoMed)
+                                .foregroundStyle(.accent)
+
+                            Spacer()
+
+                            Text("\(item.count)")
+                                .font(monoMed)
+                                .foregroundStyle(DS.Color.fgMuted)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Activity Link
+
+    private var activityLink: some View {
+        NavigationLink(value: Router.Destination.readingHistory) {
+            HStack {
+                Label("Activity Log", systemImage: "clock.arrow.circlepath")
+                    .font(DS.Typography.label)
+                Spacer()
+                Text("\(store.totalSessions) sessions")
+                    .font(monoSm)
+                    .foregroundStyle(DS.Color.fgMuted)
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(DS.Color.fgMuted)
+            }
+            .foregroundStyle(DS.Color.fg)
+            .padding(DS.Spacing.lg)
+            .background(
+                RoundedRectangle(cornerRadius: DS.Radius.lg, style: .continuous)
+                    .fill(DS.Color.surface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.lg, style: .continuous)
+                    .stroke(DS.Color.rule, lineWidth: DS.Hairline.width)
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 
-// MARK: - Insights Mini Card (for ReadingHistory header)
+// MARK: - Mini Card (for Activity header)
 
 struct InsightsMiniCard: View {
     @ObservedObject private var store = QuranReadingHistoryStore.shared
+    private let monoSm = DS.Font.mono(9, weight: .regular)
+    private let detailFont = Font.system(size: 22, weight: .semibold, design: .rounded)
 
     var body: some View {
         NavigationLink(value: Router.Destination.insights) {
@@ -381,11 +457,11 @@ struct InsightsMiniCard: View {
 
                 VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
                     Text("THIS WEEK")
-                        .font(DS.Typography.eyebrowSM)
+                        .font(monoSm)
                         .tracking(2)
                         .foregroundStyle(DS.Color.fgMuted)
                     Text(store.weeklyMinutes > 0 ? "\(store.weeklyMinutes) min" : "No activity")
-                        .font(detailNumberFont)
+                        .font(detailFont)
                         .foregroundStyle(DS.Color.fg)
                 }
 

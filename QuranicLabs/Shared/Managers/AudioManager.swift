@@ -39,9 +39,17 @@ enum AudioLoopMode: String, Codable, CaseIterable, Defaults.Serializable {
 
     var displayName: String {
         switch self {
-        case .off: return "Play once"
+        case .off: return "Loop off"
         case .queue: return "Looping queue"
-        case .repeatOne: return "Repeating track"
+        case .repeatOne: return "Looping track"
+        }
+    }
+    
+    var actionText: String {
+        switch self {
+        case .off: return "Loop off"
+        case .queue: return "Loop queue"
+        case .repeatOne: return "Loop track"
         }
     }
 }
@@ -456,9 +464,14 @@ class AudioManager: ObservableObject {
 
         let track = queue[index]
 
-        // If same track, toggle play/pause
+        // If same track, restart from beginning
         if currentTrack?.id == track.id {
-            togglePlayPause()
+            player?.seek(to: .zero)
+            if !isPlaying {
+                player?.play()
+                isPlaying = true
+            }
+            updateNowPlayingInfo()
             return
         }
 

@@ -8,7 +8,7 @@ struct Music: View {
     @Default(.music_favorites) private var favoriteUrls
 
     @State private var scrollProxy: ScrollViewProxy?
-    @State private var listMode: MusicListMode = .newReleases
+    @State private var selectedCategory: UUID?
 
     var body: some View {
         NavigationStack(path: router.pathBinding(for: .music)) {
@@ -18,7 +18,6 @@ struct Music: View {
                 .onAppear {
                     Task {
                         await dataManager.fetchAll()
-                        // After fetch completes, check for pending scroll-to-track
                         handleScrollToTrack(trackId: router.musicScrollToTrackId)
                     }
                 }
@@ -37,25 +36,16 @@ struct Music: View {
     private func handleScrollToTrack(trackId: UUID?) {
         guard let trackId else { return }
         guard !dataManager.tracks.isEmpty else { return }
-
-        // Find the track
         guard let track = dataManager.tracks.first(where: { $0.id == trackId }) else {
             router.musicScrollToTrackId = nil
             return
         }
-
-        // Clear immediately to prevent duplicate handling from multiple onChange triggers
         router.musicScrollToTrackId = nil
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            // Scroll to track if proxy available
             if let proxy = self.scrollProxy {
-                withAnimation {
-                    proxy.scrollTo("track-\(trackId)", anchor: .center)
-                }
+                withAnimation { proxy.scrollTo("track-\(trackId)", anchor: .center) }
             }
-
-            // Only play if not already playing this track (avoid toggle behavior)
             if !self.audio.isPlayingTrack(track) {
                 let categoryTracks = self.dataManager.tracks.filter { $0.category.id == track.category.id }
                 self.audio.playMusic(track, queue: categoryTracks, context: .category(id: track.category.id))
@@ -68,83 +58,64 @@ struct Music: View {
     @ViewBuilder
     private var content: some View {
         if dataManager.isLoading && dataManager.tracks.isEmpty {
-            loadingView
+            ProgressView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if dataManager.tracks.isEmpty {
             emptyView
         } else {
-            trackList
+            mainList
         }
     }
 
-    // MARK: - Loading View
-
-    private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    // MARK: - Empty View
+    // MARK: - Empty
 
     private var emptyView: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: DS.Spacing.lg) {
                 Image(systemName: "music.note")
                     .font(.system(size: 48))
-                    .foregroundColor(.secondary)
-
+                    .foregroundStyle(.secondary)
                 Text("No tracks available")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-
+                    .font(DS.Typography.titleSM)
+                    .foregroundStyle(.secondary)
                 Text("Pull to refresh")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(.tertiary)
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 100)
         }
-        .refreshable {
-            await dataManager.fetchAll()
-        }
+        .refreshable { await dataManager.fetchAll() }
     }
 
-    // MARK: - Track List
+    // MARK: - Main List
 
-    private var trackList: some View {
+    private var mainList: some View {
         ScrollViewReader { proxy in
-            ScrollView {
-                VStack(spacing: 20) {
-                    
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: DS.Spacing.section) {
                     header
 
-                    // Featured section
+                    // Featured cards
                     if !dataManager.featuredTracks.isEmpty {
                         featuredSection
                     }
 
-                    // List mode picker
-                    listModePicker
+                    // Favorites nav link
+                    if !favoriteUrls.isEmpty {
+                        favoritesLink
+                    }
 
-                    // Content based on mode
-                    switch listMode {
-                    case .newReleases:
-                        newReleasesSection
-                    case .categories:
-                        categorySections
-                    case .favorites:
-                        favoritesSection
+                    // Browse by category + track listing
+                    VStack(spacing: DS.Spacing.lg) {
+                        browseSection
+                        trackListing
                     }
                 }
                 .padding(.bottom, 200)
             }
-            .refreshable {
-                await dataManager.fetchAll()
-            }
-            .onAppear {
-                scrollProxy = proxy
-            }
+            .refreshable { await dataManager.fetchAll() }
+            .onAppear { scrollProxy = proxy }
         }
     }
 
@@ -162,69 +133,69 @@ struct Music: View {
         .padding(.horizontal)
     }
 
-    // MARK: - List Mode Picker
+    // MARK: - Favorites Link
 
-    private var recentReleaseCount: Int {
-        let sevenDaysAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
-        return dataManager.tracks.filter { $0.releaseDate >= sevenDaysAgo }.count
+    private var favoriteTracks: [MusicTrack] {
+        dataManager.favoriteTracks(urls: favoriteUrls.reversed())
     }
 
-    private var listModePicker: some View {
-        HStack(spacing: 10) {
-            musicPickerButton(.newReleases, label: recentReleaseCount > 0 ? "Latest (\(recentReleaseCount))" : "Latest", icon: recentReleaseCount > 1 ? "sparkles" : "clock")
-            musicPickerButton(.categories, label: "All Genres", icon: "square.grid.2x2")
-            musicPickerButton(.favorites, label: "Favorites", icon: favoriteUrls.isEmpty ? "heart" : "heart.fill")
-        }
-        .padding(.horizontal)
-        .pushToLeft()
-    }
+    private var favoritesLink: some View {
+        let previewTracks = Array(favoriteTracks.prefix(4))
 
-    private func musicPickerButton(_ mode: MusicListMode, label: String, icon: String) -> some View {
-        let isSelected = listMode == mode
-        let showGlow = mode == .newReleases && recentReleaseCount > 1 && !isSelected
-
-        return Button {
-            withAnimation(.easeInOut(duration: 0.2)) { listMode = mode }
+        return NavigationLink {
+            Music_Content_Favorites(dataManager: dataManager)
         } label: {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.caption)
-                    .symbolEffect(.pulse, isActive: showGlow)
-                Text(label)
-                    .font(DS.Typography.caption)
-            }
-            .fontWeight(isSelected ? .bold : .light)
-        }
-        .buttonStyle(SignatureButtonStyle())
-    }
+            HStack(spacing: DS.Spacing.md) {
+                Label("Favorites", systemImage: "music.note")
+                    .font(DS.Typography.titleMD)
+                    .foregroundStyle(DS.Color.fg)
 
-    // MARK: - New Releases Section
+                Spacer()
 
-    private var newReleasesSection: some View {
-        LazyVStack(spacing: 4) {
-            ForEach(dataManager.tracks) { track in
-                Music_TrackCard(
-                    track: track,
-                    isPlaying: audio.isPlayingTrack(track)
-                ) {
-                    audio.playMusic(track, queue: dataManager.tracks, context: .latest)
+                // Stacked artwork previews
+                ZStack {
+                    ForEach(Array(previewTracks.enumerated()), id: \.element.id) { index, track in
+                        let theme = MusicColorTheme.generate(seed: track.artist.id)
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(theme.artworkGradient)
+                            .frame(width: 36, height: 36)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .stroke(DS.Color.surface, lineWidth: 2)
+                            )
+                            .offset(x: CGFloat(index) * 8)
+                            .zIndex(Double(previewTracks.count - index))
+                    }
                 }
-                .id("track-\(track.id)")
+                .frame(width: 36 + CGFloat(max(previewTracks.count - 1, 0)) * 8, height: 36)
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .padding(.leading, 4)
             }
+            .padding(DS.Spacing.lg)
+            .background(
+                RoundedRectangle(cornerRadius: DS.Radius.lg, style: .continuous)
+                    .fill(DS.Color.surface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.lg, style: .continuous)
+                    .stroke(DS.Color.rule, lineWidth: DS.Hairline.width)
+            )
         }
+        .buttonStyle(.plain)
         .padding(.horizontal)
     }
 
-    // MARK: - Featured Section
+    // MARK: - Featured
 
     private var featuredSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: DS.Spacing.md) {
             HStack {
                 Text("Featured")
                     .font(DS.Typography.heroMD)
-
                 Spacer()
-                
                 if audio.isPlayingContext(.featured) {
                     LoopingIndicator()
                 }
@@ -232,10 +203,15 @@ struct Music: View {
             .padding(.horizontal)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 14) {
+                HStack(spacing: DS.Spacing.md) {
                     ForEach(dataManager.featuredTracks) { track in
                         Music_FeaturedCard(track: track) {
                             audio.playMusic(track, queue: dataManager.featuredTracks, context: .featured)
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                withAnimation {
+                                    scrollProxy?.scrollTo("track-\(track.id)", anchor: .center)
+                                }
+                            }
                         }
                         .id("featured-\(track.id)")
                     }
@@ -245,95 +221,80 @@ struct Music: View {
         }
     }
 
-    // MARK: - Favorites Section
+    // MARK: - Browse (Category Chips)
 
-    private var favoriteTracks: [MusicTrack] {
-        dataManager.favoriteTracks(urls: favoriteUrls.reversed())
+    private var browseSection: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.md) {
+            Text("Explore")
+                .font(DS.Typography.heroMD)
+                .padding(.horizontal)
+
+            FlexStack(horizontalSpacing: 8, verticalSpacing: 8) {
+                categoryChip(label: "All", id: nil)
+
+                ForEach(dataManager.tracksByCategory, id: \.category.id) { group in
+                    categoryChip(label: group.category.name, id: group.category.id)
+                }
+            }
+            .padding(.horizontal)
+        }
     }
 
-    private var favoritesSection: some View {
-        LazyVStack(spacing: 4) {
-            if favoriteTracks.isEmpty {
-                VStack(spacing: 16) {
-                    Image(systemName: "heart")
-                        .font(.system(size: 48))
-                        .foregroundColor(.secondary)
+    private func categoryChip(label: String, id: UUID?) -> some View {
+        let isSelected = selectedCategory == id
+        return Button {
+            withAnimation(.easeOut(duration: 0.2)) {
+                selectedCategory = id
+            }
+        } label: {
+            Text(label)
+                .font(DS.Typography.eyebrowSM)
+                .fontWeight(isSelected ? .semibold : .regular)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(
+                    isSelected
+                    ? Color.accentColor.opacity(0.15)
+                    : Color.secondary.opacity(0.15)
+                )
+                .foregroundStyle(isSelected ? .accent : .primary)
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
 
-                    Text("No favorites yet")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
+    // MARK: - Track Listing
 
-                    Text("Tap the heart icon on any track to save it here.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 60)
-            } else {
-                HStack(alignment: .top, spacing: 6) {
-                    Image(systemName: audio.loopMode.icon)
-                        .foregroundColor(audio.loopMode == .off ? .secondary : .accentColor)
-                        .font(.caption)
-                    Text(favoritesPlaybackNote)
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                }
-                .padding(.bottom, 8)
+    private var filteredTracks: [MusicTrack] {
+        guard let catId = selectedCategory else {
+            return dataManager.tracks
+        }
+        return dataManager.tracks.filter { $0.category.id == catId }
+    }
 
-                ForEach(favoriteTracks) { track in
+    private var trackListing: some View {
+        let tracks = filteredTracks
+        let context: MusicPlaybackContext = {
+            if let catId = selectedCategory { return .category(id: catId) }
+            return .latest
+        }()
+
+        return VStack(spacing: 0) {
+            LazyVStack(spacing: 0) {
+                ForEach(tracks) { track in
                     Music_TrackCard(
                         track: track,
                         isPlaying: audio.isPlayingTrack(track)
                     ) {
-                        audio.playMusic(track, queue: favoriteTracks, context: .favorites)
+                        audio.playMusic(track, queue: tracks, context: context)
+                    }
+                    .id("track-\(track.id)")
+
+                    if track.id != tracks.last?.id {
+                        Divider().padding(.leading, 76)
                     }
                 }
             }
-        }
-        .padding(.horizontal)
-    }
-
-    // MARK: - Category Sections
-
-    private var categorySections: some View {
-        ForEach(dataManager.tracksByCategory, id: \.category.id) { group in
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 8) {
-                    Text(group.category.name)
-                        .font(.title2.bold())
-
-                    if audio.isPlayingContext(.category(id: group.category.id)) {
-                        LoopingIndicator()
-                    }
-                }
-                .padding(.horizontal)
-
-                LazyVStack(spacing: 4) {
-                    ForEach(group.tracks) { track in
-                        Music_TrackCard(
-                            track: track,
-                            isPlaying: audio.isPlayingTrack(track)
-                        ) {
-                            audio.playMusic(track, queue: group.tracks, context: .category(id: group.category.id))
-                        }
-                        .id("track-\(track.id)")
-                    }
-                }
-                .padding(.horizontal)
-            }
-        }
-    }
-
-    private var favoritesPlaybackNote: String {
-        switch audio.loopMode {
-        case .off:
-            return "Favorites will play through once and stop at the end."
-        case .queue:
-            return "Favorites will keep looping through this list."
-        case .repeatOne:
-            return "Repeat is on, so the current favorite will replay until you change it."
         }
     }
 }
@@ -358,47 +319,6 @@ private struct LoopingIndicator: View {
                 .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: isPulsing)
                 .onAppear { isPulsing = true }
         }
-    }
-}
-
-struct FeaturedTracksSection: View {
-    let title: String
-    let tracks: [MusicTrack]
-
-    /// Optional visual state
-    var showsIndicator: Bool = false
-
-    /// Tap handling is injected
-    let onSelect: (MusicTrack) -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            header
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 14) {
-                    ForEach(tracks) { track in
-                        Music_FeaturedCard(track: track) {
-                            onSelect(track)
-                        }
-                        .id("featured-\(track.id)")
-                    }
-                }
-                .padding(.horizontal)
-            }
-        }
-    }
-
-    private var header: some View {
-        HStack(spacing: 8) {
-            Text(title)
-                .font(.title2.bold())
-
-            if showsIndicator {
-                LoopingIndicator()
-            }
-        }
-        .padding(.horizontal)
     }
 }
 

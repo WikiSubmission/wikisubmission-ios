@@ -58,10 +58,6 @@ struct AIChat: View {
                             showConversation = true
                         }
                     )
-
-                    if AudioManager.shared.currentTrack != nil {
-                        Color.clear.frame(height: 72)
-                    }
                 }
             }
             .navigationDestination(isPresented: $showConversation) {
@@ -215,10 +211,6 @@ struct AIChatConversation: View {
                             }
                         }
                     )
-
-                    if AudioManager.shared.currentTrack != nil {
-                        Color.clear.frame(height: 72)
-                    }
                 }
             }
             .overlay(alignment: .top) {
@@ -827,16 +819,22 @@ private struct AIChatHistorySheet: View {
     @State private var sessions: [AIChatSession] = []
     @State private var showClearConfirmation = false
 
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMM d, h:mm a"
+        return f
+    }()
+
     var body: some View {
         NavigationStack {
             Group {
                 if sessions.isEmpty {
                     VStack(spacing: 16) {
                         Spacer()
-                        Image(systemName: "clock")
+                        Image(systemName: "bubble.left.and.text.bubble.right")
                             .font(.system(size: 48))
                             .foregroundStyle(.secondary)
-                        Text("No Past Sessions")
+                        Text("No Past Conversations")
                             .font(DS.Typography.titleLG)
                         Text("Your conversations will be saved here.")
                             .font(DS.Typography.bodySM)
@@ -844,46 +842,18 @@ private struct AIChatHistorySheet: View {
                         Spacer()
                     }
                 } else {
-                    List {
-                        ForEach(sessions) { session in
-                            Button {
-                                viewModel.resume(session)
-                                dismiss()
-                                onResume?()
-                            } label: {
-                                VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                                    Text(session.title)
-                                        .font(DS.Typography.label)
-                                        .foregroundStyle(.primary)
-                                        .lineLimit(2)
-
-                                    HStack {
-                                        Text("\(session.messages.count) messages")
-                                            .font(DS.Typography.eyebrowSM)
-                                            .foregroundStyle(.secondary)
-
-                                        Spacer()
-
-                                        Text(session.savedAt.relativeCompactAI())
-                                            .font(DS.Typography.eyebrowSM)
-                                            .foregroundStyle(.tertiary)
-                                    }
-                                }
-                                .padding(.vertical, DS.Spacing.xs)
-                            }
-                            .swipeActions(edge: .trailing) {
-                                Button(role: .destructive) {
-                                    viewModel.storage.deleteSession(session)
-                                    sessions = viewModel.storage.loadHistory()
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
+                    ScrollView {
+                        LazyVStack(spacing: DS.Spacing.sm) {
+                            ForEach(sessions) { session in
+                                sessionCard(session)
                             }
                         }
+                        .padding(.horizontal)
+                        .padding(.bottom, 100)
                     }
                 }
             }
-            .navigationTitle("Chat History")
+            .navigationTitle("Conversations")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -899,7 +869,7 @@ private struct AIChatHistorySheet: View {
                     }
                 }
             }
-            .confirmationDialog("Clear all chat history?", isPresented: $showClearConfirmation, titleVisibility: .visible) {
+            .confirmationDialog("Clear all conversations?", isPresented: $showClearConfirmation, titleVisibility: .visible) {
                 Button("Clear All", role: .destructive) {
                     viewModel.storage.clearHistory()
                     sessions = []
@@ -909,6 +879,85 @@ private struct AIChatHistorySheet: View {
         }
         .onAppear {
             sessions = viewModel.storage.loadHistory()
+        }
+    }
+
+    private func sessionCard(_ session: AIChatSession) -> some View {
+        let answerCount = session.messages.filter {
+            if case .answered = $0.state { return true }
+            return false
+        }.count
+        let preview: String = {
+            for msg in session.messages {
+                if case .answered(let text, _) = msg.state {
+                    let clean = text.prefix(120)
+                    return String(clean)
+                }
+            }
+            return ""
+        }()
+
+        return Button {
+            viewModel.resume(session)
+            dismiss()
+            onResume?()
+        } label: {
+            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                // Question / title
+                Text(session.title)
+                    .font(DS.Typography.label)
+                    .foregroundStyle(DS.Color.fg)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+
+                // Preview of answer
+                if !preview.isEmpty {
+                    Text(preview)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                }
+
+                // Meta
+                HStack(spacing: DS.Spacing.sm) {
+                    Label("\(session.messages.count)", systemImage: "bubble.left")
+                    if answerCount > 0 {
+                        Label("\(answerCount)", systemImage: "text.bubble")
+                    }
+                    Spacer()
+                    Text(Self.dateFormatter.string(from: session.savedAt))
+                }
+                .font(DS.Typography.eyebrowSM)
+                .foregroundStyle(DS.Color.fgMuted)
+            }
+            .padding(DS.Spacing.md)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: DS.Radius.lg, style: .continuous)
+                    .fill(DS.Color.surface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.lg, style: .continuous)
+                    .stroke(DS.Color.rule, lineWidth: DS.Hairline.width)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            Button {
+                viewModel.resume(session)
+                dismiss()
+                onResume?()
+            } label: {
+                Label("Resume", systemImage: "arrow.uturn.forward")
+            }
+            Button(role: .destructive) {
+                viewModel.storage.deleteSession(session)
+                sessions = viewModel.storage.loadHistory()
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
         }
     }
 }

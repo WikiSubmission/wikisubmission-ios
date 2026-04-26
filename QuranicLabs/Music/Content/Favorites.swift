@@ -5,82 +5,74 @@ struct Music_Content_Favorites: View {
     @ObservedObject var dataManager: MusicDataManager
     @ObservedObject private var audio = AudioManager.shared
     @Default(.music_favorites) private var favoriteUrls
-    @Environment(\.dismiss) private var dismiss
 
-    /// Favorite tracks in reverse order (most recently added first)
     private var favoriteTracks: [MusicTrack] {
         dataManager.favoriteTracks(urls: favoriteUrls.reversed())
     }
 
     var body: some View {
+        Group {
+            if favoriteTracks.isEmpty {
+                emptyState
+            } else {
+                trackList
+            }
+        }
+        .navigationTitle("Favorites")
+        .navigationBarTitleDisplayMode(.large)
+    }
+
+    // MARK: - Track List
+
+    private var trackList: some View {
         ScrollView {
-            LazyVStack(spacing: 8) {
-                // Info text
-                HStack(alignment: .top, spacing: 6) {
-                    Image(systemName: audio.loopMode.icon)
-                        .foregroundColor(audio.loopMode == .off ? .secondary : .accentColor)
-                        .font(.caption)
-                    Text(favoritesPlaybackNote)
+            VStack(spacing: 0) {
+                // Playback note
+                HStack {
+                    Label(favoritesPlaybackNote, systemImage: audio.loopMode.icon)
                         .font(DS.Typography.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(audio.loopMode == .off ? Color.secondary : Color.accentColor)
                     Spacer()
                 }
-                .padding(.bottom, 8)
+                .padding(.horizontal, 20)
+                .padding(.bottom, DS.Spacing.lg)
 
-                if favoriteTracks.isEmpty {
-                    emptyState
-                } else {
+                LazyVStack(spacing: 0) {
                     ForEach(favoriteTracks) { track in
                         Music_TrackCard(
                             track: track,
                             isPlaying: audio.isPlayingTrack(track)
                         ) {
-                            playTrack(track)
+                            audio.playMusic(track, queue: favoriteTracks, context: .favorites)
+                        }
+
+                        if track.id != favoriteTracks.last?.id {
+                            Divider().padding(.leading, 76)
                         }
                     }
                 }
             }
-            .padding(.horizontal)
             .padding(.bottom, 200)
-        }
-        .navigationTitle("Favorites")
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Done") {
-                    dismiss()
-                }
-                .fontWeight(.semibold)
-            }
         }
     }
 
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: DS.Spacing.lg) {
+            Spacer()
             Image(systemName: "heart")
                 .font(.system(size: 48))
-                .foregroundColor(.secondary)
-
-            Text("No favorites yet")
-                .font(.headline)
-                .foregroundColor(.secondary)
-
-            Text("Tap the heart icon on any track to save it here.")
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
+            Text("No Favorites Yet")
+                .font(DS.Typography.titleLG)
+            Text("Tap the heart on any track to save it here.")
+                .font(DS.Typography.bodySM)
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+            Spacer()
         }
-        .frame(maxWidth: .infinity)
-        .padding(.top, 60)
-    }
-
-    // MARK: - Playback
-
-    private func playTrack(_ track: MusicTrack) {
-        // Play within favorites context
-        audio.playMusic(track, queue: favoriteTracks, context: .favorites)
     }
 
     private var favoritesPlaybackNote: String {

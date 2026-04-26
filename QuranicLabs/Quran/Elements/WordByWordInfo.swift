@@ -25,6 +25,7 @@ struct Quran_Element_WordByWordInfo: View {
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                     }
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }

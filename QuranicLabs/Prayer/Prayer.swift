@@ -88,10 +88,6 @@ struct Prayer: View {
                             ) {
                                 showDeleteLocationConfirmation = true
                             })
-                            
-                            if AudioManager.shared.currentTrack != nil {
-                                Color.clear.frame(height: 56)
-                            }
                         }
                     } else if manager.state.isLoading {
                         loadingView

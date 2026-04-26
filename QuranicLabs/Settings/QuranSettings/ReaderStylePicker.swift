@@ -3,6 +3,7 @@ import Defaults
 
 struct QuranSettings_ReaderStylePicker: View {
     @Default(.quran_reader_style) var quranReaderStyle
+    @Default(.arabic) var arabic
 
     var body: some View {
         Picker("Reading Style", selection: $quranReaderStyle) {
@@ -11,6 +12,11 @@ struct QuranSettings_ReaderStylePicker: View {
             }
         }
         .pickerStyle(.segmented)
+        .onChange(of: quranReaderStyle) { _, newStyle in
+            if newStyle == .wordByWord && !arabic {
+                arabic = true
+            }
+        }
     }
 }
 
