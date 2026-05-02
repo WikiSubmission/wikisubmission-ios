@@ -265,136 +265,77 @@ struct Quran_Content_ReadingHistory: View {
     private func sessionCard(_ session: QuranReadingSession) -> some View {
         let timeText = Self.timeFormatter.string(from: session.startedAt)
         let durationSec = session.duration
-        let durationText = durationSec >= 60 ? "\(Int(durationSec / 60))m" : "<1m"
-        let progress = session.chapterProgress
-        let hasTimeline = session.events.count > 1
+        let durationText = durationSec >= 60 ? "\(Int(durationSec / 60))m" : nil
+        let eventCount = session.events.count
 
-        return VStack(alignment: .leading, spacing: 0) {
-            // Tappable header
-            Button {
-                if session.chapterNumber > 0 {
-                    presentedDestination = HistoryDestination(
-                        chapterNumber: session.chapterNumber,
-                        verseNumber: session.verseNumber > 0 ? session.verseNumber : nil
-                    )
+        return Button {
+            if session.chapterNumber > 0 {
+                presentedDestination = HistoryDestination(
+                    chapterNumber: session.chapterNumber,
+                    verseNumber: session.verseNumber > 0 ? session.verseNumber : nil
+                )
+            }
+        } label: {
+            VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                // Action + subject
+                HStack(alignment: .firstTextBaseline, spacing: 5) {
+                    Text(session.action.verb)
+                        .font(DS.Typography.label)
+                        .foregroundStyle(.accent)
+
+                    if session.chapterNumber > 0 {
+                        Text("Sura \(session.chapterNumber): \(session.chapterTitle)")
+                            .font(DS.Typography.label)
+                            .foregroundStyle(DS.Color.fg)
+                            .lineLimit(1)
+                    } else if let detail = session.events.first?.detail {
+                        Text(detail)
+                            .font(DS.Typography.label)
+                            .foregroundStyle(DS.Color.fg)
+                            .lineLimit(1)
+                    }
                 }
-            } label: {
-                VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                    // Meta line
-                    HStack(spacing: 0) {
-                        Text(timeText)
-                            .foregroundStyle(DS.Color.fgMuted)
-                        Text("  \(durationText)")
-                            .foregroundStyle(.accent)
-                        if progress > 0 {
-                            Text("  \(Int(progress * 100))%")
-                                .foregroundStyle(progress >= 1.0 ? .green : DS.Color.fgMuted)
-                        }
-                        Spacer()
-                    }
-                    .font(monoSm)
 
-                    // Action line
-                    HStack(spacing: 6) {
-                        Text(session.action.verb.uppercased())
-                            .font(monoMed)
-                            .foregroundStyle(.accent)
-                        if session.chapterNumber > 0 {
-                            Text("Sura \(session.chapterNumber): \(session.chapterTitle)")
-                                .font(mono)
-                                .foregroundStyle(DS.Color.fg)
-                                .lineLimit(1)
-                        } else if let detail = session.events.first?.detail {
-                            Text(detail)
-                                .font(mono)
-                                .foregroundStyle(DS.Color.fg)
-                                .lineLimit(1)
-                        }
+                // Metadata chips
+                HStack(spacing: DS.Spacing.sm) {
+                    metaChip(text: timeText, icon: nil)
+
+                    if let durationText {
+                        metaChip(text: durationText, icon: nil)
                     }
 
-                    // Verse
                     if !session.verseId.isEmpty {
-                        HStack(spacing: 0) {
-                            Text("at ").foregroundStyle(DS.Color.fgMuted)
-                            Text(session.verseId).foregroundStyle(DS.Color.fg)
-                        }
-                        .font(mono)
+                        metaChip(text: session.verseId, icon: nil)
                     }
 
-                    // Progress bar
-                    if progress > 0 {
-                        GeometryReader { geo in
-                            ZStack(alignment: .leading) {
-                                Capsule().fill(Color.primary.opacity(0.04))
-                                Capsule()
-                                    .fill(Color.accentColor.opacity(progress >= 1.0 ? 0.6 : 0.3))
-                                    .frame(width: geo.size.width * CGFloat(min(progress, 1.0)))
-                            }
-                        }
-                        .frame(height: 2)
-                        .padding(.top, 2)
+                    if eventCount > 1 {
+                        metaChip(text: "\(eventCount) steps", icon: nil)
                     }
                 }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
 
-            // Timeline (always visible when > 1 event)
-            if hasTimeline {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(Array(session.events.enumerated()), id: \.element.id) { index, event in
-                        let isFirst = index == 0
-                        let isLast = index == session.events.count - 1
+                // Condensed timeline (show first + last only for brevity)
+                if eventCount > 1 {
+                    let first = session.events.first!
+                    let last = session.events.last!
 
-                        HStack(alignment: .top, spacing: 0) {
-                            // Vertical rail + dot
-                            ZStack(alignment: .top) {
-                                // Connecting line (above dot for non-first, below dot for non-last)
-                                if !isFirst {
-                                    VStack(spacing: 0) {
-                                        Rectangle()
-                                            .fill(DS.Color.rule)
-                                            .frame(width: 1, height: 4)
-                                        Spacer(minLength: 0)
-                                    }
-                                }
-
-                                VStack(spacing: 0) {
-                                    Spacer(minLength: isFirst ? 0 : 4)
-                                    Circle()
-                                        .fill(isFirst ? Color.accentColor : Color.accentColor.opacity(0.35))
-                                        .frame(width: 5, height: 5)
-                                    if !isLast {
-                                        Rectangle()
-                                            .fill(DS.Color.rule)
-                                            .frame(width: 1)
-                                            .frame(maxHeight: .infinity)
-                                    }
-                                    Spacer(minLength: 0)
-                                }
-                            }
-                            .frame(width: 5)
-                            .padding(.trailing, 8)
-
-                            // Event text
-                            HStack(alignment: .firstTextBaseline) {
-                                Text(event.detail)
-                                    .font(mono)
-                                    .foregroundStyle(DS.Color.fgMuted)
-                                    .lineLimit(2)
-                                Spacer()
-                                Text(Self.timeFormatter.string(from: event.timestamp))
-                                    .font(monoSm)
-                                    .foregroundStyle(DS.Color.fgMuted.opacity(0.6))
-                            }
-                            .padding(.bottom, isLast ? 0 : 6)
+                    VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                        Divider()
+                        timelineRow(event: first, isFirst: true)
+                        if eventCount > 2 {
+                            Text("\(eventCount - 2) more")
+                                .font(monoSm)
+                                .foregroundStyle(DS.Color.fgMuted.opacity(0.5))
+                                .padding(.leading, 14)
                         }
+                        timelineRow(event: last, isFirst: false)
                     }
                 }
-                .padding(.top, DS.Spacing.sm)
             }
+            .padding(DS.Spacing.lg)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
         }
-        .padding(DS.Spacing.md)
+        .buttonStyle(.plain)
         .background(
             RoundedRectangle(cornerRadius: DS.Radius.lg, style: .continuous)
                 .fill(DS.Color.surface)
@@ -419,6 +360,39 @@ struct Quran_Content_ReadingHistory: View {
             } label: {
                 Label("Delete", systemImage: "trash")
             }
+        }
+    }
+
+    private func metaChip(text: String, icon: String?) -> some View {
+        HStack(spacing: 3) {
+            if let icon {
+                Image(systemName: icon).font(.system(size: 8))
+            }
+            Text(text)
+        }
+        .font(monoSm)
+        .foregroundStyle(DS.Color.fgMuted)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(Color.primary.opacity(0.03), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+    }
+
+    private func timelineRow(event: ReadingEvent, isFirst: Bool) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Circle()
+                .fill(isFirst ? Color.accentColor : Color.accentColor.opacity(0.35))
+                .frame(width: 5, height: 5)
+
+            Text(event.detail)
+                .font(monoSm)
+                .foregroundStyle(DS.Color.fgMuted)
+                .lineLimit(1)
+
+            Spacer()
+
+            Text(Self.timeFormatter.string(from: event.timestamp))
+                .font(monoSm)
+                .foregroundStyle(DS.Color.fgMuted.opacity(0.5))
         }
     }
 }
