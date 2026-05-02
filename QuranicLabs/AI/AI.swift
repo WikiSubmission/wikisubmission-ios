@@ -1,5 +1,6 @@
 import SwiftUI
 import Foundation
+import SafariServices
 
 struct AIChat: View {
     @StateObject private var viewModel = AIChatViewModel()
@@ -149,6 +150,7 @@ struct AIChatConversation: View {
     @ObservedObject private var networkManager = NetworkManager.shared
     @FocusState private var inputFocused: Bool
     @State private var presentedReference: AIReferenceDestination?
+    @State private var presentedURL: AIPresentedURL?
     private let bottomAnchorID = "conversation-bottom"
 
     var body: some View {
@@ -166,7 +168,11 @@ struct AIChatConversation: View {
                                         await viewModel.retry(message.id)
                                     }
                                 },
-                                onReferenceTap: { ref in openReference(ref) }
+                                onReferenceTap: { ref in openReference(ref) },
+                                onLinkTap: { url in
+                                    inputFocused = false
+                                    presentedURL = AIPresentedURL(url: url)
+                                }
                             )
                             .id(message.id)
                         }
@@ -261,6 +267,10 @@ struct AIChatConversation: View {
                     )
                 }
             }
+            .sheet(item: $presentedURL) { item in
+                AISafariView(url: item.url)
+                    .ignoresSafeArea()
+            }
         }
     }
 
@@ -284,6 +294,21 @@ private struct AIReferenceDestination: Identifiable {
     let verseNumber: Int
 
     var id: String { "\(chapterNumber):\(verseNumber)" }
+}
+
+private struct AIPresentedURL: Identifiable {
+    let url: URL
+    var id: String { url.absoluteString }
+}
+
+private struct AISafariView: UIViewControllerRepresentable {
+    let url: URL
+
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        SFSafariViewController(url: url)
+    }
+
+    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {}
 }
 
 @MainActor
@@ -610,6 +635,7 @@ private struct AIMessageRow: View {
     let message: AIChatMessage
     let onRetry: () -> Void
     let onReferenceTap: (String) -> Void
+    let onLinkTap: (URL) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.md) {
@@ -657,7 +683,7 @@ private struct AIMessageRow: View {
                         AIAnswerText(text: text)
 
                         if !sources.isEmpty {
-                            AISourcesRow(sources: sources, onTap: onReferenceTap)
+                            AISourcesRow(sources: sources, onTap: onReferenceTap, onLinkTap: onLinkTap)
                         }
                     }
                 }
@@ -979,6 +1005,7 @@ private extension Date {
 private struct AISourcesRow: View {
     let sources: [String]
     let onTap: (String) -> Void
+    let onLinkTap: (URL) -> Void
 
     private static func isValidVerse(_ source: String) -> Bool {
         let parts = source.split(separator: ":")
@@ -990,16 +1017,21 @@ private struct AISourcesRow: View {
         return true
     }
 
+    private static func isLink(_ source: String) -> Bool {
+        guard let url = URL(string: source), let scheme = url.scheme?.lowercased() else { return false }
+        return scheme == "http" || scheme == "https"
+    }
+
     private var validSources: [String] {
         sources.filter { Self.isValidVerse($0) }
     }
 
-    private var extraCount: Int {
-        sources.count - validSources.count
+    private var linkSources: [String] {
+        sources.filter { Self.isLink($0) }
     }
 
     var body: some View {
-        if validSources.isEmpty { return AnyView(EmptyView()) }
+        if validSources.isEmpty && linkSources.isEmpty { return AnyView(EmptyView()) }
 
         return AnyView(
             VStack(alignment: .leading, spacing: DS.Spacing.xs) {
@@ -1008,37 +1040,123 @@ private struct AISourcesRow: View {
                     .tracking(1.4)
                     .foregroundStyle(DS.Color.fgMuted)
 
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: DS.Spacing.sm) {
-                        ForEach(validSources, id: \.self) { source in
-                            Button {
-                                onTap(source)
-                            } label: {
-                                Text(source)
-                                    .font(DS.Typography.eyebrow)
-                                    .foregroundStyle(Color.accentColor)
-                                    .fixedSize(horizontal: true, vertical: false)
-                                    .padding(.horizontal, DS.Spacing.md)
-                                    .padding(.vertical, 7)
-                                    .background(
-                                        Capsule(style: .continuous)
-                                            .fill(Color.accentColor.opacity(0.1))
-                                    )
+                if !validSources.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: DS.Spacing.sm) {
+                            ForEach(validSources, id: \.self) { source in
+                                Button {
+                                    onTap(source)
+                                } label: {
+                                    Text(source)
+                                        .font(DS.Typography.eyebrow)
+                                        .foregroundStyle(Color.accentColor)
+                                        .fixedSize(horizontal: true, vertical: false)
+                                        .padding(.horizontal, DS.Spacing.md)
+                                        .padding(.vertical, 7)
+                                        .background(
+                                            Capsule(style: .continuous)
+                                                .fill(Color.accentColor.opacity(0.1))
+                                        )
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
                         }
-
-                        if extraCount > 0 {
-                            Text("+ \(extraCount) more")
-                                .font(DS.Typography.eyebrowSM)
-                                .foregroundStyle(DS.Color.fgMuted)
-                                .padding(.horizontal, DS.Spacing.sm)
-                        }
+                        .padding(.vertical, 1)
                     }
-                    .padding(.vertical, 1)
+                }
+
+                if !linkSources.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: DS.Spacing.sm) {
+                            ForEach(linkSources, id: \.self) { source in
+                                AILinkChip(url: source, onTap: onLinkTap)
+                            }
+                        }
+                        .padding(.vertical, 1)
+                    }
                 }
             }
         )
+    }
+}
+
+private struct AILinkChip: View {
+    let url: String
+    let onTap: (URL) -> Void
+
+    private static let smallWords: Set<String> = [
+        "a", "an", "and", "as", "at", "but", "by", "for", "from", "in", "into",
+        "nor", "of", "on", "or", "the", "to", "vs", "with"
+    ]
+
+    private var parsed: URL? { URL(string: url) }
+
+    private var iconName: String? {
+        guard let host = parsed?.host?.lowercased() else { return nil }
+        let normalized = host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
+        if normalized.hasSuffix("qurantalkblog.com") || normalized.hasSuffix("qurantalk.com") {
+            return "qurantalk"
+        }
+        return nil
+    }
+
+    private var label: String {
+        guard let parsed else { return url }
+        let segments = parsed.path.split(separator: "/").map(String.init)
+        guard var slug = segments.last, !slug.isEmpty else {
+            return parsed.host?.replacingOccurrences(of: "^www\\.", with: "", options: .regularExpression) ?? url
+        }
+        if let dot = slug.lastIndex(of: ".") {
+            slug = String(slug[..<dot])
+        }
+        // Strip trailing numeric tokens (e.g. -11114-11117)
+        while let range = slug.range(of: "[-_]+\\d+$", options: .regularExpression) {
+            slug.removeSubrange(range)
+        }
+        let words = slug
+            .replacingOccurrences(of: "[-_]+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespaces)
+            .split(separator: " ")
+            .map(String.init)
+        guard !words.isEmpty else {
+            return parsed.host ?? url
+        }
+        return words.enumerated().map { index, word -> String in
+            let lower = word.lowercased()
+            if index != 0 && Self.smallWords.contains(lower) { return lower }
+            return lower.prefix(1).uppercased() + lower.dropFirst()
+        }.joined(separator: " ")
+    }
+
+    var body: some View {
+        Button {
+            if let parsed { onTap(parsed) }
+        } label: {
+            HStack(spacing: 6) {
+                if let iconName {
+                    Image(iconName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 12, height: 12)
+                        .clipShape(RoundedRectangle(cornerRadius: 2, style: .continuous))
+                }
+                Text(label)
+                    .font(DS.Typography.eyebrow)
+                    .foregroundStyle(Color.accentColor)
+                    .lineLimit(1)
+                Image(systemName: "arrow.up.right")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(Color.accentColor.opacity(0.7))
+            }
+            .fixedSize(horizontal: true, vertical: false)
+            .padding(.horizontal, DS.Spacing.md)
+            .padding(.vertical, 7)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(Color.accentColor.opacity(0.1))
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 
