@@ -39,8 +39,20 @@ struct Quran_Content_ReadingHistory: View {
                     }
                 }
             }
-            .confirmationDialog("Clear all history?", isPresented: $showClearConfirmation, titleVisibility: .visible) {
-                Button("Clear All", role: .destructive) {
+            .confirmationDialog("Delete history", isPresented: $showClearConfirmation, titleVisibility: .visible) {
+                Button("Last hour", role: .destructive) {
+                    let cutoff = Date().addingTimeInterval(-3600)
+                    withAnimation { store.removeAll { $0.startedAt >= cutoff } }
+                }
+                Button("Last 24 hours", role: .destructive) {
+                    let cutoff = Date().addingTimeInterval(-86400)
+                    withAnimation { store.removeAll { $0.startedAt >= cutoff } }
+                }
+                Button("Last 7 days", role: .destructive) {
+                    let cutoff = Date().addingTimeInterval(-7 * 86400)
+                    withAnimation { store.removeAll { $0.startedAt >= cutoff } }
+                }
+                Button("All history", role: .destructive) {
                     withAnimation { store.clear() }
                 }
                 Button("Cancel", role: .cancel) {}
@@ -289,6 +301,11 @@ struct Quran_Content_ReadingHistory: View {
                             .foregroundStyle(.accent)
                         if session.chapterNumber > 0 {
                             Text("Sura \(session.chapterNumber): \(session.chapterTitle)")
+                                .font(mono)
+                                .foregroundStyle(DS.Color.fg)
+                                .lineLimit(1)
+                        } else if let detail = session.events.first?.detail {
+                            Text(detail)
                                 .font(mono)
                                 .foregroundStyle(DS.Color.fg)
                                 .lineLimit(1)
