@@ -27,7 +27,7 @@ struct Music_FeaturedCard: View {
                         .padding(.bottom, 6)
 
                     Text(track.name)
-                        .font(DS.Typography.titleSM)
+                        .font(DS.Typography.titleMD)
                         .foregroundStyle(.primary)
                         .lineLimit(2)
 

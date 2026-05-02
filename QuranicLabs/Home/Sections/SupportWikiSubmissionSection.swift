@@ -7,6 +7,13 @@ struct Home_SupportWikiSubmissionSection: View {
     var body: some View {
         VStack(spacing: DS.Spacing.md) {
             SectionLabel("SUPPORT WIKISUBMISSION")
+            
+            Card(title: "Share the App", options: .action(
+                systemImage: "square.and.arrow.up",
+                showChevron: true
+            ) {
+                shareText(About.appStoreURL)
+            })
 
             Card(title: "Review the App", options: .action(
                 systemImage: "star",
@@ -18,13 +25,6 @@ struct Home_SupportWikiSubmissionSection: View {
                 } else {
                     openURL(URL(string: About.appStoreURL)!)
                 }
-            })
-
-            Card(title: "Share the App", options: .action(
-                systemImage: "square.and.arrow.up",
-                showChevron: true
-            ) {
-                shareText(About.appStoreURL)
             })
 
             Card(title: "Donate", options: .action(
@@ -39,6 +39,15 @@ struct Home_SupportWikiSubmissionSection: View {
                 .fontWeight(.light)
                 .foregroundStyle(.secondary)
                 .padding(.top, DS.Spacing.xs)
+            
+            Button {
+                openURL(URL(string: About.appStoreURL)!)
+            } label: {
+                Label("Open in App Store ↗", systemImage: "app.background.dotted")
+                    .font(DS.Typography.eyebrow)
+            }
+            .pushToRight()
+            .buttonStyle(SignatureButtonStyle())
         }
     }
 }
