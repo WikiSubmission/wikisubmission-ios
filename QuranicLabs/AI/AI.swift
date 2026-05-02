@@ -843,13 +843,49 @@ private struct AIChatHistorySheet: View {
     var onResume: (() -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var sessions: [AIChatSession] = []
-    @State private var showClearConfirmation = false
+    @State private var showDeleteConfirmation = false
+    @State private var collapsedSections: Set<String> = []
 
-    private static let dateFormatter: DateFormatter = {
+    private static let timeFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.dateFormat = "MMM d, h:mm a"
+        f.dateFormat = "h:mm a"
         return f
     }()
+
+    // MARK: - Grouping
+
+    private struct SessionGroup {
+        let label: String
+        let sessions: [AIChatSession]
+    }
+
+    private var groupedSessions: [SessionGroup] {
+        let calendar = Calendar.current
+        var groups: [SessionGroup] = []
+        var currentLabel = ""
+        var current: [AIChatSession] = []
+
+        for session in sessions {
+            let label = dayLabel(for: session.savedAt, calendar: calendar)
+            if label != currentLabel {
+                if !current.isEmpty { groups.append(SessionGroup(label: currentLabel, sessions: current)) }
+                currentLabel = label
+                current = [session]
+            } else {
+                current.append(session)
+            }
+        }
+        if !current.isEmpty { groups.append(SessionGroup(label: currentLabel, sessions: current)) }
+        return groups
+    }
+
+    private func dayLabel(for date: Date, calendar: Calendar) -> String {
+        if calendar.isDateInToday(date) { return "TODAY" }
+        if calendar.isDateInYesterday(date) { return "YESTERDAY" }
+        let daysAgo = calendar.dateComponents([.day], from: date, to: Date()).day ?? 0
+        if daysAgo < 7 { return date.formatted(.dateTime.weekday(.wide)).uppercased() }
+        return date.formatted(.dateTime.month(.wide).day().year()).uppercased()
+    }
 
     var body: some View {
         NavigationStack {
@@ -869,12 +905,46 @@ private struct AIChatHistorySheet: View {
                     }
                 } else {
                     ScrollView {
-                        LazyVStack(spacing: DS.Spacing.sm) {
-                            ForEach(sessions) { session in
-                                sessionCard(session)
+                        LazyVStack(spacing: 0) {
+                            ForEach(groupedSessions, id: \.label) { group in
+                                let isCollapsed = collapsedSections.contains(group.label)
+
+                                // Section header
+                                Button {
+                                    withAnimation(.easeOut(duration: 0.2)) {
+                                        if isCollapsed { collapsedSections.remove(group.label) }
+                                        else { collapsedSections.insert(group.label) }
+                                    }
+                                } label: {
+                                    HStack {
+                                        Text(group.label)
+                                            .font(DS.Typography.eyebrow)
+                                            .tracking(2)
+                                            .foregroundStyle(.secondary)
+                                        Text("\(group.sessions.count)")
+                                            .font(DS.Typography.eyebrowSM)
+                                            .foregroundStyle(.tertiary)
+                                        Spacer()
+                                        Image(systemName: isCollapsed ? "chevron.down" : "chevron.up")
+                                            .font(.caption2)
+                                            .foregroundStyle(.tertiary)
+                                    }
+                                    .padding(.horizontal)
+                                    .padding(.top, 20)
+                                    .padding(.bottom, 8)
+                                    .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+
+                                if !isCollapsed {
+                                    ForEach(group.sessions) { session in
+                                        sessionCard(session)
+                                            .padding(.horizontal)
+                                            .padding(.vertical, DS.Spacing.xs)
+                                    }
+                                }
                             }
                         }
-                        .padding(.horizontal)
                         .padding(.bottom, 100)
                     }
                 }
@@ -888,15 +958,27 @@ private struct AIChatHistorySheet: View {
                 if !sessions.isEmpty {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button(role: .destructive) {
-                            showClearConfirmation = true
+                            showDeleteConfirmation = true
                         } label: {
                             Image(systemName: "trash")
                         }
                     }
                 }
             }
-            .confirmationDialog("Clear all conversations?", isPresented: $showClearConfirmation, titleVisibility: .visible) {
-                Button("Clear All", role: .destructive) {
+            .confirmationDialog("Delete conversations", isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
+                Button("Last hour", role: .destructive) {
+                    viewModel.storage.deleteHistorySince(Date().addingTimeInterval(-3600))
+                    sessions = viewModel.storage.loadHistory()
+                }
+                Button("Last 24 hours", role: .destructive) {
+                    viewModel.storage.deleteHistorySince(Date().addingTimeInterval(-86400))
+                    sessions = viewModel.storage.loadHistory()
+                }
+                Button("Last 7 days", role: .destructive) {
+                    viewModel.storage.deleteHistorySince(Date().addingTimeInterval(-7 * 86400))
+                    sessions = viewModel.storage.loadHistory()
+                }
+                Button("All conversations", role: .destructive) {
                     viewModel.storage.clearHistory()
                     sessions = []
                 }
@@ -909,19 +991,15 @@ private struct AIChatHistorySheet: View {
     }
 
     private func sessionCard(_ session: AIChatSession) -> some View {
-        let answerCount = session.messages.filter {
-            if case .answered = $0.state { return true }
-            return false
-        }.count
         let preview: String = {
             for msg in session.messages {
                 if case .answered(let text, _) = msg.state {
-                    let clean = text.prefix(120)
-                    return String(clean)
+                    return String(text.prefix(120))
                 }
             }
             return ""
         }()
+        let timeText = Self.timeFormatter.string(from: session.savedAt)
 
         return Button {
             viewModel.resume(session)
@@ -929,14 +1007,12 @@ private struct AIChatHistorySheet: View {
             onResume?()
         } label: {
             VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                // Question / title
                 Text(session.title)
                     .font(DS.Typography.label)
                     .foregroundStyle(DS.Color.fg)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
 
-                // Preview of answer
                 if !preview.isEmpty {
                     Text(preview)
                         .font(DS.Typography.caption)
@@ -945,19 +1021,15 @@ private struct AIChatHistorySheet: View {
                         .multilineTextAlignment(.leading)
                 }
 
-                // Meta
                 HStack(spacing: DS.Spacing.sm) {
-                    Label("\(session.messages.count)", systemImage: "bubble.left")
-                    if answerCount > 0 {
-                        Label("\(answerCount)", systemImage: "text.bubble")
-                    }
+                    Text("\(session.messages.count) messages")
                     Spacer()
-                    Text(Self.dateFormatter.string(from: session.savedAt))
+                    Text(timeText)
                 }
                 .font(DS.Typography.eyebrowSM)
                 .foregroundStyle(DS.Color.fgMuted)
             }
-            .padding(DS.Spacing.md)
+            .padding(DS.Spacing.lg)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: DS.Radius.lg, style: .continuous)
@@ -1311,6 +1383,12 @@ struct AIChatStorage {
     func deleteSession(_ session: AIChatSession) {
         var history = loadHistory()
         history.removeAll { $0.conversationID == session.conversationID }
+        saveHistory(history)
+    }
+
+    func deleteHistorySince(_ date: Date) {
+        var history = loadHistory()
+        history.removeAll { $0.savedAt >= date }
         saveHistory(history)
     }
 
