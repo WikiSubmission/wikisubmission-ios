@@ -6,6 +6,7 @@ struct Migrations {
 
     static func runAll() async {
         await v3_12()
+        await v3_20_reciter()
     }
 
     // MARK: - v3.12: Bookmark Migration
@@ -13,9 +14,27 @@ struct Migrations {
     static func v3_12() async {
         let migrationId = "v3_12_bookmarks"
         guard !hasMigrationRun(migrationId) else { return }
-        
+
         await MainActor.run {
             BookmarkManager.migrateFromLegacy()
+        }
+
+        markMigrationComplete(migrationId)
+    }
+
+    // MARK: - v3.20: Onyx → Callum reciter
+
+    /// Callum replaces Onyx as the default English recitation. Move anyone still
+    /// on Onyx over to Callum, while leaving deliberately-chosen Arabic reciters
+    /// (Mishary, Basit, Minshawi) untouched.
+    static func v3_20_reciter() async {
+        let migrationId = "v3_20_onyx_to_callum"
+        guard !hasMigrationRun(migrationId) else { return }
+
+        await MainActor.run {
+            if Defaults[.quran_reciter] == .onyx {
+                Defaults[.quran_reciter] = .callum
+            }
         }
 
         markMigrationComplete(migrationId)

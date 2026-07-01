@@ -26,7 +26,7 @@ struct Home: View {
     @State private var appeared = false
 
     @State private var whatsNewIsPresented = false
-    private let whatsNewVersion = "3.17"
+    private let whatsNewVersion = "3.20"
     @Default(.whats_new_last_seen_version) private var whatsNewLastSeenVersion
     @Default(.whats_new_last_seen_at) private var whatsNewLastSeenAt
     @Default(.whats_new_auto_presented_version) private var whatsNewAutoPresentedVersion
@@ -208,34 +208,9 @@ struct WhatsNew: View {
 
                 VStack(spacing: DS.Spacing.md) {
                     whatsNewCard(
-                        title: "Activity log and insights",
-                        subtitle: "A new structured activity timeline tracks your reading sessions with lifecycle events, and insights surfaces streaks, charts, and chapter breakdowns.",
-                        systemImage: "chart.bar.xaxis.ascending"
-                    )
-                    whatsNewCard(
-                        title: "Refreshed music experience",
-                        subtitle: "Browse by category, featured cards, a dedicated favorites page, and genre labels on every track.",
-                        systemImage: "music.note"
-                    )
-                    whatsNewCard(
-                        title: "AI chat (limited early preview)",
-                        subtitle: "Ask broader questions across the app. Early preview.",
-                        systemImage: "sparkles"
-                    )
-                    whatsNewCard(
-                        title: "English Quran recitation",
-                        subtitle: "Our first English recitation, Onyx, is now available as the default Quran voice.",
+                        title: "New English reciter — Callum",
+                        subtitle: "A warmer English Quran voice, Callum, is now the default recitation. You can switch back to Onyx or an Arabic reciter anytime in settings.",
                         systemImage: "waveform"
-                    )
-                    whatsNewCard(
-                        title: "Daily reminders and prayer sounds",
-                        subtitle: "Daily reminder notifications are on by default. You can also choose a call to prayer sound for prayer alerts.",
-                        systemImage: "bell.badge"
-                    )
-                    whatsNewCard(
-                        title: "Refined design",
-                        subtitle: "An editorial visual theme with custom typography across the app.",
-                        systemImage: "paintpalette"
                     )
                     Rectangle()
                         .fill(Color.primary.opacity(0.08))

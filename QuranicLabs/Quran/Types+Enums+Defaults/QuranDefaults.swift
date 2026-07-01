@@ -14,7 +14,7 @@ extension Defaults.Keys {
     
     static let sort_chapters_by_revelation_order = Key<Bool>("sort_chapters_by_revelation_order", default: false)
     
-    static let quran_reciter = Key<QuranReciters>("quran_reciter", default: .onyx)
+    static let quran_reciter = Key<QuranReciters>("quran_reciter", default: .callum)
     static let last_read_verse_id = Key<String>("last_read_verse_id", default: "1:1")
     
     static let quran_search_history = Key<[String]>("quran_search_history", default: [])
