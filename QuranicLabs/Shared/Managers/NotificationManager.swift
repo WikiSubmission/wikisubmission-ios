@@ -103,6 +103,32 @@ class NotificationManager: ObservableObject {
         }
     }
     
+    /// Syncs only the prayer times registry (plus the parent user row for the FK) and
+    /// rethrows on failure, unlike `sync(_:)` which swallows per-table errors. Callers use
+    /// the thrown error to decide whether the resolved location was actually persisted.
+    func syncPrayerTimesRegistry() async throws {
+        guard let deviceToken = Defaults[.device_token] else {
+            print("No device token – skipping prayer times registry sync")
+            return
+        }
+
+        let session = try await SupabaseManager.shared.requireSession()
+        let user = session.user
+
+        // User row must exist first (registry tables have a foreign key on device_token).
+        try await syncPushNotificationUser(
+            deviceToken: deviceToken,
+            userId: user.id,
+            table: .user
+        )
+
+        try await syncPushNotificationsRegistryPrayerTimes(
+            deviceToken: deviceToken,
+            userId: user.id,
+            table: .prayerTimes
+        )
+    }
+
     static func registerForPushNotifications() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             if granted {

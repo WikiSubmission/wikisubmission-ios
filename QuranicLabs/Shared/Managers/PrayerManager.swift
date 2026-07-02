@@ -87,6 +87,14 @@ class PrayerManager: ObservableObject {
             hasValidLiveData = true
             state = .loaded
 
+            // [Keep the push notification registry in step with the resolved location.]
+            // The server sends prayer notifications purely from the registry's `location`
+            // column, so if the resolved location changes (city change, or a normalized
+            // string from the API) the registry must be re-synced or the server keeps
+            // notifying for the previous location. Only mark as registered on a successful
+            // write, so a failed sync is retried automatically on the next fetch.
+            await syncRegisteredLocationIfChanged()
+
         } catch let decodingError as DecodingError {
             print("PrayerManager: Decoding error - \(decodingError)")
             state = .error("Failed to parse prayer times")
@@ -95,6 +103,27 @@ class PrayerManager: ObservableObject {
             print("PrayerManager: Network error - \(error.localizedDescription)")
             state = .error("Network error")
             loadCachedData()
+        }
+    }
+
+    /// Re-syncs the prayer times registry when the resolved location differs from the
+    /// value last written to the server. The registered marker is only advanced on a
+    /// successful write, so a transient failure is retried on the next successful fetch
+    /// rather than silently stranding a stale location on the server.
+    private func syncRegisteredLocationIfChanged() async {
+        guard Defaults[.prayer_notifications] else { return }
+
+        let resolvedLocation = Defaults[.prayer_times]?.location_string ?? Defaults[.prayer_times_location]
+        guard let resolvedLocation, resolvedLocation != Defaults[.prayer_times_registered_location] else {
+            return
+        }
+
+        do {
+            try await NotificationManager.shared.syncPrayerTimesRegistry()
+            Defaults[.prayer_times_registered_location] = resolvedLocation
+        } catch {
+            // Leave the registered marker unchanged so the next fetch retries the sync.
+            print("PrayerManager: failed to sync prayer location '\(resolvedLocation)' to registry, will retry: \(error.localizedDescription)")
         }
     }
 
