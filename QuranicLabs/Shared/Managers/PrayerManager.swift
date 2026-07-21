@@ -87,6 +87,11 @@ class PrayerManager: ObservableObject {
             hasValidLiveData = true
             state = .loaded
 
+            // [Refresh the salat Live Activity against the newest schedule.]
+            // Fetches happen on foreground, so this is also the moment a
+            // backgrounded activity's color gets corrected locally.
+            await SalatLiveActivityManager.shared.ensureActivity()
+
             // [Keep the push notification registry in step with the resolved location.]
             // The server sends prayer notifications purely from the registry's `location`
             // column, so if the resolved location changes (city change, or a normalized

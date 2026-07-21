@@ -24,6 +24,7 @@ struct Notifications: View {
     @Default(.daily_reminders_notifications) private var dailyRemindersNotifications
     @Default(.random_verse_notifications) private var randomVerseNotifications
     @Default(.announcement_notifications) private var announcementNotifications
+    @Default(.prayer_live_activity) private var prayerLiveActivity
 
     @Default(.prompted_for_notifications) private var promptedForNotifications
     @Default(.device_token) private var deviceToken
@@ -157,6 +158,13 @@ struct Notifications: View {
                 }
             }
             .disabled(!notifications)
+
+            Section(header: Text("LIVE ACTIVITY"), footer: Text("Shows a live countdown to the next prayer on your Lock Screen and Dynamic Island. The color follows the sun through the day.")) {
+                Toggle("Prayer Countdown", isOn: Binding(
+                    get: { prayerLiveActivity },
+                    set: { vm.toggleLiveActivity($0) }
+                ))
+            }
 
             Section(header: Text("QURAN REMINDERS"), footer: Text("Daily reminders and daily verses are sent through our notification service once a day.")) {
                 Toggle("Daily Verse", isOn: notifications ? Binding(
@@ -389,6 +397,16 @@ class NotificationsViewModel: ObservableObject {
         Defaults[.prayer_notifications] = enabled
         Task { @MainActor in
             try? await notificationManager.sync([.prayerTimes])
+        }
+    }
+
+    /// Toggle the salat countdown Live Activity: persist the preference,
+    /// sync the registry, and start or end the Activity immediately.
+    func toggleLiveActivity(_ enabled: Bool) {
+        Defaults[.prayer_live_activity] = enabled
+        Task { @MainActor in
+            try? await notificationManager.sync([.liveActivities])
+            await SalatLiveActivityManager.shared.ensureActivity()
         }
     }
 

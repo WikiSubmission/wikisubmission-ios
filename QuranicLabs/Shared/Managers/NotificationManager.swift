@@ -8,6 +8,7 @@ enum NotificationTables: String {
     case dailyReminders
     case randomVerse
     case announcements
+    case liveActivities
     
     var tableName: String {
         switch self {
@@ -21,6 +22,8 @@ enum NotificationTables: String {
             return "ws_push_notifications_registry_random_verse"
         case .announcements:
             return "ws_push_notifications_registry_announcements"
+        case .liveActivities:
+            return "ws_push_notifications_registry_live_activities"
         }
     }
 }
@@ -100,7 +103,46 @@ class NotificationManager: ObservableObject {
                     }
                 }
             }
+            if tables == nil || (tables?.contains(.liveActivities) == true) {
+                group.addTask {
+                    do {
+                        try await self.syncPushNotificationsRegistryLiveActivities(
+                            deviceToken: deviceToken,
+                            userId: user.id,
+                            table: .liveActivities
+                        )
+                    } catch {
+                        print("Notification sync error (liveActivities): \(error)")
+                    }
+                }
+            }
         }
+    }
+
+    /// Syncs only the Live Activity registry (plus the parent user row for
+    /// the FK) and rethrows on failure so callers can retry token writes.
+    func syncLiveActivitiesRegistry() async throws {
+        guard let deviceToken = Defaults[.device_token] else {
+            print("No device token - skipping live activities registry sync")
+            return
+        }
+
+        let session = try await SupabaseManager.shared.requireSession()
+        let user = session.user
+
+        // User row must exist first (registry tables have a foreign key on
+        // device_token).
+        try await syncPushNotificationUser(
+            deviceToken: deviceToken,
+            userId: user.id,
+            table: .user
+        )
+
+        try await syncPushNotificationsRegistryLiveActivities(
+            deviceToken: deviceToken,
+            userId: user.id,
+            table: .liveActivities
+        )
     }
     
     /// Syncs only the prayer times registry (plus the parent user row for the FK) and
@@ -239,6 +281,29 @@ class NotificationManager: ObservableObject {
         print("Synced ws_push_notifications_registry_random_verse")
     }
     
+    /// Upserts the Live Activity registry row: enabled state, resolved
+    /// location, and both ActivityKit push tokens.
+    private func syncPushNotificationsRegistryLiveActivities(deviceToken: String, userId: UUID, table: NotificationTables) async throws {
+        let payload = PushNotificationsRegistryLiveActivities(
+            user_id: userId,
+            updated_at: Date().ISO8601Format(),
+            device_token: deviceToken,
+            enabled: Defaults[.prayer_live_activity],
+            location: Defaults[.prayer_times]?.location_string ?? Defaults[.prayer_times_location],
+            afternoon_midpoint_method: Defaults[.prayer_times_use_midpoint_method_for_asr],
+            push_to_start_token: Defaults[.live_activity_push_to_start_token],
+            activity_push_token: Defaults[.live_activity_push_token]
+        )
+
+        try await SupabaseManager.client
+            .schema("internal")
+            .from(table.tableName)
+            .upsert(payload, onConflict: "device_token")
+            .execute()
+
+        print("Synced ws_push_notifications_registry_live_activities")
+    }
+
     private func syncPushNotificationsRegistryAnnouncements(deviceToken: String, userId: UUID, table: NotificationTables) async throws {
         let payload = PushNotificationsRegistryAnnouncements(
             user_id: userId,

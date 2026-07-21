@@ -34,6 +34,9 @@ struct Main: View {
             await quranDataManager.initializeFromBundle(modelContext: modelContext)
             await Migrations.runAll()
             NotificationManager.registerForPushNotificationsIfNeeded()
+            // [Salat Live Activity: observe push-to-start tokens and
+            // reconcile any Activity that survived a previous app run.]
+            SalatLiveActivityManager.shared.bootstrap()
         }
         .onOpenURL { url in
             router.navigate(to: url)

@@ -151,6 +151,20 @@ struct PushNotificationsRegistryAnnouncements: Encodable {
     let enabled: Bool
 }
 
+/// Registry row for salat Live Activity push delivery. `push_to_start_token`
+/// lets the server open a new prayer window's Activity; `activity_push_token`
+/// targets `liveactivity` updates at the currently running window.
+struct PushNotificationsRegistryLiveActivities: Encodable {
+    let user_id: UUID
+    let updated_at: String?
+    let device_token: String
+    let enabled: Bool
+    let location: String?
+    let afternoon_midpoint_method: Bool
+    let push_to_start_token: String?
+    let activity_push_token: String?
+}
+
 struct KeychainStorage: AuthLocalStorage {
     
     func store(key: String, value: Data) throws {

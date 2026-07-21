@@ -15,13 +15,39 @@
 		924106512F19542500B95E0D /* CodableCSV in Frameworks */ = {isa = PBXBuildFile; productRef = 924106502F19542500B95E0D /* CodableCSV */; };
 		9290D94A2E84ADF2009E3F45 /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 9290D9492E84ADEF009E3F45 /* LICENSE */; };
 		92E13EA62F2FCD4C00473C49 /* AlertKit in Frameworks */ = {isa = PBXBuildFile; productRef = 92E13EA52F2FCD4C00473C49 /* AlertKit */; };
+		5A1AC0DE2F3000000000A00C /* SalatActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5A1AC0DE2F3000000000A004 /* SalatActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5A1AC0DE2F3000000000A00E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 923F0B0D2E847C440092BA1B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5A1AC0DE2F3000000000A003;
+			remoteInfo = SalatActivityExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		5A1AC0DE2F3000000000A00B /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				5A1AC0DE2F3000000000A00C /* SalatActivityExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		923F0B152E847C440092BA1B /* QuranicLabs.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QuranicLabs.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		923F0BEB2E847C8B0092BA1B /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		923F0C072E8480DC0092BA1B /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		9290D9492E84ADEF009E3F45 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		5A1AC0DE2F3000000000A004 /* SalatActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SalatActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -32,6 +58,27 @@
 			);
 			target = 923F0B142E847C440092BA1B /* QuranicLabs */;
 		};
+		5A1AC0DE2F3000000000A00F /* Exceptions for "SalatActivityExtension" folder in "SalatActivityExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 5A1AC0DE2F3000000000A003 /* SalatActivityExtension */;
+		};
+		5A1AC0DE2F3000000000A010 /* Exceptions for "SalatShared" folder in "QuranicLabs" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				README.md,
+			);
+			target = 923F0B142E847C440092BA1B /* QuranicLabs */;
+		};
+		5A1AC0DE2F3000000000A011 /* Exceptions for "SalatShared" folder in "SalatActivityExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				README.md,
+			);
+			target = 5A1AC0DE2F3000000000A003 /* SalatActivityExtension */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -41,6 +88,23 @@
 				923F0BEF2E847CC90092BA1B /* Exceptions for "QuranicLabs" folder in "QuranicLabs" target */,
 			);
 			path = QuranicLabs;
+			sourceTree = "<group>";
+		};
+		5A1AC0DE2F3000000000A001 /* SalatActivityExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				5A1AC0DE2F3000000000A00F /* Exceptions for "SalatActivityExtension" folder in "SalatActivityExtension" target */,
+			);
+			path = SalatActivityExtension;
+			sourceTree = "<group>";
+		};
+		5A1AC0DE2F3000000000A002 /* SalatShared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				5A1AC0DE2F3000000000A010 /* Exceptions for "SalatShared" folder in "QuranicLabs" target */,
+				5A1AC0DE2F3000000000A011 /* Exceptions for "SalatShared" folder in "SalatActivityExtension" target */,
+			);
+			path = SalatShared;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -58,6 +122,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5A1AC0DE2F3000000000A006 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -65,6 +136,8 @@
 			isa = PBXGroup;
 			children = (
 				923F0B172E847C440092BA1B /* QuranicLabs */,
+				5A1AC0DE2F3000000000A002 /* SalatShared */,
+				5A1AC0DE2F3000000000A001 /* SalatActivityExtension */,
 				923F0B162E847C440092BA1B /* Products */,
 				923F0BEB2E847C8B0092BA1B /* README.md */,
 				923F0C072E8480DC0092BA1B /* .gitignore */,
@@ -76,6 +149,7 @@
 			isa = PBXGroup;
 			children = (
 				923F0B152E847C440092BA1B /* QuranicLabs.app */,
+				5A1AC0DE2F3000000000A004 /* SalatActivityExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -90,13 +164,16 @@
 				923F0B112E847C440092BA1B /* Sources */,
 				923F0B122E847C440092BA1B /* Frameworks */,
 				923F0B132E847C440092BA1B /* Resources */,
+				5A1AC0DE2F3000000000A00B /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				5A1AC0DE2F3000000000A00D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				923F0B172E847C440092BA1B /* QuranicLabs */,
+				5A1AC0DE2F3000000000A002 /* SalatShared */,
 			);
 			name = QuranicLabs;
 			packageProductDependencies = (
@@ -110,6 +187,29 @@
 			productReference = 923F0B152E847C440092BA1B /* QuranicLabs.app */;
 			productType = "com.apple.product-type.application";
 		};
+		5A1AC0DE2F3000000000A003 /* SalatActivityExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5A1AC0DE2F3000000000A00A /* Build configuration list for PBXNativeTarget "SalatActivityExtension" */;
+			buildPhases = (
+				5A1AC0DE2F3000000000A005 /* Sources */,
+				5A1AC0DE2F3000000000A006 /* Frameworks */,
+				5A1AC0DE2F3000000000A007 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				5A1AC0DE2F3000000000A001 /* SalatActivityExtension */,
+				5A1AC0DE2F3000000000A002 /* SalatShared */,
+			);
+			name = SalatActivityExtension;
+			packageProductDependencies = (
+			);
+			productName = SalatActivityExtension;
+			productReference = 5A1AC0DE2F3000000000A004 /* SalatActivityExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -121,6 +221,9 @@
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					923F0B142E847C440092BA1B = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					5A1AC0DE2F3000000000A003 = {
 						CreatedOnToolsVersion = 16.4;
 					};
 				};
@@ -146,6 +249,7 @@
 			projectRoot = "";
 			targets = (
 				923F0B142E847C440092BA1B /* QuranicLabs */,
+				5A1AC0DE2F3000000000A003 /* SalatActivityExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -160,6 +264,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5A1AC0DE2F3000000000A007 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -171,7 +282,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5A1AC0DE2F3000000000A005 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		5A1AC0DE2F3000000000A00D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5A1AC0DE2F3000000000A003 /* SalatActivityExtension */;
+			targetProxy = 5A1AC0DE2F3000000000A00E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		923F0B1E2E847C460092BA1B /* Debug */ = {
@@ -365,6 +491,56 @@
 			};
 			name = Release;
 		};
+		5A1AC0DE2F3000000000A008 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5KF856M5CC;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SalatActivityExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Salat Activity";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 3.20;
+				PRODUCT_BUNDLE_IDENTIFIER = com.motoread.QuranicLabs.SalatActivityExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		5A1AC0DE2F3000000000A009 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5KF856M5CC;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SalatActivityExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Salat Activity";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 3.20;
+				PRODUCT_BUNDLE_IDENTIFIER = com.motoread.QuranicLabs.SalatActivityExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -382,6 +558,15 @@
 			buildConfigurations = (
 				923F0B212E847C460092BA1B /* Debug */,
 				923F0B222E847C460092BA1B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5A1AC0DE2F3000000000A00A /* Build configuration list for PBXNativeTarget "SalatActivityExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5A1AC0DE2F3000000000A008 /* Debug */,
+				5A1AC0DE2F3000000000A009 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
