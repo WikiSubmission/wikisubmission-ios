@@ -74,31 +74,20 @@ class SupabaseManager: ObservableObject {
     
     @MainActor
     func requireSession() async throws -> Session {
-        // 1. Already resolved
-        if let session {
-            return session
+        // 1. Resolve a live session. `auth.session` returns the stored session and
+        //    refreshes it when the access token is expired, throwing if it cannot be
+        //    recovered. We do NOT short-circuit on the cached `self.session`: that mirror
+        //    can hold an expired session (set from the `initialSession` event when the
+        //    refresh token is dead), which would make every upsert fail with 401. This
+        //    also replaces awaiting `authStateChanges`, which never emits a signed-in
+        //    event once the refresh token is dead and would otherwise hang every sync.
+        if let resolved = try? await SupabaseManager.client.auth.session {
+            self.session = resolved
+            return resolved
         }
 
-        // 2. Check immediately available cached session
-        if let current = SupabaseManager.client.auth.currentSession {
-            self.session = current
-            return current
-        }
-
-        // 3. Await auth state resolution (initialSession / signedIn)
-        for await (event, newSession) in SupabaseManager.client.auth.authStateChanges {
-            switch event {
-            case .initialSession, .signedIn, .tokenRefreshed:
-                if let resolved = newSession {
-                    self.session = resolved
-                    return resolved
-                }
-            default:
-                break
-            }
-        }
-
-        // 4. Absolute fallback
+        // 2. No recoverable session (never signed in, or refresh token expired/revoked):
+        //    establish a fresh anonymous session so sync can proceed.
         let newSession = try await SupabaseManager.client.auth.signInAnonymously()
         self.session = newSession
         return newSession
