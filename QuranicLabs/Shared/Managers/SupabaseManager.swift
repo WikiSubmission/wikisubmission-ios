@@ -81,16 +81,42 @@ class SupabaseManager: ObservableObject {
         //    refresh token is dead), which would make every upsert fail with 401. This
         //    also replaces awaiting `authStateChanges`, which never emits a signed-in
         //    event once the refresh token is dead and would otherwise hang every sync.
-        if let resolved = try? await SupabaseManager.client.auth.session {
+        // Bound every auth call with a timeout so a blocked SDK call can never hang the
+        // caller (and, transitively, sync) indefinitely.
+        if let resolved = try? await withTimeout(seconds: 8, operation: {
+            try await SupabaseManager.client.auth.session
+        }) {
             self.session = resolved
             return resolved
         }
 
         // 2. No recoverable session (never signed in, or refresh token expired/revoked):
         //    establish a fresh anonymous session so sync can proceed.
-        let newSession = try await SupabaseManager.client.auth.signInAnonymously()
+        let newSession = try await withTimeout(seconds: 12, operation: {
+            try await SupabaseManager.client.auth.signInAnonymously()
+        })
         self.session = newSession
         return newSession
+    }
+}
+
+struct TimeoutError: Error {}
+
+/// Runs `operation`, throwing `TimeoutError` if it does not finish within `seconds`.
+/// Guards against SDK calls that can block indefinitely rather than returning or throwing.
+func withTimeout<T: Sendable>(
+    seconds: TimeInterval,
+    operation: @escaping @Sendable () async throws -> T
+) async throws -> T {
+    try await withThrowingTaskGroup(of: T.self) { group in
+        group.addTask { try await operation() }
+        group.addTask {
+            try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            throw TimeoutError()
+        }
+        defer { group.cancelAll() }
+        guard let result = try await group.next() else { throw TimeoutError() }
+        return result
     }
 }
 
