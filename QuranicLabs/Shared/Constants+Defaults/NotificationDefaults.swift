@@ -2,6 +2,11 @@ import Defaults
 
 extension Defaults.Keys {
     static let device_token = Key<String?>("device_token", default: nil)
+
+    /// Diagnostics for the notification registry sync, surfaced in the notifications screen
+    /// so a stuck device is visible without attaching Xcode.
+    static let last_sync_at = Key<Date?>("last_sync_at", default: nil)
+    static let last_sync_error = Key<String?>("last_sync_error", default: nil)
     
     static let notifications = Key<Bool>("notifications", default: true)
     static let prayer_notifications = Key<Bool>("prayer_notifications", default: false)

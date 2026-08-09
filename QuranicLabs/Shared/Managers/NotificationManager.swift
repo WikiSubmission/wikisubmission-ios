@@ -39,6 +39,7 @@ class NotificationManager: ObservableObject {
             return
         }
 
+        do {
         let session = try await SupabaseManager.shared.requireSession()
         let user = session.user
 
@@ -104,8 +105,17 @@ class NotificationManager: ObservableObject {
                 }
             }
         }
+
+        Defaults[.last_sync_at] = Date()
+        Defaults[.last_sync_error] = nil
+        } catch {
+            // Record the failure so it is visible in the notifications screen instead of
+            // being swallowed by the caller's `try?`.
+            Defaults[.last_sync_error] = "\(error)"
+            throw error
+        }
     }
-    
+
     /// Syncs only the prayer times registry (plus the parent user row for the FK) and
     /// rethrows on failure, unlike `sync(_:)` which swallows per-table errors. Callers use
     /// the thrown error to decide whether the resolved location was actually persisted.

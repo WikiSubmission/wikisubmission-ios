@@ -27,6 +27,8 @@ struct Notifications: View {
 
     @Default(.prompted_for_notifications) private var promptedForNotifications
     @Default(.device_token) private var deviceToken
+    @Default(.last_sync_at) private var lastSync
+    @Default(.last_sync_error) private var lastSyncError
     
     @State private var testNotificationStatus: TestNotificationStatus = .idle
     
@@ -194,8 +196,28 @@ struct Notifications: View {
                     .monospaced()
                     .textSelection(.enabled)
             }
-            
-            
+
+            Section(header: Text("SYNC STATUS"), footer: Text("Your preferences are synced to our notification service. If the last sync is old or shows an error, your device is not reaching the service.")) {
+                HStack {
+                    Text("Last sync")
+                    Spacer()
+                    Text(lastSync == nil ? "Never" : lastSync!.formatted(date: .abbreviated, time: .shortened))
+                        .foregroundStyle(.secondary)
+                }
+                if let error = lastSyncError, !error.isEmpty {
+                    Text(error)
+                        .font(.caption2)
+                        .foregroundStyle(.red)
+                        .textSelection(.enabled)
+                }
+                Button {
+                    Task { try? await NotificationManager.shared.sync() }
+                } label: {
+                    Label("Sync now", systemImage: "arrow.triangle.2.circlepath")
+                }
+            }
+
+
             if notifications {
                 Section {
                     Card(title: testNotificationStatus.title, options: .action(
