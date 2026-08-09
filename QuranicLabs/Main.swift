@@ -8,6 +8,7 @@ struct Main: View {
     @StateObject private var quranDataManager = QuranDataManager.shared
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
 
     @Default(.onboarded) private var onboarded
 
@@ -34,6 +35,14 @@ struct Main: View {
             await quranDataManager.initializeFromBundle(modelContext: modelContext)
             await Migrations.runAll()
             NotificationManager.registerForPushNotificationsIfNeeded()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            // Re-register and re-sync whenever the app comes to the foreground so a device
+            // that missed or failed an earlier sync recovers on its own, instead of staying
+            // silently stuck until a specific action (launch, location change, auth event).
+            guard newPhase == .active else { return }
+            NotificationManager.registerForPushNotificationsIfNeeded()
+            Task { try? await NotificationManager.shared.sync() }
         }
         .onOpenURL { url in
             router.navigate(to: url)
