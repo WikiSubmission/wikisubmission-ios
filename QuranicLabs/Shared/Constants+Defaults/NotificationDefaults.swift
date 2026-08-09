@@ -1,3 +1,4 @@
+import Foundation
 import Defaults
 
 extension Defaults.Keys {
