@@ -32,7 +32,10 @@ class NotificationManager: ObservableObject {
 
     func sync(_ tables: [NotificationTables]? = nil) async throws {
         guard let deviceToken = Defaults[.device_token] else {
-            print("No device token – skipping sync")
+            // No stored APNs token yet: re-trigger registration so we obtain one (which
+            // calls sync again on success) rather than silently giving up until next launch.
+            print("No device token – requesting registration")
+            NotificationManager.registerForPushNotificationsIfNeeded()
             return
         }
 
@@ -108,7 +111,8 @@ class NotificationManager: ObservableObject {
     /// the thrown error to decide whether the resolved location was actually persisted.
     func syncPrayerTimesRegistry() async throws {
         guard let deviceToken = Defaults[.device_token] else {
-            print("No device token – skipping prayer times registry sync")
+            print("No device token – requesting registration")
+            NotificationManager.registerForPushNotificationsIfNeeded()
             return
         }
 
